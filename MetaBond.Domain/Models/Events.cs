@@ -10,6 +10,8 @@ namespace MetaBond.Domain.Models;
     {
         public Guid? Id { get; set; }
 
+        public string? Description { get; set; }
+
         public string? Title {  get; set; }    
         
         public DateTime? DateAndTime { get; set; }
@@ -19,6 +21,8 @@ namespace MetaBond.Domain.Models;
         public Guid? CommunitiesId { get; set; }
 
         public Communities? Communities { get; set; }
+
+        public int ParticipationInEventId { get; set; }
 
         public ICollection<ParticipationInEvent>? ParticipationInEvent { get; set; }
     }

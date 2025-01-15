@@ -1,0 +1,6 @@
+@MetaBond.Presentation.Api_HostAddress = http://localhost:5217
+
+GET {{MetaBond.Presentation.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

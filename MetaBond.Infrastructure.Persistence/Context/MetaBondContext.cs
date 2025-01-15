@@ -1,0 +1,168 @@
+﻿using MetaBond.Domain;
+using MetaBond.Domain.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace MetaBond.Infrastructure.Persistence.Context
+{
+    public class MetaBondContext : DbContext
+    {
+        public MetaBondContext(DbContextOptions<MetaBondContext> dbContextOptions) : base(dbContextOptions)
+        { }
+
+        #region Models
+        public DbSet<Communities> Communities { get; set; }
+
+        public DbSet<Events> Events { get; set; }
+
+        public DbSet<Friendship> Friendships { get; set; }
+
+        public DbSet<ParticipationInEvent> Participations { get; set; }
+
+        public DbSet<Posts> Posts { get; set; }
+
+        public DbSet<Rewards> Rewards { get; set; }
+        #endregion
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            #region Tables
+
+            modelBuilder.Entity<Communities>()
+                        .ToTable("Communities");
+
+            modelBuilder.Entity<Events>()
+                        .ToTable("Events");
+
+
+            modelBuilder.Entity<Friendship>()
+                        .ToTable("Friendship");
+
+            modelBuilder.Entity<ParticipationInEvent>()
+                        .ToTable("ParticiationInEvent");
+
+            modelBuilder.Entity<Posts>()
+                        .ToTable("Posts");
+
+            modelBuilder.Entity<Rewards>()
+                        .ToTable("Rewards");
+            #endregion
+
+            #region PrimaryKey
+            modelBuilder.Entity<Communities>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkCommunities");
+
+            modelBuilder.Entity<Events>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkEvents");
+
+            modelBuilder.Entity<Friendship>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkFriendship");
+
+            modelBuilder.Entity<Posts>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkPosts");
+
+            modelBuilder.Entity<Rewards>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkRewards");
+            #endregion
+
+            #region Relationships
+            modelBuilder.Entity<Communities>()
+                        .HasMany(c => c.Events)
+                        .WithOne(v => v.Communities)
+                        .HasForeignKey(x => x.CommunitiesId)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunitiesId");
+
+            modelBuilder.Entity<Communities>()
+                        .HasMany(c => c.Posts)
+                        .WithOne(p => p.Communities)
+                        .HasForeignKey(x => x.CommunitiesId)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunities");
+
+            modelBuilder.Entity<ParticipationInEvent>()
+                        .HasMany(p => p.Events)
+                        .WithMany(e => e.ParticipationInEvent);
+
+            #endregion
+
+            #region Communities
+
+            modelBuilder.Entity<Communities>(x =>
+            {
+                x.Property(c => c.Name)
+                .IsRequired()
+                .HasMaxLength(50);
+
+                x.Property(c => c.Description)
+                 .IsRequired()
+                 .HasMaxLength(maxLength: 250);
+
+                x.Property(c => c.Category)
+                  .HasMaxLength(25)
+                  .IsRequired();
+            });
+
+            #endregion
+
+            #region Friendship
+
+            modelBuilder.HasPostgresEnum<Status>();
+
+            #endregion
+
+            #region Posts
+            modelBuilder.Entity<Posts>(p =>
+            {
+                p.Property(p => p.Title)
+                  .HasMaxLength(50)
+                  .IsRequired();
+
+                p.Property(p => p.Content)
+                  .HasMaxLength(150)
+                  .IsRequired();
+                
+                p.Property(p => p.Image)
+                 .HasMaxLength(250)
+                 .IsRequired();
+            });
+            #endregion
+
+            #region Events
+
+            modelBuilder.Entity<Events>(e =>
+            {
+                e.Property(e => e.Title)
+                 .HasMaxLength(50)
+                 .IsRequired();
+
+                e.Property(e => e.Description)
+                 .HasMaxLength(maxLength: 250)
+                 .IsRequired();
+            });
+
+            #endregion
+
+            #region Rewards
+
+            modelBuilder.Entity<Rewards>(p =>
+            {
+
+                p.Property(p => p.Description)
+                 .HasMaxLength(250)
+                 .IsRequired();
+
+                p.Property(p => p.PointAwarded)
+                 .IsRequired();
+            });
+
+            #endregion
+        }
+    }
+}
