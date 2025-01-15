@@ -9,10 +9,8 @@ using System.Threading.Tasks;
     public sealed class Friendship
     {
         public Guid Id { get; set; }
-
-        public string? Name { get; set; }
            
-        public enum Status { Pendiete, Aceptada, Bloqueada }    
+        public Status Status { get; set; }    
 
         public DateTime? CreateAt { get; set; }
     }
