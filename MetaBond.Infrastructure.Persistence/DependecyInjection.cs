@@ -1,4 +1,6 @@
-﻿using MetaBond.Infrastructure.Persistence.Context;
+﻿using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Infrastructure.Persistence.Context;
+using MetaBond.Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,16 @@ namespace MetaBond.Infrastructure.Persistence
                 });
             });
 
+            #endregion
+
+            #region Repositories
+            services.AddTransient(typeof(GenericRepository<>), typeof(IGenericRepository<>));
+            services.AddTransient<ICommunitiesRepository, CommunitiesRepository>(); 
+            services.AddTransient<IEventsRepository, EventsRepository>();
+            services.AddTransient<IFriendshipRepository, FriendshipRepository>();
+            services.AddTransient<IParticipationInEventRepository, ParticipationInEventRepository>();
+            services.AddTransient<IPostsRepository, PostsRepository>();
+            services.AddTransient<IRewardsRepository, RewardsRepository>();
             #endregion
 
         }
