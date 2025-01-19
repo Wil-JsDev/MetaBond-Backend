@@ -29,7 +29,7 @@ namespace MetaBond.Infrastructure.Persistence
             #endregion
 
             #region Repositories
-            services.AddTransient(typeof(GenericRepository<>), typeof(IGenericRepository<>));
+            services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<ICommunitiesRepository, CommunitiesRepository>(); 
             services.AddTransient<IEventsRepository, EventsRepository>();
             services.AddTransient<IFriendshipRepository, FriendshipRepository>();
