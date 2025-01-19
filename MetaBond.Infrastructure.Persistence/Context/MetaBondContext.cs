@@ -47,6 +47,13 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<Rewards>()
                         .ToTable("Rewards");
+
+            modelBuilder.Entity<ProgressBoard>()
+                        .ToTable("ProgressBoard");
+
+            modelBuilder.Entity<ProgressEntry>()
+                        .ToTable("ProgressEntry");
+
             #endregion
 
             #region PrimaryKey
@@ -69,6 +76,14 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<Rewards>()
                         .HasKey(x => x.Id)
                         .HasName("PkRewards");
+
+            modelBuilder.Entity<ProgressEntry>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkProgressEntry");
+
+            modelBuilder.Entity<ProgressBoard>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkProgressBoard");
             #endregion
 
             #region Relationships
@@ -89,6 +104,21 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<ParticipationInEvent>()
                         .HasMany(p => p.Events)
                         .WithMany(e => e.ParticipationInEvent);
+
+            modelBuilder.Entity<ProgressBoard>()
+                        .HasOne(x => x.Communities)
+                        .WithOne(x => x.ProgressBoard)
+                        .HasForeignKey<ProgressBoard>(x => x.CommunitiesId)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunitiesId");
+
+            modelBuilder.Entity<ProgressEntry>()
+                        .HasOne(x => x.ProgressBoard)
+                        .WithMany(x => x.ProgressEntries)
+                        .HasForeignKey(x => x.ProgressBoardId)
+                        .IsRequired()
+                        .HasConstraintName("FkProgressBoardId");
+
 
             #endregion
 
@@ -159,6 +189,16 @@ namespace MetaBond.Infrastructure.Persistence.Context
                  .IsRequired();
 
                 p.Property(p => p.PointAwarded)
+                 .IsRequired();
+            });
+
+            #endregion
+
+            #region Progress Entry
+            modelBuilder.Entity<ProgressEntry>(x =>
+            {
+                x.Property(p => p.Description)
+                 .HasMaxLength(250)
                  .IsRequired();
             });
 
