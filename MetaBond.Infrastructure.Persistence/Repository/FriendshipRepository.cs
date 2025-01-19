@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
+using MetaBond.Domain;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,87 @@ namespace MetaBond.Infrastructure.Persistence.Repository
 
             var pagedResponse = new PagedResult<Friendship>(pagedFriendship,pageNumber,pageZize, totalRecord);
             return pagedResponse;
+        }
+        public async Task<IEnumerable<Friendship>> GetFilterByStatusAsync(Status status, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Friendship>()
+                                               .AsNoTracking()
+                                               .Where(f => f.Status == status)
+                                               .ToListAsync(cancellationToken);
+
+            return query;
+        }
+
+        public async Task<IEnumerable<Friendship>> OrderByIdAscAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Friendship>()
+                                        .AsNoTracking()
+                                        .OrderBy(x => x.Id == id)
+                                        .ToListAsync(cancellationToken);
+
+            return query;
+        }
+
+        public async Task<IEnumerable<Friendship>> OrderByIdDescAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Friendship>()
+                                              .AsNoTracking()
+                                              .OrderByDescending(x => x.Id == id)
+                                              .ToListAsync(cancellationToken);
+            return query;
+        }
+
+        public async Task<int> CountByStatusAsync(Status status, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Friendship>()
+                                              .AsNoTracking()
+                                              .Where(x => x.Status == status)
+                                              .CountAsync(cancellationToken);
+
+            return query;
+        }
+
+        public async Task<IEnumerable<Friendship>> GetCreatedAfterAsync(DateTime date, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Friendship>()
+                                              .AsQueryable()
+                                              .Where(x => x.CreateAt > date)
+                                              .ToListAsync(cancellationToken);
+
+            return query;
+        }
+
+        public async Task<IEnumerable<Friendship>> GetCreatedBeforeAsync(DateTime date, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Friendship>()
+                                              .AsQueryable()
+                                              .Where(x => x.CreateAt <= date)
+                                              .ToListAsync(cancellationToken);
+            return query;
+        }
+
+        public async Task<IEnumerable<Friendship>> GetRecentlyCreatedAsync(int limit, CancellationToken cancellationToken)
+        {
+            DateTime? date = new DateTime()
+                                .AddDays(-3);
+            var query = await _metaBondContext.Set<Friendship>()
+                                              .AsNoTracking()
+                                              .Where(x => x.CreateAt < date)
+                                              .Take(limit)
+                                              .ToListAsync(cancellationToken);
+
+            return query;
+        }
+
+        public async Task<Friendship> UpdateStatusAsync(Guid id, Status newStatus, CancellationToken cancellationToken)
+        {
+            var existingFriendship = await _metaBondContext.Set<Friendship>().FindAsync(id, cancellationToken);
+
+            existingFriendship.Status = newStatus;
+            existingFriendship.CreateAt = DateTime.UtcNow;
+
+            await _metaBondContext.SaveChangesAsync(cancellationToken);
+            return existingFriendship;
         }
     }
 }
