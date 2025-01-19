@@ -10,9 +10,11 @@ namespace MetaBond.Domain.Models
     {
         public Guid Id { get; set; } 
 
-        public Guid CommunitiesId { get; set; } 
+        public Guid ProgressBoardId { get; set; } 
+       
+        public ProgressBoard? ProgressBoard { get; set; }
 
-        public Communities? Communities { get; set; }
+        public string? Description { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
