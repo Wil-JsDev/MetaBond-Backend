@@ -6,9 +6,9 @@ namespace MetaBond.Application.Interfaces.Repository
 {
     public interface IFriendshipRepository : IGenericRepository<Friendship>
     {
-        Task<IEnumerable<Friendship>> OrderByIdAscAsync(Guid id, CancellationToken cancellationToken);
+        Task<IEnumerable<Friendship>> OrderByIdAscAsync(CancellationToken cancellationToken);
 
-        Task<IEnumerable<Friendship>> OrderByIdDescAsync(Guid id, CancellationToken cancellationToken);
+        Task<IEnumerable<Friendship>> OrderByIdDescAsync(CancellationToken cancellationToken);
 
         Task<PagedResult<Friendship>> GetPagedFriendshipAsync(int pageNumber, int pageZize, CancellationToken cancellationToken);
 

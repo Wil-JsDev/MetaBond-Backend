@@ -46,20 +46,20 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<Events>> GetOrderByIdAscAsync(Guid orderId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Events>> GetOrderByIdAscAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Events>()
                                          .AsNoTracking()
-                                         .OrderBy(x => x.Id == orderId)
+                                         .OrderBy(x => x.Id)
                                          .ToListAsync(cancellationToken);
             return query;
         }
 
-        public async Task<IEnumerable<Events>> GetOrderByIdDescAsync(Guid orderId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Events>> GetOrderByIdDescAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Events>()
                                          .AsNoTracking()
-                                         .OrderByDescending(x => x.Id == orderId)
+                                         .OrderByDescending(x => x.Id)
                                          .ToListAsync(cancellationToken);
             return query;
         }

@@ -41,21 +41,21 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<Friendship>> OrderByIdAscAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Friendship>> OrderByIdAscAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Friendship>()
                                         .AsNoTracking()
-                                        .OrderBy(x => x.Id == id)
+                                        .OrderBy(x => x.Id)
                                         .ToListAsync(cancellationToken);
 
             return query;
         }
 
-        public async Task<IEnumerable<Friendship>> OrderByIdDescAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Friendship>> OrderByIdDescAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Friendship>()
                                               .AsNoTracking()
-                                              .OrderByDescending(x => x.Id == id)
+                                              .OrderByDescending(x => x.Id)
                                               .ToListAsync(cancellationToken);
             return query;
         }
