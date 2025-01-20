@@ -15,9 +15,9 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task<IEnumerable<Events>> GetFilterByTitleAsync(string title, CancellationToken cancellationToken);
 
-        Task<IEnumerable<Events>> GetOrderByIdAscAsync(Guid orderId, CancellationToken cancellationToken);
+        Task<IEnumerable<Events>> GetOrderByIdAscAsync(CancellationToken cancellationToken);
 
-        Task<IEnumerable<Events>> GetOrderByIdDescAsync(Guid orderId, CancellationToken cancellationToken);
+        Task<IEnumerable<Events>> GetOrderByIdDescAsync(CancellationToken cancellationToken);
 
         Task<IEnumerable<Events>> FilterByDateRange(DateTime dateFilter,CancellationToken cancellationToken);
     }
