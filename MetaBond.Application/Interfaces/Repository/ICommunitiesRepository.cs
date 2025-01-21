@@ -13,5 +13,8 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<PagedResult<Communities>> GetPagedCommunitiesAsync(int pageNumber, int pageZize, CancellationToken cancellationToken);
 
         Task<IEnumerable<Communities>> GetByFilterAsync(Func<Communities, bool> predicate, CancellationToken cancellationToken);
+
+        Task<IEnumerable<Communities>> GetPostsAndEventsByCommunityIdAsync(Guid communitieId, CancellationToken cancellationToken);
+
     }
 }
