@@ -46,6 +46,18 @@ namespace MetaBond.Infrastructure.Persistence.Repository
 
         }
 
-        
+        public async Task<IEnumerable<Communities>> GetPostsAndEventsByCommunityIdAsync(
+            Guid communitieId, 
+            CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Communities>()
+                                              .AsNoTracking()
+                                              .Where(x => x.Id == communitieId)
+                                              .Include(x => x.Posts)
+                                              .Include(x => x.Events)
+                                              .AsSplitQuery()
+                                              .ToListAsync(cancellationToken);
+            return query;
+        }
     }
 }
