@@ -13,7 +13,7 @@ namespace MetaBond.Domain.Models;
 
         public string? Category { get; set; }
 
-        public DateTime? CreateAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreateAt { get; set; } = DateTime.UtcNow;
     
         public ProgressBoard? ProgressBoard { get; set; }
     
