@@ -1,5 +1,6 @@
 using MetaBond.Infrastructure.Persistence;
 using MetaBond.Infrastructure.Shared;
+using MetaBond.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddShared(builder.Configuration);
+builder.Services.AddApplicationLayer();
 
 var app = builder.Build();
 

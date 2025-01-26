@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MetaBond.Application\MetaBond.Application.csproj" />
     <ProjectReference Include="..\MetaBond.Infrastructure.Persistence\MetaBond.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\MetaBond.Infrastructure.Shared\MetaBond.Infrastructure.Shared.csproj" />
   </ItemGroup>
