@@ -36,7 +36,13 @@ namespace MetaBond.Infrastructure.Persistence.Repository
 
         public async Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(int topCount, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var query = await _metaBondContext.Set<Posts>()
+                                              .AsNoTracking()
+                                              .OrderByDescending(x => x.CreatedAt)
+                                              .Take(topCount)
+                                              .ToListAsync(cancellationToken);
+
+            return query;
         }
 
         public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(CancellationToken cancellationToken)
