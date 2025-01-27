@@ -4,11 +4,6 @@ using MetaBond.Domain;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaBond.Infrastructure.Persistence.Repository
 {
@@ -71,6 +66,18 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                               .Where(x => x.CreateAt == dateFilter)
                                               .ToListAsync(cancellationToken);
 
+            return query;
+        }
+
+        public async Task<IEnumerable<Events>> GetCommunitiesAndParticipationInEvent(Guid id, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Events>()
+                                               .AsNoTracking()
+                                               .Where(x => x.Id == id)
+                                               .Include(x => x.ParticipationInEvent)
+                                               .Include(x => x.Communities)
+                                               .AsSingleQuery()
+                                               .ToListAsync(cancellationToken);
             return query;
         }
     }
