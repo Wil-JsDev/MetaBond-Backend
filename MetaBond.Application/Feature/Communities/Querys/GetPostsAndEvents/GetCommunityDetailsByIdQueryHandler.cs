@@ -2,6 +2,7 @@
 using MetaBond.Application.DTOs.Communties;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Models;
 
 namespace MetaBond.Application.Feature.Communities.Querys.GetPostsAndEvents
 {
@@ -16,24 +17,30 @@ namespace MetaBond.Application.Feature.Communities.Querys.GetPostsAndEvents
 
         public async Task<ResultT<IEnumerable<PostsAndEventsDTos>>> Handle(GetCommunityDetailsByIdQuery request, CancellationToken cancellationToken)
         {
-            var communities = await _communitiesRepository.GetByIdAsync(request.Id);
-            if (communities != null)
+            var community = await _communitiesRepository.GetByIdAsync(request.Id);
+            if (community == null)
             {
-                var communitiesWithEventsAndPosts = await _communitiesRepository.GetPostsAndEventsByCommunityIdAsync(request.Id,cancellationToken);
-
-                var dTos = communitiesWithEventsAndPosts.Select(c => new PostsAndEventsDTos
-                (
-                    CommunitieId: c.Id,
-                    Name: c.Name,
-                    Category: c.Category,
-                    CreatedAt: c.CreateAt,
-                    Posts: c.Posts,
-                    Events: c.Events
-                ));
-
-                return ResultT<IEnumerable<PostsAndEventsDTos>>.Success(dTos);
+                return ResultT<IEnumerable<PostsAndEventsDTos>>.Failure(Error.NotFound("404", "Community not found."));
             }
-            return ResultT<IEnumerable< PostsAndEventsDTos >>.Failure(Error.NotFound ("404","Community not found."));
+
+            var communitiesWithEventsAndPosts = await _communitiesRepository.GetPostsAndEventsByCommunityIdAsync(request.Id, cancellationToken);
+
+            if (!communitiesWithEventsAndPosts.Any())
+            {
+                return ResultT<IEnumerable<PostsAndEventsDTos>>.Failure(Error.NotFound("404", "No posts or events found for this community."));
+            }
+
+            var dTos = communitiesWithEventsAndPosts.Select(c => new PostsAndEventsDTos
+            (
+                CommunitieId: c.Id,
+                Name: c.Name,
+                Category: c.Category,
+                CreatedAt: c.CreateAt,
+                Posts: c.Posts ?? new List<Posts>(), 
+                Events: c.Events ?? new List<Domain.Models.Events>() 
+            ));
+
+            return ResultT<IEnumerable<PostsAndEventsDTos>>.Success(dTos);
         }
     }
 }
