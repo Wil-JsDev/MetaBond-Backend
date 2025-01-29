@@ -10,7 +10,7 @@ using System.Threading.Tasks;
     {
         public Guid Id { get; set; }
            
-        public Status Status { get; set; }    
+        public Status Status { get; set; }
 
-        public DateTime? CreateAt { get; set; }
+        public DateTime? CreateAdt { get; set; } = DateTime.UtcNow;
     }

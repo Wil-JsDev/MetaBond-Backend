@@ -22,7 +22,7 @@ namespace MetaBond.Domain.Models;
 
         public Communities? Communities { get; set; }
 
-        public int ParticipationInEventId { get; set; }
+        public Guid ParticipationInEventId { get; set; }
 
         public ICollection<ParticipationInEvent>? ParticipationInEvent { get; set; }
     }
