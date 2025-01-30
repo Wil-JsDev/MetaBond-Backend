@@ -20,19 +20,14 @@ namespace MetaBond.Application.Feature.Friendship.Command.Update
             if (friendship != null)
             { 
                 friendship.Status = request.Status;
-                Domain.Models.Friendship friendshipModel = new()
-                {
-                    Id = friendship.Id,
-                    Status = friendship.Status,
-                    CreateAt = friendship.CreateAt
-                };
-                await _friendshipRepository.UpdateAsync(friendshipModel,cancellationToken);
+                
+                await _friendshipRepository.UpdateAsync(friendship, cancellationToken);
 
                 FriendshipDTos friendshipDTos = new
                 (
-                    FriendshipId: friendshipModel.Id,
-                    Status: friendshipModel.Status,
-                    CreatedAt: friendshipModel.CreateAt
+                    FriendshipId: friendship.Id,
+                    Status: friendship.Status,
+                    CreatedAt: friendship.CreateAdt
                 );
 
                 return ResultT<FriendshipDTos>.Success(friendshipDTos);

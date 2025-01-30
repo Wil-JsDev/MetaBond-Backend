@@ -18,27 +18,25 @@ namespace MetaBond.Application.Feature.Communities.Commands.Update
         public async Task<ResultT<CommunitiesDTos>> Handle(UpdateCommunitiesCommand request, CancellationToken cancellationToken)
         {
             var communites = await _communitiesRepository.GetByIdAsync(request.Id);
+
             if (communites != null)
             {
-                Domain.Models.Communities communitiesModel = new()
-                {
-                    Name = communites.Name,
-                    Category = communites.Category
-                };
-                await _communitiesRepository.UpdateAsync(communitiesModel, cancellationToken);
+                communites.Name = request.Name;
+                communites.Category = request.Category;
+
+                await _communitiesRepository.UpdateAsync(communites, cancellationToken);
 
                 CommunitiesDTos communitiesDTos = new(
-                    CommunitieId: communitiesModel.Id,
-                    Name: communitiesModel.Name,
-                    Category: communitiesModel.Category,
-                    CreatedAt: communitiesModel.CreateAt
+                    CommunitieId: communites.Id,
+                    Name: communites.Name,
+                    Category: communites.Category,
+                    CreatedAt: communites.CreateAt
                 );
 
                 return ResultT<CommunitiesDTos>.Success(communitiesDTos);
-
             }
 
-            return ResultT<CommunitiesDTos>.Failure(Error.Failure("404", ""));
+            return ResultT<CommunitiesDTos>.Failure(Error.Failure("404", $"{request.Id} not found"));
         }
     }
 }
