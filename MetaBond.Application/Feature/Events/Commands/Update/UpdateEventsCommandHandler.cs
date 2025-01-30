@@ -19,24 +19,21 @@ namespace MetaBond.Application.Feature.Events.Commands.Update
             var events = await _eventsRepository.GetByIdAsync(request.Id);
             if (events != null)
             {
-                Domain.Models.Events eventsModel = new()
-                {
-                    Description = events.Description,
-                    Title = events.Title,
-                    ParticipationInEventId = events.ParticipationInEventId
-                };
+                events.Description = request.Description;
+                events.Title = request.Title;
+                events.ParticipationInEventId = request.ParticipationInEventId;
 
-                await _eventsRepository.UpdateAsync(eventsModel,cancellationToken);
+                await _eventsRepository.UpdateAsync(events, cancellationToken);
 
                 EventsDto eventsDto = new
                 (
-                    Id: eventsModel.Id,
-                    Description: eventsModel.Description,
-                    Title: eventsModel.Title,
-                    DateAndTime: eventsModel.DateAndTime,
-                    CreatedAt: eventsModel.CreateAt,
-                    CommunitiesId: eventsModel.CommunitiesId,
-                    ParticipationInEventId: eventsModel.ParticipationInEventId
+                    Id: events.Id,
+                    Description: events.Description,
+                    Title: events.Title,
+                    DateAndTime: events.DateAndTime,
+                    CreatedAt: events.CreateAt,
+                    CommunitiesId: events.CommunitiesId,
+                    ParticipationInEventId: events.ParticipationInEventId
                 );
 
                 return ResultT<EventsDto>.Success(eventsDto);
