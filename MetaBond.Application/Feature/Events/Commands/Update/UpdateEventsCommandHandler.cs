@@ -2,19 +2,26 @@
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Commands.Update
 {
     internal sealed class UpdateEventsCommandHandler : ICommandHandler<UpdateEventsCommand, EventsDto>
     {
         private readonly IEventsRepository _eventsRepository;
+        private readonly ILogger<UpdateEventsCommandHandler> _logger;
 
-        public UpdateEventsCommandHandler(IEventsRepository eventsRepository)
+        public UpdateEventsCommandHandler(
+            IEventsRepository eventsRepository, 
+            ILogger<UpdateEventsCommandHandler> logger)
         {
             _eventsRepository = eventsRepository;
+            _logger = logger;
         }
 
-        public async Task<ResultT<EventsDto>> Handle(UpdateEventsCommand request, CancellationToken cancellationToken)
+        public async Task<ResultT<EventsDto>> Handle(
+            UpdateEventsCommand request, 
+            CancellationToken cancellationToken)
         {
             var events = await _eventsRepository.GetByIdAsync(request.Id);
             if (events != null)
@@ -24,6 +31,8 @@ namespace MetaBond.Application.Feature.Events.Commands.Update
                 events.ParticipationInEventId = request.ParticipationInEventId;
 
                 await _eventsRepository.UpdateAsync(events, cancellationToken);
+
+                _logger.LogInformation("Event with ID {EventId} was successfully updated.", request.Id);
 
                 EventsDto eventsDto = new
                 (
@@ -39,7 +48,10 @@ namespace MetaBond.Application.Feature.Events.Commands.Update
                 return ResultT<EventsDto>.Success(eventsDto);
             }
 
+            _logger.LogError("Failed to update event. Event with ID {EventId} was not found.", request.Id);
+
             return ResultT<EventsDto>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+            
         }
     }
 }
