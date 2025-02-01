@@ -2,22 +2,19 @@
 using MetaBond.Application.DTOs.Communties;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
-using MetaBond.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Querys.GetAll
 {
     internal sealed class GetAllCommunitiesQueryHandler : IQueryHandler<GetlAllCommunitiesQuery,IEnumerable<CommunitiesDTos>>
     {
         private readonly ICommunitiesRepository _communitiesRepository;
+        private readonly ILogger<GetAllCommunitiesQueryHandler> _logger;
 
-        public GetAllCommunitiesQueryHandler(ICommunitiesRepository communitiesRepository)
+        public GetAllCommunitiesQueryHandler(ICommunitiesRepository communitiesRepository, ILogger<GetAllCommunitiesQueryHandler> logger)
         {
             _communitiesRepository = communitiesRepository;
+            _logger = logger;
         }
 
         public async Task<ResultT<IEnumerable<CommunitiesDTos>>> Handle(GetlAllCommunitiesQuery request, CancellationToken cancellationToken)
@@ -33,10 +30,19 @@ namespace MetaBond.Application.Feature.Communities.Querys.GetAll
                     CreatedAt: c.CreateAt
                 ));
 
+                if (!communitiesAll.Any())
+                {
+                    _logger.LogError("No communities found. The list is empty.");
+                    return ResultT<IEnumerable<CommunitiesDTos>>.Failure(Error.Failure("400", "The list is empty"));
+                }
+
+                _logger.LogInformation("Successfully retrieved {Count} communities.", communitiesAll.Count());
                 return ResultT<IEnumerable<CommunitiesDTos>>.Success(communitiesDtosList);
             }
 
+            _logger.LogError("Failed to retrieve communities. The list is null.");
             return ResultT<IEnumerable<CommunitiesDTos>>.Failure(Error.Failure("400", "List of null"));
+
         }
     }
 }

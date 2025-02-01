@@ -3,19 +3,26 @@ using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAfter
 {
     internal sealed class GetCreatedAfterFriendshipQueryHandler : IQueryHandler<GetCreatedAfterFriendshipQuery, IEnumerable<FriendshipDTos>>
     {
         private readonly IFriendshipRepository _friendshipRepository;
+        private readonly ILogger<GetCreatedAfterFriendshipQueryHandler> _logger;
 
-        public GetCreatedAfterFriendshipQueryHandler(IFriendshipRepository friendshipRepository)
+        public GetCreatedAfterFriendshipQueryHandler(
+            IFriendshipRepository friendshipRepository, 
+            ILogger<GetCreatedAfterFriendshipQueryHandler> logger)
         {
             _friendshipRepository = friendshipRepository;
+            _logger = logger;
         }
 
-        public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(GetCreatedAfterFriendshipQuery request, CancellationToken cancellationToken)
+        public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
+            GetCreatedAfterFriendshipQuery request, 
+            CancellationToken cancellationToken)
         {
             var friendshipAfter = GetCreatedAfterFriendship();
             DateTime dateTime = DateTime.UtcNow;
@@ -24,6 +31,8 @@ namespace MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAft
                 var friendshipList = await createdAfter(cancellationToken);
                 if (friendshipList == null || !friendshipList.Any())
                 {
+                    _logger.LogError("No friendships found after the specified date range: {DateRange}", request.DateRange);
+
                     return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "The list is empty"));
                 }
 
@@ -31,15 +40,18 @@ namespace MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAft
                 (
                     FriendshipId: x.Id,
                     Status: x.Status,
-                    CreatedAt: x.CreateAt
+                    CreatedAt: x.CreateAdt
                 ));
 
-                return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTos);
+                _logger.LogInformation("Retrieved {Count} friendships after the date range: {DateRange}", 
+                                        friendshipDTos.Count(), request.DateRange);
 
+                return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTos);
             }
 
-            return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "Invalid status"));
+            _logger.LogError("Failed to retrieve friendships: Invalid date range type {DateRange}", request.DateRange);
 
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "Invalid status"));
         }
 
         private Dictionary<DateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>> GetCreatedAfterFriendship()

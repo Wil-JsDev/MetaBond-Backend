@@ -3,21 +3,19 @@ using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.Pagination
 {
     internal sealed class GetPagedEventsQueryHandler : IQueryHandler<GetPagedEventsQuery, PagedResult<EventsDto>>
     {
         private readonly IEventsRepository _eventsRepository;
+        private readonly ILogger<GetPagedEventsQueryHandler> _logger;
 
-        public GetPagedEventsQueryHandler(IEventsRepository eventsRepository)
+        public GetPagedEventsQueryHandler(IEventsRepository eventsRepository, ILogger<GetPagedEventsQueryHandler> logger)
         {
             _eventsRepository = eventsRepository;
+            _logger = logger;
         }
 
         public async Task<ResultT<PagedResult<EventsDto>>> Handle(GetPagedEventsQuery request, CancellationToken cancellationToken)
@@ -44,10 +42,18 @@ namespace MetaBond.Application.Feature.Events.Query.Pagination
                     TotalPages = eventsPaged.TotalPages,
                     Items = dtoItems
                 };
+
+                _logger.LogInformation("Paged events retrieved successfully. Page {PageNumber} of {TotalPages}.", 
+                    request.PageNumber, eventsPaged.TotalPages);
+
                 return ResultT<PagedResult<EventsDto>>.Success(result);
             }
-            return ResultT < PagedResult<EventsDto>>.Failure
+
+            _logger.LogError("No events were found for the specified criteria. Page {PageNumber}.", request.PageNumber);
+
+            return ResultT<PagedResult<EventsDto>>.Failure
                 (Error.Failure("400", "No events were found for the specified criteria."));
+
         }
     }
 }

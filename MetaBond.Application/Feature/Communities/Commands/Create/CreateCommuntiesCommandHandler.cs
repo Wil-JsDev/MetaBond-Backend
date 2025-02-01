@@ -2,7 +2,7 @@
 using MetaBond.Application.DTOs.Communties;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
-using MetaBond.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Commands
 {
@@ -10,9 +10,11 @@ namespace MetaBond.Application.Feature.Communities.Commands
         ICommandHandler<CreateCommuntiesCommand, CommunitiesDTos>
     {
         private readonly ICommunitiesRepository _communitiesRepository;
-        public CreateCommuntiesCommandHandler(ICommunitiesRepository communitiesRepository)
+        private readonly ILogger<CreateCommuntiesCommandHandler> _logger;
+        public CreateCommuntiesCommandHandler(ICommunitiesRepository communitiesRepository, ILogger<CreateCommuntiesCommandHandler> logger)
         {
             _communitiesRepository = communitiesRepository;
+            _logger = logger;
         }
 
         public async Task<ResultT<CommunitiesDTos>> Handle(
@@ -22,6 +24,7 @@ namespace MetaBond.Application.Feature.Communities.Commands
 
             if (request != null)
             { 
+                
                 Domain.Models.Communities communities = new()
                 {
                     Id = Guid.NewGuid(),
@@ -30,6 +33,7 @@ namespace MetaBond.Application.Feature.Communities.Commands
                 };
 
                 await _communitiesRepository.CreateAsync(communities,cancellationToken);
+                _logger.LogInformation("Community {CommunityId} created successfully.", communities.Id);
 
                 CommunitiesDTos communitiesDTos = new(
                     CommunitieId: communities.Id,
@@ -37,10 +41,10 @@ namespace MetaBond.Application.Feature.Communities.Commands
                     Category: communities.Category,
                     CreatedAt: communities.CreateAt
                 );
-
+                
                 return ResultT<CommunitiesDTos>.Success(communitiesDTos);
             }
-
+            _logger.LogError("Received a null CreateCommuntiesCommand request.");
             return ResultT<CommunitiesDTos>.Failure(Error.Failure("400", "The request object is null"));
         }
     }

@@ -14,9 +14,7 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task<IEnumerable<Friendship>> GetCreatedBeforeAsync(DateTime date, CancellationToken cancellationToken);
 
-        Task<IEnumerable<Friendship>> GetCreatedAfterAsync(DateTime date, CancellationToken cancellationToken);
-
-        Task<Friendship> UpdateStatusAsync(Guid id, Status newStatus, CancellationToken cancellationToken);
+        Task<IEnumerable<Friendship>> GetCreatedAfterAsync(DateTime date, CancellationToken cancellationToken); 
 
         Task<int> CountByStatusAsync(Status status, CancellationToken cancellationToken);
 
