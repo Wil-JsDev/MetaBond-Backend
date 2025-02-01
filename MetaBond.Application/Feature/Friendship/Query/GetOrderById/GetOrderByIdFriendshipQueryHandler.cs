@@ -2,19 +2,26 @@
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetOrderById
 {
     internal sealed class GetOrderByIdFriendshipQueryHandler : IQueryHandler<GetOrderByIdFriendshipQuery, IEnumerable<FriendshipDTos>>
     {
         private readonly IFriendshipRepository _friendshipRepository;
+        private readonly ILogger<GetOrderByIdFriendshipQueryHandler> _logger;
 
-        public GetOrderByIdFriendshipQueryHandler(IFriendshipRepository friendshipRepository)
+        public GetOrderByIdFriendshipQueryHandler(
+            IFriendshipRepository friendshipRepository, 
+            ILogger<GetOrderByIdFriendshipQueryHandler> logger)
         {
             _friendshipRepository = friendshipRepository;
+            _logger = logger;
         }
 
-        public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(GetOrderByIdFriendshipQuery request, CancellationToken cancellationToken)
+        public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
+            GetOrderByIdFriendshipQuery request, 
+            CancellationToken cancellationToken)
         {
 
             var friendshipSort = GetSort();
@@ -23,19 +30,25 @@ namespace MetaBond.Application.Feature.Friendship.Query.GetOrderById
                 var friendshipList = await GetSortFriendship(cancellationToken);
                 if (friendshipList == null || !friendshipList.Any())
                 {
-                    return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "The list is empty")); 
+                    _logger.LogError("No friendships found for the sorted order: {Sort}", request.Sort);
+
+                    return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "The list is empty"));
                 }
 
                 IEnumerable<FriendshipDTos> friendshipDTos = friendshipList.Select(x => new FriendshipDTos
                 (
                     FriendshipId: x.Id,
                     Status: x.Status,
-                    CreatedAt: x.CreateAt
+                    CreatedAt: x.CreateAdt
                 ));
 
-                return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTos);
+                _logger.LogInformation("Successfully retrieved {Count} friendships sorted by: {Sort}", 
+                                        friendshipDTos.Count(), request.Sort);
 
+                return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTos);
             }
+
+            _logger.LogError("Invalid order parameter: {Sort}. Expected 'asc' or 'desc'.", request.Sort);
 
             return ResultT<IEnumerable<FriendshipDTos>>.Failure
                 (Error.Failure("400", "Invalid order parameter. Please specify 'asc' or 'desc'."));
