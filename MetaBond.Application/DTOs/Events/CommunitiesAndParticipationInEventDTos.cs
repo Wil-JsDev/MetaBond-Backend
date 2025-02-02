@@ -15,6 +15,6 @@ namespace MetaBond.Application.DTOs.Events
         DateTime? DateAndTime,
         DateTime? CreatedAt,
         Communities Communities,
-        ICollection<ParticipationInEvent> ParticipationInEvent
+        ICollection<Domain.Models.ParticipationInEvent> ParticipationInEvent
     );
 }
