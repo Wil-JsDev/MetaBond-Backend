@@ -74,7 +74,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         {
             var query = await _metaBondContext.Set<Friendship>()
                                               .AsQueryable()
-                                              .Where(x => x.CreateAt > date)
+                                              .Where(x => x.CreateAdt > date)
                                               .ToListAsync(cancellationToken);
 
             return query;
@@ -84,7 +84,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         {
             var query = await _metaBondContext.Set<Friendship>()
                                               .AsQueryable()
-                                              .Where(x => x.CreateAt <= date)
+                                              .Where(x => x.CreateAdt <= date)
                                               .ToListAsync(cancellationToken);
             return query;
         }
@@ -95,22 +95,11 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                 .AddDays(-3);
             var query = await _metaBondContext.Set<Friendship>()
                                               .AsNoTracking()
-                                              .Where(x => x.CreateAt < date)
+                                              .Where(x => x.CreateAdt < date)
                                               .Take(limit)
                                               .ToListAsync(cancellationToken);
 
             return query;
-        }
-
-        public async Task<Friendship> UpdateStatusAsync(Guid id, Status newStatus, CancellationToken cancellationToken)
-        {
-            var existingFriendship = await _metaBondContext.Set<Friendship>().FindAsync(id, cancellationToken);
-
-            existingFriendship.Status = newStatus;
-            existingFriendship.CreateAt = DateTime.UtcNow;
-
-            await _metaBondContext.SaveChangesAsync(cancellationToken);
-            return existingFriendship;
         }
     }
 }

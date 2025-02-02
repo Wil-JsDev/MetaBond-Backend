@@ -1,12 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Communties;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Commands.Delete
 {
@@ -14,9 +9,12 @@ namespace MetaBond.Application.Feature.Communities.Commands.Delete
     {
 
         private readonly ICommunitiesRepository _communitiesRepository;
-        public DeleteCommunitiesCommandHandler(ICommunitiesRepository communitiesRepository)
+        private readonly ILogger<DeleteCommunitiesCommandHandler> _logger;
+
+        public DeleteCommunitiesCommandHandler(ICommunitiesRepository communitiesRepository, ILogger<DeleteCommunitiesCommandHandler> logger)
         {
             _communitiesRepository = communitiesRepository;
+            _logger = logger;
         }
 
         public async Task<ResultT<Guid>> Handle(DeleteCommunitiesCommand request, CancellationToken cancellationToken)
@@ -25,9 +23,12 @@ namespace MetaBond.Application.Feature.Communities.Commands.Delete
             if (communities != null)
             {
                 await _communitiesRepository.DeleteAsync(communities,cancellationToken);
+                _logger.LogInformation("Community with ID {CommunityId} successfully deleted.", request.Id);
+
                 return ResultT<Guid>.Success(request.Id);
             }
 
+            _logger.LogError("Community with ID {CommunityId} not found for deletion.", request.Id);
             return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
 
         }
