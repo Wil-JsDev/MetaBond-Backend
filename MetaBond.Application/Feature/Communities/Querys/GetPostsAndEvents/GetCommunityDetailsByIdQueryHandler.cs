@@ -43,7 +43,7 @@ namespace MetaBond.Application.Feature.Communities.Querys.GetPostsAndEvents
                 Name: c.Name,
                 Category: c.Category,
                 CreatedAt: c.CreateAt,
-                Posts: c.Posts ?? new List<Posts>(), 
+                Posts: c.Posts ?? new List<Domain.Models.Posts>(), 
                 Events: c.Events ?? new List<Domain.Models.Events>() 
             ));
 

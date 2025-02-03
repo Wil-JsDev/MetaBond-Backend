@@ -8,7 +8,7 @@ namespace MetaBond.Application.DTOs.Communties
         string? Name,
         string? Category,
         DateTime CreatedAt,
-        ICollection<Posts> Posts,
+        ICollection<Domain.Models.Posts> Posts,
         ICollection<Domain.Models.Events> Events
     );
 }
