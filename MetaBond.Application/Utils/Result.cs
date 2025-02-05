@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace MetaBond.Application.Utils
 {
@@ -37,8 +32,16 @@ namespace MetaBond.Application.Utils
 
     }
 
+    /// <summary>
+    /// Represents the outcome of an operation that can either succeed with a value of type 
+    /// or fail with an associated error. Provides utility methods for implicit conversion and result handling.
+    /// The type of the value contained in the result when the operation is successful.
+    /// </summary>
     public class ResultT<TValue> : Result
     {
+        /// <summary>
+        /// Contiene el valor del resultado en caso de éxito.
+        /// </summary>
         private readonly TValue? _value;
 
         private ResultT(TValue value) : base()
@@ -60,9 +63,20 @@ namespace MetaBond.Application.Utils
         public static implicit operator ResultT<TValue>(TValue value) =>
             new(value);
 
-        public static ResultT<TValue> Success(TValue value) => 
+
+        /// <summary>
+        /// Creates a successful result with the provided value.
+        /// </summary>
+        /// <param name="value">The value associated with the successful result.</param>
+        /// <returns>An instance of <see cref="ResultT{TValue}"/> representing success.</returns>
+        public static ResultT<TValue> Success(TValue value) =>
             new(value);
 
+        /// <summary>
+        /// Creates a failed result with the provided error.
+        /// </summary>
+        /// <param name="error">The error associated with the failed result.</param>
+        /// <returns>An instance of <see cref="ResultT{TValue}"/> representing failure.</returns>
         public static ResultT<TValue> Failure(Error error) =>
             new(error);
     }
