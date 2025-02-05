@@ -15,7 +15,6 @@ try
 
     builder.Host.UseSerilog((context, loggerConfiguration) =>
     {
-        loggerConfiguration.WriteTo.Console();
         loggerConfiguration.ReadFrom.Configuration(context.Configuration);
     });
 
@@ -30,6 +29,8 @@ try
     builder.Services.AddApplicationLayer();
 
     var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
