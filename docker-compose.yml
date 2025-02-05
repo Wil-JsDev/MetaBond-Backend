@@ -12,7 +12,19 @@ services:
     - ${POSTGRES_PORTS}:5432
     volumes:
     - postgreDb:/var/lib/postgresql/data
-        
+  
+  Seq:
+    image: datalust/seq:latest
+    container_name: SEQ
+    restart: always
+    environment:
+    - ACCEPT_EULA=${SEQ_ACCEPT_EULA} 
+    ports:
+    - ${SEQ_PORT}:5341 
+    - ${SEQ_PORT_UI}:80
+    volumes:
+    - Seq:/data
 
 volumes:
+  Seq:    
   postgreDb:    

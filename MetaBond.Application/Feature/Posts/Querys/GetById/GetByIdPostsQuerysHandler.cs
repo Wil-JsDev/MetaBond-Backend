@@ -9,9 +9,9 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetById
     internal sealed class GetByIdPostsQuerysHandler : IQueryHandler<GetByIdPostsQuerys, PostsDTos>
     {
         private readonly IPostsRepository _postsRepository;
-        private readonly ILogger _logger;
+        private readonly ILogger<GetByIdPostsQuerysHandler> _logger;
 
-        public GetByIdPostsQuerysHandler(IPostsRepository postsRepository, ILogger logger)
+        public GetByIdPostsQuerysHandler(IPostsRepository postsRepository, ILogger<GetByIdPostsQuerysHandler> logger)
         {
             _postsRepository = postsRepository;
             _logger = logger;
