@@ -19,5 +19,7 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<int> CountEntriesByBoardIdAsync(Guid id, CancellationToken cancellationToken);
 
         Task<IEnumerable<ProgressEntry>> GetRecentEntriesAsync(int topCount, CancellationToken cancellationToken);
+
+        Task<IEnumerable<ProgressEntry>> GetOrderByDescriptionAsync(CancellationToken cancellationToken);
     }
 }
