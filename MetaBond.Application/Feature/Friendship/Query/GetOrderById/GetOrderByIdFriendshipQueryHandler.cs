@@ -58,7 +58,7 @@ namespace MetaBond.Application.Feature.Friendship.Query.GetOrderById
         {
             return new Dictionary<string, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>>
             {
-                {"asc", async cancellationToken => await _friendshipRepository.OrderByIdDescAsync(cancellationToken) },
+                {"asc", async cancellationToken => await _friendshipRepository.OrderByIdAscAsync(cancellationToken) },
                 {"desc", async cancellationToken => await _friendshipRepository.OrderByIdDescAsync(cancellationToken) }
             };
         }
