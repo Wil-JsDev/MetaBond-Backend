@@ -51,10 +51,11 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<int> CountRewardsAsync(CancellationToken cancellationToken)
+        public async Task<int> CountRewardsAsync(Guid id,CancellationToken cancellationToken)
         {
             int query = await _metaBondContext.Set<Rewards>() 
                                               .AsNoTracking()
+                                              .Where(x => x.Id == id)
                                               .CountAsync(cancellationToken);
          
             return query;
