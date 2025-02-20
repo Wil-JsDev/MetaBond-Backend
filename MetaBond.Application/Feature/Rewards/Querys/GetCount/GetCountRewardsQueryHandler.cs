@@ -26,7 +26,7 @@ namespace MetaBond.Application.Feature.Rewards.Querys.GetCount
             var rewards = await _repository.GetByIdAsync(request.RewardsId);
             if (rewards != null)
             {
-                var rewardsCount = await _repository.CountRewardsAsync(rewards.Id ?? Guid.Empty,cancellationToken);
+                var rewardsCount = await _repository.CountRewardsAsync(cancellationToken);
 
                 _logger.LogInformation("Successfully counted {Count} rewards for ID: {RewardsId}.", rewardsCount, request.RewardsId);
 

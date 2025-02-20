@@ -16,7 +16,7 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task<IEnumerable<Rewards>> GetRewardsByDateRangeAsync(DateTime startTime, DateTime endTime ,CancellationToken cancellationToken);
 
-        Task<int> CountRewardsAsync(Guid id,CancellationToken cancellationToken);
+        Task<int> CountRewardsAsync(CancellationToken cancellationToken);
 
         Task<IEnumerable<Rewards>> GetTopRewardsByPointsAsync(int topCount, CancellationToken cancellationToken);
     }
