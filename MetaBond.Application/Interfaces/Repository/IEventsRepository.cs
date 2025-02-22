@@ -17,5 +17,9 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<IEnumerable<Events>> FilterByDateRange(DateTime dateFilter,CancellationToken cancellationToken);
 
         Task<IEnumerable<Events>> GetCommunities(Guid id,CancellationToken cancellationToken);
+
+        Task<IEnumerable<Events>> GetParticipationInEventAsync(Guid eventId, CancellationToken cancellationToken);
+
+        Task<Events?> GetEventsWithParticipationsAsync(Guid eventId, CancellationToken cancellationToken);
     }
 }
