@@ -11,7 +11,5 @@ namespace MetaBond.Application.Interfaces.Repository
     public interface IParticipationInEventRepository : IGenericRepository<ParticipationInEvent>
     {
         Task<PagedResult<ParticipationInEvent>> GetPagedParticipationInEventAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
-
-        Task<IEnumerable<ParticipationInEvent>> GetParticipationByEventIdAsync(Guid idEvent, CancellationToken cancellationToken);
     }
 }
