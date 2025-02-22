@@ -8,7 +8,7 @@ namespace MetaBond.Domain.Models;
 
     public sealed class Rewards
     {
-        public Guid? Id { get; set; }
+        public Guid Id { get; set; }
 
         public string? Description { get; set; }
 
