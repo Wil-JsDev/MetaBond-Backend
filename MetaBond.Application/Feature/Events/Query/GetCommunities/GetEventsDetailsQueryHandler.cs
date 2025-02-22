@@ -34,7 +34,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipati
                 return ResultT<IEnumerable<CommunitiesAndParticipationInEventDTos>>.Failure(Error.NotFound("404", $"{request.Id} not found"));
             }
 
-            var evenntsDetails = await _eventsRepository.GetCommunitiesAndParticipationInEvent(request.Id,cancellationToken);
+            var evenntsDetails = await _eventsRepository.GetCommunities(request.Id,cancellationToken);
             if (!evenntsDetails.Any())
             {
                 _logger.LogError("No communities or participation in event found for event with ID {Id}.", request.Id);
