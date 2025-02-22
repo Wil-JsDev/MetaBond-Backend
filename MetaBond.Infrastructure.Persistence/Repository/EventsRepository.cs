@@ -73,10 +73,9 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         {
             var query = await _metaBondContext.Set<Events>()
                                                .AsNoTracking()
-                                               .Where(x => x.Id == id)
-                                               .Include(x => x.ParticipationInEvent)
+                                               .Where(x => x.Id == id) 
                                                .Include(x => x.Communities)
-                                               .AsSingleQuery()
+                                               .AsSplitQuery()
                                                .ToListAsync(cancellationToken);
             return query;
         }
