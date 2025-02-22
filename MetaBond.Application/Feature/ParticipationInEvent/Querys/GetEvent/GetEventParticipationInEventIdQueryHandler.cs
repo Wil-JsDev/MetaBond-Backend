@@ -39,8 +39,7 @@ namespace MetaBond.Application.Feature.ParticipationInEvent.Querys.GetEvent
                 var participationInEventsDto = participationInEventsWithEvents.Select(x => new ParticipationInEventWithEventsDTos
                 (
                     ParticipationInEventId: x.Id,
-                    EventId: x.EventId,
-                    Events: x.Events ?? new List<Domain.Models.Events>()
+                    EventId: x.EventId
                 ));
 
 
