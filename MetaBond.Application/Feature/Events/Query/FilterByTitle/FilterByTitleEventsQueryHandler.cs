@@ -31,8 +31,7 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
                     Title: c.Title,
                     DateAndTime: c.DateAndTime,
                     CreatedAt: c.CreateAt,
-                    CommunitiesId: c.CommunitiesId,
-                    ParticipationInEventId: c.ParticipationInEventId 
+                    CommunitiesId: c.CommunitiesId
                 ));
 
                 _logger.LogInformation("Successfully retrieved events with title containing: {Title}", request.Title);

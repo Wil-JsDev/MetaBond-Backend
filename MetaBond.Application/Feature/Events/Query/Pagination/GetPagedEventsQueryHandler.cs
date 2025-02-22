@@ -31,8 +31,7 @@ namespace MetaBond.Application.Feature.Events.Query.Pagination
                     Title: e.Title,
                     DateAndTime: e.DateAndTime,
                     CreatedAt: e.CreateAt,
-                    CommunitiesId: e.CommunitiesId,
-                    ParticipationInEventId: e.ParticipationInEventId
+                    CommunitiesId: e.CommunitiesId
                 ));
 
                 PagedResult<EventsDto> result = new()

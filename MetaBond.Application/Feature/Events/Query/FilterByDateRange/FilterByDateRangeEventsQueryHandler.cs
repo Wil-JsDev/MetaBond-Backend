@@ -44,8 +44,7 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
                     Title: e.Title,
                     DateAndTime: e.DateAndTime,
                     CreatedAt: e.CreateAt,
-                    CommunitiesId: e.CommunitiesId,
-                    ParticipationInEventId: e.ParticipationInEventId
+                    CommunitiesId: e.CommunitiesId
                 ));
 
                 _logger.LogInformation("Events retrieved successfully");

@@ -1,9 +1,4 @@
 ﻿using MetaBond.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaBond.Application.DTOs.Events
 {
@@ -14,7 +9,6 @@ namespace MetaBond.Application.DTOs.Events
         string? Title,
         DateTime? DateAndTime,
         DateTime? CreatedAt,
-        Communities Communities,
-        ICollection<Domain.Models.ParticipationInEvent> ParticipationInEvent
+        Communities Communities
     );
 }

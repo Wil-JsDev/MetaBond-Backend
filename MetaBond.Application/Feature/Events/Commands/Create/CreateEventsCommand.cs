@@ -17,7 +17,5 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
         public DateTime? DateAndTime { get; set; }
 
         public Guid? CommunitiesId { get; set; }
-
-        public Guid ParticipationInEventId { get; set; }
     }
 }

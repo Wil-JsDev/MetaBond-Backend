@@ -21,7 +21,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Description = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
                     Category = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
-                    CreateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
@@ -35,7 +35,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreateAdt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -51,7 +51,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ParticiationInEvent", x => x.Id);
+                    table.PrimaryKey("PkParticipationInEvent", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -77,8 +77,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     Title = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     DateAndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CommunitiesId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ParticipationInEventId = table.Column<int>(type: "integer", nullable: false)
+                    CommunitiesId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -114,28 +113,74 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EventsParticipationInEvent",
+                name: "ProgressBoard",
                 columns: table => new
                 {
-                    EventsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CommunitiesId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PkProgressBoard", x => x.Id);
+                    table.ForeignKey(
+                        name: "FkCommunitiesId",
+                        column: x => x.CommunitiesId,
+                        principalTable: "Communities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EventParticipation",
+                columns: table => new
+                {
+                    EventId = table.Column<Guid>(type: "uuid", nullable: false),
                     ParticipationInEventId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EventsParticipationInEvent", x => new { x.EventsId, x.ParticipationInEventId });
+                    table.PrimaryKey("PK_EventParticipation", x => new { x.EventId, x.ParticipationInEventId });
                     table.ForeignKey(
-                        name: "FK_EventsParticipationInEvent_Events_EventsId",
-                        column: x => x.EventsId,
+                        name: "FkEvent",
+                        column: x => x.EventId,
                         principalTable: "Events",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_EventsParticipationInEvent_ParticiationInEvent_Participatio~",
+                        name: "FkParticipationInEvent",
                         column: x => x.ParticipationInEventId,
                         principalTable: "ParticiationInEvent",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "ProgressEntry",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProgressBoardId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Description = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PkProgressEntry", x => x.Id);
+                    table.ForeignKey(
+                        name: "FkProgressBoardId",
+                        column: x => x.ProgressBoardId,
+                        principalTable: "ProgressBoard",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventParticipation_ParticipationInEventId",
+                table: "EventParticipation",
+                column: "ParticipationInEventId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Events_CommunitiesId",
@@ -143,27 +188,36 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                 column: "CommunitiesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EventsParticipationInEvent_ParticipationInEventId",
-                table: "EventsParticipationInEvent",
-                column: "ParticipationInEventId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Posts_CommunitiesId",
                 table: "Posts",
                 column: "CommunitiesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProgressBoard_CommunitiesId",
+                table: "ProgressBoard",
+                column: "CommunitiesId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProgressEntry_ProgressBoardId",
+                table: "ProgressEntry",
+                column: "ProgressBoardId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "EventsParticipationInEvent");
+                name: "EventParticipation");
 
             migrationBuilder.DropTable(
                 name: "Friendship");
 
             migrationBuilder.DropTable(
                 name: "Posts");
+
+            migrationBuilder.DropTable(
+                name: "ProgressEntry");
 
             migrationBuilder.DropTable(
                 name: "Rewards");
@@ -173,6 +227,9 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "ParticiationInEvent");
+
+            migrationBuilder.DropTable(
+                name: "ProgressBoard");
 
             migrationBuilder.DropTable(
                 name: "Communities");

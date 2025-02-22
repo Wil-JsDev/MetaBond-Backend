@@ -36,7 +36,6 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             var query = await _metaBondContext.Set<ParticipationInEvent>()
                                                .AsNoTracking()
                                                .Where(x => x.EventId == idEvent)
-                                               .Include(x => x.Events)
                                                .AsSplitQuery()
                                                .ToListAsync(cancellationToken);
 

@@ -4,11 +4,6 @@ using MetaBond.Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaBond.Infrastructure.Persistence
 {
@@ -36,6 +31,8 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<IParticipationInEventRepository, ParticipationInEventRepository>();
             services.AddTransient<IPostsRepository, PostsRepository>();
             services.AddTransient<IRewardsRepository, RewardsRepository>();
+            services.AddTransient<IProgressEntryRepository, ProgressEntryRepository>();
+            services.AddTransient<IProgressBoardRepository, ProgressBoardRepository>();
             #endregion
 
         }

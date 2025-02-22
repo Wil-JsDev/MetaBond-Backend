@@ -8,7 +8,7 @@ namespace MetaBond.Domain.Models;
 
     public sealed class Events
     {
-        public Guid? Id { get; set; }
+        public Guid Id { get; set; }
 
         public string? Description { get; set; }
 
@@ -22,8 +22,6 @@ namespace MetaBond.Domain.Models;
 
         public Communities? Communities { get; set; }
 
-        public Guid ParticipationInEventId { get; set; }
-
-        public ICollection<ParticipationInEvent>? ParticipationInEvent { get; set; }
+        public ICollection<EventParticipation>? EventParticipations { get; set; }
     }
 
