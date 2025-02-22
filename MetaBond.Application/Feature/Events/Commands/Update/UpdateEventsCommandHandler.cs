@@ -28,8 +28,6 @@ namespace MetaBond.Application.Feature.Events.Commands.Update
             {
                 events.Description = request.Description;
                 events.Title = request.Title;
-                events.ParticipationInEventId = request.ParticipationInEventId;
-
                 await _eventsRepository.UpdateAsync(events, cancellationToken);
 
                 _logger.LogInformation("Event with ID {EventId} was successfully updated.", request.Id);
@@ -41,8 +39,7 @@ namespace MetaBond.Application.Feature.Events.Commands.Update
                     Title: events.Title,
                     DateAndTime: events.DateAndTime,
                     CreatedAt: events.CreateAt,
-                    CommunitiesId: events.CommunitiesId,
-                    ParticipationInEventId: events.ParticipationInEventId
+                    CommunitiesId: events.CommunitiesId
                 );
 
                 return ResultT<EventsDto>.Success(eventsDto);

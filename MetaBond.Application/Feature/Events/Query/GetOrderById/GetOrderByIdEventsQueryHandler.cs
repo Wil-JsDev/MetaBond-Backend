@@ -39,8 +39,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetOrderById
                     Title: x.Title,
                     DateAndTime: x.DateAndTime,
                     CreatedAt: x.CreateAt,
-                    CommunitiesId: x.CommunitiesId,
-                    ParticipationInEventId: x.ParticipationInEventId
+                    CommunitiesId: x.CommunitiesId
                 ));
 
                 _logger.LogInformation("Successfully retrieved {Count} events ordered by {Order}.", eventsDtos.Count(), request.Order);
