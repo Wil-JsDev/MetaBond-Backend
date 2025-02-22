@@ -2,11 +2,12 @@
 using MetaBond.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace MetaBond.Infrastructure.Persistence.Context
 {
     public class MetaBondContext : DbContext
     {
-        public MetaBondContext(DbContextOptions<MetaBondContext> dbContextOptions) : base(dbContextOptions)
+        public MetaBondContext(DbContextOptions<MetaBondContext> options) : base(options)
         { }
 
         #region Models
@@ -21,6 +22,13 @@ namespace MetaBond.Infrastructure.Persistence.Context
         public DbSet<Posts> Posts { get; set; }
 
         public DbSet<Rewards> Rewards { get; set; }
+
+        public DbSet<ProgressBoard> ProgressBoard { get; set; }
+
+        public DbSet<ProgressEntry> ProgressEntry { get; set; }
+
+        public DbSet<EventParticipation> eventParticipations { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,6 +68,13 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<Communities>()
                         .HasKey(x => x.Id)
                         .HasName("PkCommunities");
+
+            modelBuilder.Entity<EventParticipation>()
+                        .HasKey(ep => new { ep.EventId, ep.ParticipationInEventId });
+
+            modelBuilder.Entity<ParticipationInEvent>()
+                        .HasKey(x => x.Id)
+                        .HasName("PkParticipationInEvent");
 
             modelBuilder.Entity<Events>()
                         .HasKey(x => x.Id)
@@ -101,9 +116,19 @@ namespace MetaBond.Infrastructure.Persistence.Context
                         .IsRequired()
                         .HasConstraintName("FkCommunities");
 
-            modelBuilder.Entity<ParticipationInEvent>()
-                        .HasMany(p => p.Events)
-                        .WithMany(e => e.ParticipationInEvent);
+            modelBuilder.Entity<EventParticipation>()
+                        .HasOne(ep => ep.Event)
+                        .WithMany(e => e.EventParticipations)
+                        .HasForeignKey(ep => ep.EventId)
+                        .IsRequired()
+                        .HasConstraintName("FkEvent");
+
+            modelBuilder.Entity<EventParticipation>()
+                        .HasOne(ep => ep.ParticipationInEvent)
+                        .WithMany(p => p.EventParticipations)
+                        .HasForeignKey(ep => ep.ParticipationInEventId)
+                        .IsRequired()
+                        .HasConstraintName("FkParticipationInEvent");
 
             modelBuilder.Entity<ProgressBoard>()
                         .HasOne(x => x.Communities)

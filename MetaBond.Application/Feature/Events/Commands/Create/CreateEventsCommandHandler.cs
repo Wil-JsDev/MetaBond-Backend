@@ -32,8 +32,7 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
                     Description = request.Description,
                     Title = request.Title,  
                     DateAndTime = request.DateAndTime,
-                    CommunitiesId = request.CommunitiesId,
-                    ParticipationInEventId = request.ParticipationInEventId,
+                    CommunitiesId = request.CommunitiesId
                 };
 
                 await _eventsRepository.CreateAsync(events,cancellationToken);
@@ -47,8 +46,7 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
                    Title: events.Title,
                    DateAndTime: events.DateAndTime,
                    CreatedAt: events.CreateAt,
-                   CommunitiesId: events.CommunitiesId,
-                   ParticipationInEventId: events.ParticipationInEventId
+                   CommunitiesId: events.CommunitiesId
                 );
 
                 return ResultT<EventsDto>.Success(eventsDto);

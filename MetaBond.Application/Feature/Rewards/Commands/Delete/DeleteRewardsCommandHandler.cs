@@ -29,7 +29,7 @@ namespace MetaBond.Application.Feature.Rewards.Commands.Delete
 
                 _logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Id);
 
-                return ResultT<Guid>.Success(reward.Id ?? Guid.Empty);
+                return ResultT<Guid>.Success(reward.Id);
             }
 
             _logger.LogError("Reward with ID {RewardsId} not found", request.RewardsId);

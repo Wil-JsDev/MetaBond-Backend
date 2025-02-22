@@ -42,8 +42,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetAll
                     Title: x.Title,
                     DateAndTime: x.DateAndTime,
                     CreatedAt: x.CreateAt,
-                    CommunitiesId: x.CommunitiesId,
-                    ParticipationInEventId: x.ParticipationInEventId
+                    CommunitiesId: x.CommunitiesId
                 ));
 
                 _logger.LogInformation("Events retrieved successfully");

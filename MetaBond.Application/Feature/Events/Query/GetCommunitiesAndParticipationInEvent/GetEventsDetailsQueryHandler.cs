@@ -49,8 +49,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipati
                     Title: e.Title,
                     DateAndTime: e.DateAndTime,
                     CreatedAt: e.CreateAt,
-                    Communities: e.Communities ?? new Domain.Models.Communities(),
-                    ParticipationInEvent: e.ParticipationInEvent ?? new List<Domain.Models.ParticipationInEvent>()
+                    Communities: e.Communities ?? new Domain.Models.Communities()
             ));
 
             _logger.LogInformation("Event details with ID {Id} retrieved successfully.", request.Id);

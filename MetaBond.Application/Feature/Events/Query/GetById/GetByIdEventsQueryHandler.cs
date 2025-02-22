@@ -33,8 +33,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetById
                     Title: events.Title,
                     DateAndTime: events.DateAndTime,
                     CreatedAt: events.CreateAt,
-                    CommunitiesId: events.CommunitiesId,
-                    ParticipationInEventId: events.ParticipationInEventId
+                    CommunitiesId: events.CommunitiesId
                 );
 
                 _logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Id);

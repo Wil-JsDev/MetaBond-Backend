@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MetaBond.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MetaBondContext))]
-    [Migration("20250119214624_AddProgressBoardAndEntry")]
-    partial class AddProgressBoardAndEntry
+    [Migration("20250220202901_AddEventParticipationTable")]
+    partial class AddEventParticipationTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,24 +26,9 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "status", new[] { "pending", "accepted", "blocked" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("EventsParticipationInEvent", b =>
-                {
-                    b.Property<Guid>("EventsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ParticipationInEventId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("EventsId", "ParticipationInEventId");
-
-                    b.HasIndex("ParticipationInEventId");
-
-                    b.ToTable("EventsParticipationInEvent");
-                });
-
             modelBuilder.Entity("MetaBond.Domain.Models.Communities", b =>
                 {
-                    b.Property<Guid?>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -52,7 +37,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .HasMaxLength(25)
                         .HasColumnType("character varying(25)");
 
-                    b.Property<DateTime?>("CreateAt")
+                    b.Property<DateTime>("CreateAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -71,9 +56,24 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.ToTable("Communities", (string)null);
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.EventParticipation", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ParticipationInEventId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EventId", "ParticipationInEventId");
+
+                    b.HasIndex("ParticipationInEventId");
+
+                    b.ToTable("eventParticipations");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.Events", b =>
                 {
-                    b.Property<Guid?>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -91,9 +91,6 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
-
-                    b.Property<int>("ParticipationInEventId")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -114,7 +111,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("CreateAt")
+                    b.Property<DateTime?>("CreateAdt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
@@ -128,14 +125,15 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
                 {
-                    b.Property<Guid?>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("EventId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("PkParticipationInEvent");
 
                     b.ToTable("ParticiationInEvent", (string)null);
                 });
@@ -230,7 +228,7 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MetaBond.Domain.Models.Rewards", b =>
                 {
-                    b.Property<Guid?>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -252,19 +250,25 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.ToTable("Rewards", (string)null);
                 });
 
-            modelBuilder.Entity("EventsParticipationInEvent", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.EventParticipation", b =>
                 {
-                    b.HasOne("MetaBond.Domain.Models.Events", null)
-                        .WithMany()
-                        .HasForeignKey("EventsId")
+                    b.HasOne("MetaBond.Domain.Models.Events", "Event")
+                        .WithMany("EventParticipations")
+                        .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FkEvent");
 
-                    b.HasOne("MetaBond.Domain.Models.ParticipationInEvent", null)
-                        .WithMany()
+                    b.HasOne("MetaBond.Domain.Models.ParticipationInEvent", "ParticipationInEvent")
+                        .WithMany("EventParticipations")
                         .HasForeignKey("ParticipationInEventId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FkParticipationInEvent");
+
+                    b.Navigation("Event");
+
+                    b.Navigation("ParticipationInEvent");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.Events", b =>
@@ -322,6 +326,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("Posts");
 
                     b.Navigation("ProgressBoard");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Events", b =>
+                {
+                    b.Navigation("EventParticipations");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
+                {
+                    b.Navigation("EventParticipations");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ProgressBoard", b =>
