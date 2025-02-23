@@ -29,6 +29,18 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             
             PagedResult<ParticipationInEvent> pageResponse = new PagedResult<ParticipationInEvent>(getPagedParticipationInEvent, pageNumber, pageSize, totalRecord);
             return pageResponse;
-        }      
+        }
+        
+        public async Task<IEnumerable<ParticipationInEvent>> GetEventsAsync(Guid participationInEventId,CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<ParticipationInEvent>()
+                                               .AsNoTracking()
+                                               .Where(x => x.Id == participationInEventId)
+                                               .Include(x => x.EventParticipations)
+                                                    .ThenInclude(x => x.Event)
+                                               .AsSplitQuery()
+                                               .ToListAsync(cancellationToken);
+            return query;
+        }
     }
 }
