@@ -9,7 +9,7 @@ using Serilog.Core;
 
 namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent
 {
-    internal sealed class GetEventsDetailsQueryHandler : IQueryHandler<GetEventsDetailsQuery, IEnumerable<CommunitiesAndParticipationInEventDTos>>
+    internal sealed class GetEventsDetailsQueryHandler : IQueryHandler<GetEventsDetailsQuery, IEnumerable<DTOs.Events.CommunitiesDTos>>
     {
         private readonly IEventsRepository _eventsRepository;
         private readonly ILogger<GetEventsDetailsQueryHandler> _logger;
@@ -22,7 +22,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipati
             _logger = logger;
         }
 
-        public async Task<ResultT<IEnumerable<CommunitiesAndParticipationInEventDTos>>> Handle(
+        public async Task<ResultT<IEnumerable<DTOs.Events.CommunitiesDTos>>> Handle(
             GetEventsDetailsQuery request, 
             CancellationToken cancellationToken)
         {
@@ -31,18 +31,18 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipati
             {
                 _logger.LogError("Event with ID {Id} not found.", request.Id);
 
-                return ResultT<IEnumerable<CommunitiesAndParticipationInEventDTos>>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+                return ResultT<IEnumerable<DTOs.Events.CommunitiesDTos>>.Failure(Error.NotFound("404", $"{request.Id} not found"));
             }
 
-            var evenntsDetails = await _eventsRepository.GetCommunitiesAndParticipationInEvent(request.Id,cancellationToken);
+            var evenntsDetails = await _eventsRepository.GetCommunities(request.Id,cancellationToken);
             if (!evenntsDetails.Any())
             {
                 _logger.LogError("No communities or participation in event found for event with ID {Id}.", request.Id);
 
-                return ResultT<IEnumerable<CommunitiesAndParticipationInEventDTos>>.Failure(Error.NotFound("404", "No communities or participation in event found for this events."));
+                return ResultT<IEnumerable<DTOs.Events.CommunitiesDTos>>.Failure(Error.NotFound("404", "No communities or participation in event found for this events."));
             }
 
-            IEnumerable<CommunitiesAndParticipationInEventDTos> inEventDTos = evenntsDetails.Select(e => new CommunitiesAndParticipationInEventDTos
+            IEnumerable<DTOs.Events.CommunitiesDTos> inEventDTos = evenntsDetails.Select(e => new DTOs.Events.CommunitiesDTos
             (
                     Id: e.Id,
                     Description: e.Description,
@@ -54,7 +54,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipati
 
             _logger.LogInformation("Event details with ID {Id} retrieved successfully.", request.Id);
 
-            return ResultT<IEnumerable<CommunitiesAndParticipationInEventDTos>>.Success(inEventDTos);
+            return ResultT<IEnumerable<DTOs.Events.CommunitiesDTos>>.Success(inEventDTos);
         }
     }
 }
