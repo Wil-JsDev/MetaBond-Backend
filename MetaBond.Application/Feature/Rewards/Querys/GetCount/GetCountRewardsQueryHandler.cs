@@ -19,23 +19,22 @@ namespace MetaBond.Application.Feature.Rewards.Querys.GetCount
         }
 
         public async Task<ResultT<int>> Handle(
-            GetCountRewardsQuery request, 
+            GetCountRewardsQuery request,
             CancellationToken cancellationToken)
         {
-            
-            var rewards = await _repository.GetByIdAsync(request.RewardsId);
-            if (rewards != null)
+            if (request != null)
             {
                 var rewardsCount = await _repository.CountRewardsAsync(cancellationToken);
 
-                _logger.LogInformation("Successfully counted {Count} rewards for ID: {RewardsId}.", rewardsCount, request.RewardsId);
+                _logger.LogInformation("Total rewards counted: {Count}.", rewardsCount);
 
                 return ResultT<int>.Success(rewardsCount);
             }
 
-            _logger.LogWarning("Reward with ID: {RewardsId} not found. Cannot count rewards.", request.RewardsId);
+            _logger.LogWarning("Failed to count rewards: The request was invalid or encountered an issue during processing.");
 
-            return ResultT<int>.Failure(Error.NotFound("400",$"{request.RewardsId} not found"));
+            return ResultT<int>.Failure(Error.NotFound("400", "Unable to count rewards due to an invalid request or processing error."));
         }
+
     }
 }

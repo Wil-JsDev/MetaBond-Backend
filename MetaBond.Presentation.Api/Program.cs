@@ -2,10 +2,7 @@ using MetaBond.Infrastructure.Persistence;
 using MetaBond.Infrastructure.Shared;
 using MetaBond.Application;
 using Serilog;
-
-Log.Logger = new LoggerConfiguration()
-             .WriteTo.Console()
-             .CreateLogger();
+using MetaBond.Presentation.Api.Extensions;
 
 try
 {
@@ -24,11 +21,18 @@ try
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+    builder.Services.RateLimiting();
+    builder.Services.AddException();
+
+    // DI layer
     builder.Services.AddPersistence(builder.Configuration);
     builder.Services.AddShared(builder.Configuration);
     builder.Services.AddApplicationLayer();
+    builder.Services.AddSwaggerExtension();
+    builder.Services.AddVersioning();
 
     var app = builder.Build();
+    app.UseExceptionHandler(_ => { });
 
     app.UseSerilogRequestLogging();
 
@@ -40,8 +44,12 @@ try
     }
 
     app.UseHttpsRedirection();
+    app.UseRateLimiter();
 
+    app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UserSwaggerExtension();
 
     app.MapControllers();
 
