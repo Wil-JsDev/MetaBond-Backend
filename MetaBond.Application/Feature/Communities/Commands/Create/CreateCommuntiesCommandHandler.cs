@@ -36,6 +36,7 @@ namespace MetaBond.Application.Feature.Communities.Commands
                 {
                     Id = Guid.NewGuid(),
                     Name = request.Name,
+                    Description = request.Description,
                     Category = request.Category
                 };
 
