@@ -27,16 +27,17 @@ namespace MetaBond.Application.Feature.Posts.Commands.Create
             CreatePostsCommand request, 
             CancellationToken cancellationToken)
         {
+            
             if (request != null)
-            { 
+            {
+                string imageUrl = "";
                 if (request.ImageFile != null)
                 {
                     using var stream = request.ImageFile.OpenReadStream();
-                    request.ImageUrl = await _cloudinaryService.UploadImageCloudinaryAsync(
+                    imageUrl = await _cloudinaryService.UploadImageCloudinaryAsync(
                         stream,
                         request.ImageFile.FileName,
                         cancellationToken);
-
                 }
 
                 Domain.Models.Posts postsModel = new()
@@ -44,7 +45,7 @@ namespace MetaBond.Application.Feature.Posts.Commands.Create
                     Id = Guid.NewGuid(),
                     Title = request.Title,
                     Content = request.Content,
-                    Image =  request.ImageUrl,
+                    Image =  imageUrl,
                     CommunitiesId = request.CommunitiesId
                 };
 
@@ -52,7 +53,7 @@ namespace MetaBond.Application.Feature.Posts.Commands.Create
 
                 _logger.LogInformation("Post created successfully with ID: {PostId}", postsModel.Id);
 
-                PostsDTos postsDtos = new
+                PostsDTos postsDTos = new
                 (
                     PostsId: postsModel.Id,
                     Title: postsModel.Title,
@@ -62,7 +63,7 @@ namespace MetaBond.Application.Feature.Posts.Commands.Create
                     CreatedAt: postsModel.CreatedAt
                 );
 
-                return ResultT<PostsDTos>.Success(postsDtos);
+                return ResultT<PostsDTos>.Success(postsDTos);
             }
             _logger.LogError("Request is null. Unable to create post.");
 

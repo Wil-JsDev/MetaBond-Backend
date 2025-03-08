@@ -10,8 +10,6 @@ namespace MetaBond.Application.Feature.Posts.Commands.Create
 
         public string? Content { get; set; }
         
-        public string? ImageUrl { get; set; }
-
         public Guid? CommunitiesId { get; set; }
 
         public IFormFile? ImageFile { get; init; }
