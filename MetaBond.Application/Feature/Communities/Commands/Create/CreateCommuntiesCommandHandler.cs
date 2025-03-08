@@ -23,7 +23,14 @@ namespace MetaBond.Application.Feature.Communities.Commands
         {
 
             if (request != null)
-            { 
+            {
+                var exists = await _communitiesRepository.ValidateAsync(x => x.Name == request.Name);
+                if (exists)
+                {
+                    _logger.LogError($"The name {request.Name} already exists.");
+
+                    return ResultT<CommunitiesDTos>.Failure(Error.Failure("400", $"The name {request.Name} already exists."));
+                }
                 
                 Domain.Models.Communities communities = new()
                 {
@@ -44,7 +51,7 @@ namespace MetaBond.Application.Feature.Communities.Commands
                 
                 return ResultT<CommunitiesDTos>.Success(communitiesDTos);
             }
-            _logger.LogError("Received a null CreateCommuntiesCommand request.");
+            _logger.LogError("Received a null CreateCommunitiesCommand request.");
             return ResultT<CommunitiesDTos>.Failure(Error.Failure("400", "The request object is null"));
         }
     }
