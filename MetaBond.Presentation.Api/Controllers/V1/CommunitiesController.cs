@@ -19,7 +19,6 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     public class CommunitiesController : ControllerBase
     {
         private readonly IMediator _mediator;
-
         public CommunitiesController(IMediator mediator)
         {
             _mediator = mediator;
@@ -33,7 +32,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
-            return Ok(result.Error);
+            return Ok(result.Value);
         }
 
         [HttpDelete("{id}")]
@@ -87,9 +86,14 @@ namespace MetaBond.Presentation.Api.Controllers.V1
 
         [HttpGet("{id}/details")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetCommunitiesDetailsAsync([FromRoute] Guid Id,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCommunitiesDetailsAsync([FromRoute] Guid Id,[FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
         {
-            var query = new GetCommunityDetailsByIdQuery { Id = Id };
+            var query = new GetCommunityDetailsByIdQuery
+            {
+                Id = Id,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
             var result = await _mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
@@ -108,7 +112,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             };
 
             var result = await _mediator.Send(query, cancellationToken);
-            if (result.IsSuccess)
+            if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
             return Ok(result.Value);
