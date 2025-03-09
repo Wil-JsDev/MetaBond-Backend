@@ -22,8 +22,14 @@ namespace MetaBond.Application.Feature.Communities.Querys.Filter
             
             if (request.Category != null)
             {
-                var communitiesByCatagory = await _communitiesRepository.GetByFilterAsync(x => x.Category == request.Category,cancellationToken);
+                var exists = await _communitiesRepository.ValidateAsync(x => x.Name == request.Category);
+                if (!exists)
+                {
+                    _logger.LogError("The specified category '{Category}' was not found.", request.Category);
+                    return ResultT<IEnumerable<CommunitiesDTos>>.Failure(Error.NotFound("404", $"The category '{request.Category}' does not exist."));
+                }
 
+                var communitiesByCatagory = await _communitiesRepository.GetByFilterAsync(x => x.Category == request.Category,cancellationToken);
                 if (!communitiesByCatagory.Any())
                 {
                     _logger.LogError("No communities found for category '{Category}'.", request.Category);
