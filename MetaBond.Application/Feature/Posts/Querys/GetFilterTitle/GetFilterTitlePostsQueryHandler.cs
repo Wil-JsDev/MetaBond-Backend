@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
@@ -26,6 +27,13 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetFilterTitle
 
             if (request.Title != null)
             {
+                var exists = await _postsRepository.ValidateAsync(x => x.Title == request.Title);
+                if (!exists)
+                {
+                    _logger.LogError("No post found with the title '{Title}'.", request.Title);
+    
+                    return ResultT<IEnumerable<PostsDTos>>.Failure(Error.NotFound("404", $"No post exists with the title '{request.Title}'.")); 
+                }
                 var postsWithTitle = await _postsRepository.GetFilterByTitleAsync(request.Title,cancellationToken);
                 if (!postsWithTitle.Any())
                 {
