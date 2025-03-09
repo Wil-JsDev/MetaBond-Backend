@@ -7,7 +7,6 @@ namespace MetaBond.Application.DTOs.Posts
         string? Title,
         string? Content,
         string? ImageUrl,
-        Guid? CommunitiesId,
         Domain.Models.Communities? Communities,
         DateTime? CreatedAt
     );

@@ -4,6 +4,7 @@ using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +25,19 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             var query = await _metaBondContext.Set<ProgressEntry>()
                                               .AsNoTracking()
                                               .CountAsync(x => x.ProgressBoardId == ProgressBoardId, cancellationToken);
+            return query;
+        }
+
+        public async Task<IEnumerable<ProgressEntry>> GetByIdProgressEntryWithProgressBoard(Guid progressEntry,
+            CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<ProgressEntry>()
+                .AsNoTracking()
+                .Where(x => x.ProgressBoardId == progressEntry)
+                .Include(x => x.ProgressBoard)
+                .AsSplitQuery()
+                .ToListAsync(cancellationToken);
+            
             return query;
         }
 

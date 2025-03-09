@@ -45,7 +45,6 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetPostByIdCommunities
                     Title: x.Title,
                     Content: x.Content,
                     ImageUrl: x.Image,
-                    CommunitiesId: x.CommunitiesId,
                     Communities: x.Communities,
                     CreatedAt: x.CreatedAt
             ));
