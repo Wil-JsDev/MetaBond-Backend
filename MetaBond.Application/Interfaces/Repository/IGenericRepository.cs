@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace MetaBond.Application.Interfaces.Repository
 {
@@ -22,6 +18,8 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task DeleteAsync(TEntity entity, CancellationToken cancellationToken);
 
+        Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate);
+        
         Task SaveAsync(CancellationToken cancellationToken);
     }
 }
