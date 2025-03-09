@@ -26,6 +26,13 @@ namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetRecent
 
             if (request != null)
             {
+                if (request.TopCount <= 0)
+                {
+                    _logger.LogInformation("Invalid request: TopCount must be greater than zero.");
+    
+                    return ResultT<IEnumerable<ProgressEntryDTos>>.Failure(Error.Failure("400", "TopCount must be greater than zero."));
+                }
+                
                 IEnumerable<Domain.Models.ProgressEntry> progressEntries = await _repository.GetRecentEntriesAsync(request.TopCount,cancellationToken);
                 if (!progressEntries.Any())
                 {
