@@ -24,8 +24,14 @@ namespace MetaBond.Application.Feature.Friendship.Query.GetFilterByStatus
             FilterByStatusFriendshipQuery request, 
             CancellationToken cancellationToken)
         {
+            var exists = await _friendshipRepository.ValidateAsync(x => x.Status == request.Status);
+            if (!exists)
+            {
+                _logger.LogError("No active friendship found with status '{Status}'.", request.Status);
+    
+                return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.NotFound("404", $"No active friendship exists with status '{request.Status}'.")); 
+            }
             var getStatusFriendship = GetStatusFriendship();
-
             if (getStatusFriendship.TryGetValue((request.Status), out var statusFilter))
             {
                 var friendship = await statusFilter(cancellationToken);
