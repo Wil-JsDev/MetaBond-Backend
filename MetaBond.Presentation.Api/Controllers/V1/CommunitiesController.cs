@@ -35,11 +35,11 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result.Value);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> DeleteAsync([FromRoute] Guid Id,CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteAsync([FromQuery] Guid id,CancellationToken cancellationToken)
         {
-            var query = new DeleteCommunitiesCommand { Id = Id };
+            var query = new DeleteCommunitiesCommand { Id = id };
             var result = await _mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
@@ -47,11 +47,11 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result.Value);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("update/{id}")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid Id, [FromBody] UpdateCommunitiesCommand updateCommand,CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateCommunitiesCommand updateCommand,CancellationToken cancellationToken)
         {
-            updateCommand.Id = Id;
+            updateCommand.Id = id;
             var result = await _mediator.Send(updateCommand,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
@@ -61,9 +61,9 @@ namespace MetaBond.Presentation.Api.Controllers.V1
 
         [HttpGet("{id}")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetByIdAsync([FromRoute] Guid Id,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id,CancellationToken cancellationToken)
         {
-            var query = new GetByIdCommunitiesQuery { Id = Id };
+            var query = new GetByIdCommunitiesQuery { Id = id };
             var result = await _mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
