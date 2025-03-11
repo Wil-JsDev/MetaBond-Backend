@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using FluentValidation;
+using MetaBond.Application.Behaviors;
 
 namespace MetaBond.Application
 {
@@ -8,8 +10,13 @@ namespace MetaBond.Application
     {
         public static void AddApplicationLayer(this IServiceCollection services)
         {
-            services.AddMediatR(Assembly.GetExecutingAssembly());
-
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            services.AddMediatR(config =>
+            {
+                config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            });
+            services.AddProblemDetails();
         }
     }
 }
