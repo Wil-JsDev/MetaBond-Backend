@@ -19,5 +19,4 @@ interaction through **gamification tools**, real-time chat, and smart resources.
 
 ## Deployment
 
-The backend is deployed using **AWS Elastic Beanstalk**, ensuring scalability
-and reliability.
+The backend is deployed using **Railway**.
