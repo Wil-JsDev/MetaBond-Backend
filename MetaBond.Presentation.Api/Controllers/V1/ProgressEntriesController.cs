@@ -4,6 +4,7 @@ using MetaBond.Application.Feature.ProgressEntry.Commands.Create;
 using MetaBond.Application.Feature.ProgressEntry.Commands.Delete;
 using MetaBond.Application.Feature.ProgressEntry.Commands.Update;
 using MetaBond.Application.Feature.ProgressEntry.Querys.GetById;
+using MetaBond.Application.Feature.ProgressEntry.Querys.GetByIdProgressEntryWithProgressBoard;
 using MetaBond.Application.Feature.ProgressEntry.Querys.GetCountByBoard;
 using MetaBond.Application.Feature.ProgressEntry.Querys.GetDateRange;
 using MetaBond.Application.Feature.ProgressEntry.Querys.GetOrderByDescription;
@@ -126,7 +127,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result.Value);
         }
 
-        [HttpGet("ordered-by-desciption")]
+        [HttpGet("ordered-by-description")]
         [DisableRateLimiting]
         public async Task<IActionResult> OrderByDescriptionAsync(CancellationToken cancellationToken)
         {
@@ -136,7 +137,18 @@ namespace MetaBond.Presentation.Api.Controllers.V1
 
             return Ok(result.Value);
         }
-
+        
+        [HttpGet("{id}/progress-boards")]
+        [EnableRateLimiting("fixed")]
+        public async Task<IActionResult> GetProgressEntryWithBoard([FromRoute] Guid id,CancellationToken cancellationToken)
+        {
+            var query = new GetProgressEntryWithBoardByIdQuery { ProgressEntryId = id };
+            var result = await _mediator.Send(query,cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
+            
+            return Ok(result.Value);
+        }
 
         [HttpGet("pagination")]
         [EnableRateLimiting("fixed")]

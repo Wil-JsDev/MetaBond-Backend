@@ -1,4 +1,5 @@
-﻿using MetaBond.Application.Interfaces.Repository;
+﻿using System.Linq.Expressions;
+using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,5 +50,8 @@ namespace MetaBond.Infrastructure.Persistence.Repository
 
         public virtual async Task SaveAsync(CancellationToken cancellationToken) => 
             await _metaBondContext.SaveChangesAsync(cancellationToken); 
+        
+        public async Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate) => 
+            await _metaBondContext.Set<TEntity>().AnyAsync(predicate);
     }
 }

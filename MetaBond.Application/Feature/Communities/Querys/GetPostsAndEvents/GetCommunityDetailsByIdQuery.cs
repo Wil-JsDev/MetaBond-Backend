@@ -11,5 +11,9 @@ namespace MetaBond.Application.Feature.Communities.Querys.GetPostsAndEvents
     public sealed class GetCommunityDetailsByIdQuery : IQuery<IEnumerable<PostsAndEventsDTos>>
     {
         public Guid Id { get; set; }
+        
+        public int PageNumber { get; set;}
+        
+        public int PageSize { get; set; }
     }
 }

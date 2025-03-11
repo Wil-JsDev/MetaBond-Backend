@@ -23,6 +23,13 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
         {
             if (request.Title != null)
             {
+                var exists = await _eventsRepository.ValidateAsync(x => x.Title == request.Title);
+                if (!exists)
+                {
+                    _logger.LogError("The specified event '{Title}' was not found.", request.Title);
+                    return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"The event '{request.Title}' does not exist."));
+                }
+                
                 var eventsTitle = await _eventsRepository.GetFilterByTitleAsync(request.Title, cancellationToken);
                 IEnumerable<EventsDto> eventsDtos = eventsTitle.Select(c => new EventsDto 
                 (
@@ -43,7 +50,6 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
             _logger.LogError("Failed to retrieve events. No events found with title containing: {Title}", request.Title);
 
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400",$"{request.Title} not found"));
-
         }
     }
 }

@@ -62,7 +62,7 @@ namespace MetaBond.Presentation.Api.Extensions
         
         public static void AddException(this IServiceCollection services)
         {
-            services.AddExceptionHandler<GlobalExpectionHandler>();
+            services.AddExceptionHandler<GlobalExceptionHandler>();
         }
     }
 }

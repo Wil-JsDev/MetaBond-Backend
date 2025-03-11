@@ -1,4 +1,5 @@
-﻿using MetaBond.Application.Interfaces.Repository;
+﻿using System.Linq.Expressions;
+using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
@@ -59,5 +60,8 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                               .ToListAsync(cancellationToken);
             return query;
         }
+        public async Task<bool> ValidateAsync(Expression<Func<Communities, bool>> predicate) => 
+        await _metaBondContext.Set<Communities>().AnyAsync(predicate);
+                            
     }
 }
