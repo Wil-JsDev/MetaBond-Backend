@@ -1,26 +1,50 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MetaBond.Presentation.Api.ExceptionHandler
-{
-    public class GlobalExpectionHandler : IExceptionHandler
+namespace MetaBond.Presentation.Api.ExceptionHandler;
+
+    public class GlobalExceptionHandler : IExceptionHandler
     {
+        private readonly ILogger<GlobalExceptionHandler> _logger;
+
+        public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+        {
+            _logger = logger;
+        }
+        
         public async ValueTask<bool> TryHandleAsync(
             HttpContext httpContext, 
             Exception exception, 
             CancellationToken cancellationToken)
+        
         {
-            ProblemDetails problemDetails = new()
-            {
-                Title = "An error occurred",
-                Status = StatusCodes.Status400BadRequest,
-                Detail = exception.Message
-            };
-            httpContext.Response.ContentType = "application/json";
-            httpContext.Response.StatusCode = problemDetails.Status.Value;
-            await httpContext.Response.WriteAsJsonAsync(problemDetails);
+            var problemDetails = new ProblemDetails();
+            problemDetails.Instance = httpContext.Request.Path;
 
-            return true;    
-        }
+            if (exception is FluentValidation.ValidationException fluentException)
+            {
+                problemDetails.Title = "One or more validation errors occurred.";
+                problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                List<string> validationErrors = new List<string>();
+
+                foreach (var error in fluentException.Errors)
+                {
+                    validationErrors.Add(error.ErrorMessage);
+                }
+                problemDetails.Extensions.Add("Erros", validationErrors);
+            }
+            else
+            {
+                problemDetails.Title = exception.Message;
+            }
+        
+            _logger.LogError("{ProblemDetailsTitle}", problemDetails.Title);
+        
+            problemDetails.Status = httpContext.Response.StatusCode;
+            await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken).ConfigureAwait(false);
+            return true;
+        } 
     }
-}
+    
+
