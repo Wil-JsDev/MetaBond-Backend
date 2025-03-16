@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MetaBond.Domain.Models;
@@ -21,7 +22,7 @@ namespace MetaBond.Domain.Models;
         public Guid? CommunitiesId { get; set; }
 
         public Communities? Communities { get; set; }
-
-        public ICollection<EventParticipation>? EventParticipations { get; set; }
+        [JsonIgnore]
+        public ICollection<EventParticipation>? EventParticipations { get; set; } = new List<EventParticipation>(); 
     }
 
