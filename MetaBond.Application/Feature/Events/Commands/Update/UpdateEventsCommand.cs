@@ -17,7 +17,5 @@ namespace MetaBond.Application.Feature.Events.Commands.Update
 
         public string? Title { get; set; }
 
-        public Guid ParticipationInEventId { get; set; }
-
     }
 }
