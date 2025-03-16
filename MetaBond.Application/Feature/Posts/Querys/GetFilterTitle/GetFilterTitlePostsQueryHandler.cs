@@ -1,5 +1,4 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
@@ -7,19 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Querys.GetFilterTitle
 {
-    internal sealed class GetFilterTitlePostsQueryHandler : IQueryHandler<GetFilterTitlePostsQuery, IEnumerable<PostsDTos>>
+    internal sealed class GetFilterTitlePostsQueryHandler(
+        IPostsRepository postsRepository,
+        ILogger<GetFilterTitlePostsQueryHandler> logger)
+        : IQueryHandler<GetFilterTitlePostsQuery, IEnumerable<PostsDTos>>
     {
-        private readonly IPostsRepository _postsRepository;
-        private readonly ILogger<GetFilterTitlePostsQueryHandler> _logger;
-
-        public GetFilterTitlePostsQueryHandler(
-            IPostsRepository postsRepository, 
-            ILogger<GetFilterTitlePostsQueryHandler> logger)
-        {
-            _postsRepository = postsRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<IEnumerable<PostsDTos>>> Handle(
             GetFilterTitlePostsQuery request, 
             CancellationToken cancellationToken)
@@ -27,17 +18,17 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetFilterTitle
 
             if (request.Title != null)
             {
-                var exists = await _postsRepository.ValidateAsync(x => x.Title == request.Title);
+                var exists = await postsRepository.ValidateAsync(x => x.Title == request.Title);
                 if (!exists)
                 {
-                    _logger.LogError("No post found with the title '{Title}'.", request.Title);
+                    logger.LogError("No post found with the title '{Title}'.", request.Title);
     
                     return ResultT<IEnumerable<PostsDTos>>.Failure(Error.NotFound("404", $"No post exists with the title '{request.Title}'.")); 
                 }
-                var postsWithTitle = await _postsRepository.GetFilterByTitleAsync(request.Title,cancellationToken);
+                var postsWithTitle = await postsRepository.GetFilterByTitleAsync(request.CommunitiesId,request.Title,cancellationToken);
                 if (!postsWithTitle.Any())
                 {
-                    _logger.LogError("No posts found with the title '{Title}'.", request.Title);
+                    logger.LogError("No posts found with the title '{Title}'.", request.Title);
 
                     return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "The list is empty"));
                 }
@@ -52,11 +43,11 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetFilterTitle
                     CreatedAt: x.CreatedAt
                 ));
 
-                _logger.LogInformation("Successfully retrieved {Count} posts with the title '{Title}'.", postsDTos.Count(), request.Title);
+                logger.LogInformation("Successfully retrieved {Count} posts with the title '{Title}'.", postsDTos.Count(), request.Title);
 
                 return ResultT<IEnumerable<PostsDTos>>.Success(postsDTos);
             }
-            _logger.LogError("Invalid request: Title parameter is missing.");
+            logger.LogError("Invalid request: Title parameter is missing.");
 
             return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "Invalid request"));
         }

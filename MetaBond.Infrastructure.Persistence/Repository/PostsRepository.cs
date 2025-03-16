@@ -3,11 +3,6 @@ using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaBond.Infrastructure.Persistence.Repository
 {
@@ -34,10 +29,11 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return result;
         }
 
-        public async Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(int topCount, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId,int topCount, CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Posts>()
                                               .AsNoTracking()
+                                              .Where(x => x.CommunitiesId == communitiesId)
                                               .OrderByDescending(x => x.CreatedAt)
                                               .Take(topCount)
                                               .ToListAsync(cancellationToken);
@@ -45,10 +41,11 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,CancellationToken cancellationToken)
         {
             var posts = await _metaBondContext.Set<Posts>()
                                               .AsNoTracking()
+                                              .Where(x => x.CommunitiesId == communitiesId)
                                               .OrderByDescending(x => x.CreatedAt)
                                               .Take(10)
                                               .ToListAsync(cancellationToken);
@@ -56,12 +53,12 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return posts;
         }
 
-        public async Task<IEnumerable<Posts>> GetFilterByTitleAsync(string title, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId,string title, CancellationToken cancellationToken)
         {
             
             var posts = await _metaBondContext.Set<Posts>()
                                                .AsNoTracking()
-                                               .Where(x => x.Title == title)
+                                               .Where(x => x.CommunitiesId == communitiesId && x.Title == title)
                                                .ToListAsync(cancellationToken);
             return posts;
         }

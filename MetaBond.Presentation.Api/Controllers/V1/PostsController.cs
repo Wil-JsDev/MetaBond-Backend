@@ -16,20 +16,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:ApiVersion}/posts")]
-    public class PostsController : ControllerBase
+    public class PostsController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public PostsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [DisableRateLimiting]
         public async Task<IActionResult> AddPostsAsync([FromForm] CreatePostsCommand createPostsCommand, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(createPostsCommand,cancellationToken);
+            var result = await mediator.Send(createPostsCommand,cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -41,7 +34,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         public async Task<IActionResult> DeletePostsAsync([FromRoute] Guid id,CancellationToken cancellationToken)
         {
             var query = new DeletePostsCommand { PostsId = id };
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -54,59 +47,78 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetByIdPostsQuerys { PostsId= id };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
             
             return Ok(result.Value);
         }
 
-        [HttpGet("recent-posts")]
+        [HttpGet("communities/{communitiesId}/recent-posts")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetRecentPostsAsync([FromQuery] int topCount,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRecentPostsAsync(
+            [FromRoute] Guid communitiesId,
+            [FromQuery] int topCount,
+            CancellationToken cancellationToken)
         {
             if (topCount <= 0)
                 return BadRequest("The topCount parameter must be greater than zero.");
 
-            var query = new GetFilterRecentPostsQuery { TopCount = topCount };
+            var query = new GetFilterRecentPostsQuery
+            {
+                CommunitiesId = communitiesId,
+                TopCount = topCount
+            };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess) 
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("recent-posts-top10")]
+        [HttpGet("communities/{communitiesId}/recent-posts-top10")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetRecentTop10Posts(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRecentTop10Posts([FromRoute] Guid communitiesId,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send( new GetFilterTop10Query(),cancellationToken);
+            var query = new GetFilterTop10Query
+            {
+                CommunitiesId = communitiesId
+            };
+            
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                     return BadRequest(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("{id}/details/communities")]
+        [HttpGet("{postsId}/details/communities")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetDetailsPosts([FromRoute] Guid id,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetDetailsPosts([FromRoute] Guid postsId,CancellationToken cancellationToken)
         {
-            var query = new GetPostsByIdCommunitiesQuery { PostsId = id };
-            var result = await _mediator.Send(query,cancellationToken);
+            var query = new GetPostsByIdCommunitiesQuery { PostsId = postsId };
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("filter-by-title")]
+        [HttpGet("communities/{communitiesId}/search/title")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> FilterByTitleAsync([FromQuery] string title,CancellationToken cancellationToken)
+        public async Task<IActionResult> FilterByTitleAsync(
+            [FromRoute] Guid communitiesId,
+            [FromQuery] string title,
+            CancellationToken cancellationToken)
         {
-            var query = new GetFilterTitlePostsQuery { Title = title };
+            var query = new GetFilterTitlePostsQuery
+            {
+                CommunitiesId = communitiesId,
+                Title = title
+            };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -123,7 +135,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
                 PageSize = pageSize
             };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 

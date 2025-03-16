@@ -16,19 +16,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:ApiVersion}/communities")]
-    public class CommunitiesController : ControllerBase
+    public class CommunitiesController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-        public CommunitiesController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> AddAsync([FromBody] CreateCommuntiesCommand createCommand, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(createCommand,cancellationToken);
+            var result = await mediator.Send(createCommand,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -40,7 +34,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         public async Task<IActionResult> DeleteAsync([FromQuery] Guid id,CancellationToken cancellationToken)
         {
             var query = new DeleteCommunitiesCommand { Id = id };
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -51,8 +45,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateCommunitiesCommand updateCommand,CancellationToken cancellationToken)
         {
-            updateCommand.Id = id;
-            var result = await _mediator.Send(updateCommand,cancellationToken);
+            var result = await mediator.Send(updateCommand,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -64,19 +57,19 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id,CancellationToken cancellationToken)
         {
             var query = new GetByIdCommunitiesQuery { Id = id };
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("filter/by-category")]
+        [HttpGet("search/category/{category}")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> FilterByCategoryAsync([FromQuery] string category,CancellationToken cancellationToken)
+        public async Task<IActionResult> FilterByCategoryAsync([FromRoute] string category,CancellationToken cancellationToken)
         {
             var query = new FilterCommunitiesQuery { Category = category };
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -86,15 +79,15 @@ namespace MetaBond.Presentation.Api.Controllers.V1
 
         [HttpGet("{id}/details")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetCommunitiesDetailsAsync([FromRoute] Guid Id,[FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCommunitiesDetailsAsync([FromRoute] Guid id,[FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
         {
             var query = new GetCommunityDetailsByIdQuery
             {
-                Id = Id,
+                Id = id,
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -111,7 +104,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
                 PageSize = pageSize
             };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
