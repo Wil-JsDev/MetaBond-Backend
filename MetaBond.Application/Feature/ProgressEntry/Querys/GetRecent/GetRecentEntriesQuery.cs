@@ -5,6 +5,7 @@ namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetRecent
 {
     public sealed class GetRecentEntriesQuery : IQuery<IEnumerable<ProgressEntryDTos>>
     {
+        public Guid ProgressBoardId { get; set; }
         public int TopCount { get; set; }
     }
 }
