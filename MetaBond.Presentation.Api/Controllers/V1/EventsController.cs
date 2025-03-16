@@ -5,6 +5,7 @@ using MetaBond.Application.Feature.Events.Commands.Delete;
 using MetaBond.Application.Feature.Events.Commands.Update;
 using MetaBond.Application.Feature.Events.Query.FilterByDateRange;
 using MetaBond.Application.Feature.Events.Query.FilterByTitle;
+using MetaBond.Application.Feature.Events.Query.FilterByTitleCommunityId;
 using MetaBond.Application.Feature.Events.Query.GetById;
 using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
@@ -20,20 +21,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:ApiVersion}/events")]
-    public class EventsController : ControllerBase
+    public class EventsController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public EventsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateAsync([FromBody] CreateEventsCommand eventsCommand,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(eventsCommand,cancellationToken);
+            var result = await mediator.Send(eventsCommand,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -46,7 +40,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new DeleteEventsCommand { Id = id };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -57,9 +51,8 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateEventsCommand updateEventsCommand,CancellationToken cancellationToken)
         {
-            updateEventsCommand.Id = id;
-
-            var result = await _mediator.Send(updateEventsCommand,cancellationToken);
+            //updateEventsCommand.Id = id;
+            var result = await mediator.Send(updateEventsCommand,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -72,57 +65,83 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetByIdEventsQuery { Id = id };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("filter/by-date-range")]
+        [HttpGet("communities/{communitiesId}/search/by-date-range")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> FilterByRangeAsync([FromQuery] DateRangeFilter dateRange,CancellationToken cancellationToken)
+        public async Task<IActionResult> FilterByRangeAsync(
+            [FromRoute] Guid communitiesId,
+            [FromQuery] DateRangeFilter dateRange,
+            CancellationToken cancellationToken)
         {
-            var query = new FilterByDateRangeEventsQuery { DateRangeFilter = dateRange };
+            var query = new FilterByDateRangeEventsQuery
+            {
+                CommunitiesId = communitiesId,
+                DateRangeFilter = dateRange
+            };
 
-            var reuslt = await _mediator.Send(query,cancellationToken);
-            if (!reuslt.IsSuccess)
-                return NotFound(reuslt.Error);
+            var result = await mediator.Send(query,cancellationToken);
+            if (!result.IsSuccess)
+                return NotFound(result.Error);
 
-            return Ok(reuslt.Value);
+            return Ok(result.Value);
         }
 
-        [HttpGet("filter/by-title")]
+        [HttpGet("search/title/{title}")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> FilterByTitleAsync([FromQuery] string title,CancellationToken cancellationToken)
+        public async Task<IActionResult> FilterByTitleAsync([FromRoute] string title,CancellationToken cancellationToken)
         {
             var query = new FilterByTitleEventsQuery { Title = title };
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess) 
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
-
-        [HttpGet("{id}/communities")]
+        
+        [HttpGet("communities/{communityId}/search/title/{title}")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetEventsWithCommunitiesAsync([FromRoute] Guid id,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetEventsByTitleAndCommunityIdAsync(
+            [FromRoute] Guid communityId,
+            [FromRoute] string title,
+            CancellationToken cancellationToken)
         {
-            var query = new GetEventsDetailsQuery { Id = id };
+            var query = new GetEventsByTitleAndCommunityIdQuery
+            {
+                CommunitiesId = communityId,
+                Title = title
+            };
+            var result = await mediator.Send(query,cancellationToken);
+            if (!result.IsSuccess) 
+                return NotFound(result.Error);
+
+            return Ok(result.Value);
+        }
+        
+        [HttpGet("{eventId}/communities")]
+        [EnableRateLimiting("fixed")]
+        public async Task<IActionResult> GetEventsWithCommunitiesAsync([FromRoute] Guid eventId,CancellationToken cancellationToken)
+        {
+            var query = new GetEventsDetailsQuery { Id = eventId };
             
-            var result = await _mediator.Send(query,cancellationToken);
-            if (result.IsSuccess)
+            var result = await mediator.Send(query,cancellationToken);
+            if (!result.IsSuccess)
                 return NotFound(result.Error);
             
             return Ok(result.Value);
         }
 
-        [HttpGet("{id}/participation-in-event")]
+        [HttpGet("{eventId}/participation-in-event")]
         [DisableRateLimiting]
-        public async Task<IActionResult> GetEventsWithParticipationInEventAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetEventsWithParticipationInEventAsync([FromRoute] Guid eventId, CancellationToken cancellationToken)
         {
-            var query = new GetEventsWithParticipationInEventQuery { EventsId = id };
-            var result = await _mediator.Send(query,cancellationToken);
+            var query = new GetEventsWithParticipationInEventQuery { EventsId = eventId };
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -131,24 +150,24 @@ namespace MetaBond.Presentation.Api.Controllers.V1
 
         [HttpGet("order")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> OrderByIdAsync([FromQuery] string order,CancellationToken cancellationToken)
+        public async Task<IActionResult> OrderByIdAsync([FromQuery] string orderBy,CancellationToken cancellationToken)
         {
-            var query = new GetOrderByIdEventsQuery { Order = order };
+            var query = new GetOrderByIdEventsQuery { Order = orderBy };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess) 
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("{id}/participations")]
+        [HttpGet("{eventId}/participation")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetEventsWithParticipationsAsync([FromRoute] Guid id,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetEventsWithParticipationAsync([FromRoute] Guid eventId,CancellationToken cancellationToken)
         {
-            var query = new GetParticipationInEventQuery { EventsId= id };
+            var query = new GetParticipationInEventQuery { EventsId= eventId };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess) 
                 return NotFound(result.Error);
 
@@ -165,7 +184,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
                 PageSize = pageSize,
             };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess) 
                 return NotFound(result.Error);
 
