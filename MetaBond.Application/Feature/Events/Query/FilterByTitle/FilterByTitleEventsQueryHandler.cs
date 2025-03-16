@@ -6,31 +6,23 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
 {
-    internal sealed class FilterByTitleEventsQueryHandler : IQueryHandler<FilterByTitleEventsQuery, IEnumerable<EventsDto>>
+    internal sealed class FilterByTitleEventsQueryHandler(
+        IEventsRepository eventsRepository,
+        ILogger<FilterByTitleEventsQueryHandler> logger)
+        : IQueryHandler<FilterByTitleEventsQuery, IEnumerable<EventsDto>>
     {
-        private readonly IEventsRepository _eventsRepository;
-        private readonly ILogger<FilterByTitleEventsQueryHandler> _logger;
-
-        public FilterByTitleEventsQueryHandler(
-            IEventsRepository eventsRepository,
-            ILogger<FilterByTitleEventsQueryHandler> logger)
-        {
-            _eventsRepository = eventsRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<IEnumerable<EventsDto>>> Handle(FilterByTitleEventsQuery request, CancellationToken cancellationToken)
         {
             if (request.Title != null)
             {
-                var exists = await _eventsRepository.ValidateAsync(x => x.Title == request.Title);
+                var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title);
                 if (!exists)
                 {
-                    _logger.LogError("The specified event '{Title}' was not found.", request.Title);
+                    logger.LogError("The specified event '{Title}' was not found.", request.Title);
                     return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"The event '{request.Title}' does not exist."));
                 }
                 
-                var eventsTitle = await _eventsRepository.GetFilterByTitleAsync(request.Title, cancellationToken);
+                var eventsTitle = await eventsRepository.GetFilterByTitleAsync(request.Title, cancellationToken);
                 IEnumerable<EventsDto> eventsDtos = eventsTitle.Select(c => new EventsDto 
                 (
                     Id: c.Id,
@@ -41,13 +33,13 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
                     CommunitiesId: c.CommunitiesId
                 ));
 
-                _logger.LogInformation("Successfully retrieved events with title containing: {Title}", request.Title);
+                logger.LogInformation("Successfully retrieved events with title containing: {Title}", request.Title);
 
                 return ResultT<IEnumerable<EventsDto>>.Success(eventsDtos);
 
             }
 
-            _logger.LogError("Failed to retrieve events. No events found with title containing: {Title}", request.Title);
+            logger.LogError("Failed to retrieve events. No events found with title containing: {Title}", request.Title);
 
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400",$"{request.Title} not found"));
         }
