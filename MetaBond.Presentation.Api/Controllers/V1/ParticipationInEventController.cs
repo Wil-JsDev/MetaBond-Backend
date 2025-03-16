@@ -4,7 +4,11 @@ using MetaBond.Application.Feature.Friendship.Command.Create;
 using MetaBond.Application.Feature.Friendship.Command.Update;
 using MetaBond.Application.Feature.Friendship.Query.GetById;
 using MetaBond.Application.Feature.Friendship.Query.Pagination;
+using MetaBond.Application.Feature.ParticipationInEvent.Commands.Create;
+using MetaBond.Application.Feature.ParticipationInEvent.Commands.Update;
+using MetaBond.Application.Feature.ParticipationInEvent.Querys.GetById;
 using MetaBond.Application.Feature.ParticipationInEvent.Querys.GetEvents;
+using MetaBond.Application.Feature.ParticipationInEvent.Querys.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -13,20 +17,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:ApiVersion}/participation-in-event")]
-    public class ParticipationInEventController : ControllerBase
+    public class ParticipationInEventController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public ParticipationInEventController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> CreateAsync([FromBody] CreateFriendshipCommand createFriendshipCommand,CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateAsync([FromBody] CreateParticipationInEventCommand createParticipation,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(createFriendshipCommand,cancellationToken);
+            var result = await mediator.Send(createParticipation,cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -35,11 +32,9 @@ namespace MetaBond.Presentation.Api.Controllers.V1
 
         [HttpPut("{id}")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateFriendshipCommand updateFriendship,CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateParticipationInEventCommand updateParticipationInEventCommand,CancellationToken cancellationToken)
         {
-            updateFriendship.Id = id;
-
-            var result = await _mediator.Send(updateFriendship,cancellationToken);
+            var result = await mediator.Send(updateParticipationInEventCommand,cancellationToken);
             if (!result.IsSuccess) 
                 return NotFound(result.Error);
 
@@ -50,22 +45,22 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [DisableRateLimiting]
         public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id,CancellationToken cancellationToken)
         {
-            var query = new GetByIdFriendshipQuery {Id = id};
+            var query = new GetByIdParticipationInEventQuery {ParticipationInEventId = id};
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("{eventId}/participations")]
+        [HttpGet("{eventId}/participation")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetParticipationInEventDetailsAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetParticipationInEventDetailsAsync([FromRoute] Guid eventId, CancellationToken cancellationToken)
         {
-            var query = new GetEventsQuery { EventsId = id};
+            var query = new GetEventsQuery { EventsId = eventId};
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -76,13 +71,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
         {
-            var query = new GetPagedFriendshipQuery
+            var query = new GetPagedParticipationInEventQuery()
             {
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
