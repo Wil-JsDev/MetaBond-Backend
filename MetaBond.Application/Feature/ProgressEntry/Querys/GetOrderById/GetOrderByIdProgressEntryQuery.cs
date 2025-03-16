@@ -5,6 +5,6 @@ namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetOrderById
 {
     public sealed class GetOrderByIdProgressEntryQuery : IQuery<IEnumerable<ProgressEntryBasicDTos>>
     {
-
+        public Guid ProgressBoardId { get; set; }
     }
 }

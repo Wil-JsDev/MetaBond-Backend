@@ -1,4 +1,5 @@
-﻿using MetaBond.Application.Abstractions.Messaging;
+﻿using System.Collections;
+using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
@@ -7,37 +8,37 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
 {
-    internal sealed class FilterByDateRangeEventsQueryHandler : IQueryHandler<FilterByDateRangeEventsQuery, IEnumerable<EventsDto>>
+    internal sealed class FilterByDateRangeEventsQueryHandler(
+        IEventsRepository eventsRepository,
+        ILogger<FilterByDateRangeEventsQueryHandler> logger)
+        : IQueryHandler<FilterByDateRangeEventsQuery, IEnumerable<EventsDto>>
     {
-        private readonly IEventsRepository _eventsRepository;
-        private readonly ILogger<FilterByDateRangeEventsQueryHandler> _logger;  
-
-        public FilterByDateRangeEventsQueryHandler(
-            IEventsRepository eventsRepository, 
-            ILogger<FilterByDateRangeEventsQueryHandler> logger)
-        {
-            _eventsRepository = eventsRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<IEnumerable<EventsDto>>> Handle(
             FilterByDateRangeEventsQuery request, 
             CancellationToken cancellationToken)
         {
-
-            var status = GetStatus();
+            
+            var status = FilterByDateRange(request.CommunitiesId);
             if (status.TryGetValue((request.DateRangeFilter), out var getStatusList))
             {
                 var eventsList = await getStatusList(cancellationToken);
-                if (eventsList == null || !eventsList.Any())
+                IEnumerable<Domain.Models.Events> eventsEnumerable = eventsList.ToList();
+                
+                if (!eventsEnumerable.Any())
                 {
-                    _logger.LogError("The events list is empty.");
+                    var valuesFilter = GetValueFilter();
+                    if (valuesFilter.TryGetValue((request.DateRangeFilter), out var values))
+                    {
+                        logger.LogInformation("No events found for the given filter");
+                        
+                        return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", values));
+                    }
 
+                    logger.LogError("The events list is empty due to an unknown error.");
                     return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "The list is empty"));
-
                 }
 
-                IEnumerable<EventsDto> dTos = eventsList.Select(e => new EventsDto
+                IEnumerable<EventsDto> dTos = eventsEnumerable.Select(e => new EventsDto
                 (
                     Id: e.Id,
                     Description: e.Description,
@@ -47,27 +48,38 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
                     CommunitiesId: e.CommunitiesId
                 ));
 
-                _logger.LogInformation("Events retrieved successfully");
+                logger.LogInformation("Events retrieved successfully");
 
                 return ResultT<IEnumerable<EventsDto>>.Success(dTos);
 
             }
 
-            _logger.LogError("No data entered for the status.");
+            logger.LogError("No data entered for the status.");
 
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "No data entered"));
 
         }
-
-        private Dictionary<Domain.DateRangeFilter, Func<CancellationToken,Task<IEnumerable<Domain.Models.Events>>>> GetStatus()
+        
+        # region Private Methods
+        private Dictionary<Domain.DateRangeFilter, Func<CancellationToken,Task<IEnumerable<Domain.Models.Events>>>> FilterByDateRange(Guid communitiesId)
         {
             return new Dictionary<Domain.DateRangeFilter, Func<CancellationToken, Task<IEnumerable<Domain.Models.Events>>>>
             {
-                { DateRangeFilter.LastDay, async cancellationToken => await _eventsRepository.FilterByDateRange(DateTime.UtcNow.AddDays(- 1),cancellationToken)  },
-                { DateRangeFilter.ThreeDays, async cancellationToken => await _eventsRepository.FilterByDateRange(DateTime.UtcNow.AddDays(- 3),cancellationToken)  },
-                { DateRangeFilter.LastWeek, async cancellationToken => await _eventsRepository.FilterByDateRange(DateTime.UtcNow.AddDays(- 7),cancellationToken)  }
+                { DateRangeFilter.LastDay, async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,DateTime.UtcNow.AddDays(- 1),cancellationToken)  },
+                { DateRangeFilter.ThreeDays, async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,DateTime.UtcNow.AddDays(- 3),cancellationToken)  },
+                { DateRangeFilter.LastWeek, async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,DateTime.UtcNow.AddDays(- 7),cancellationToken)  }
             };
         }
-
+        private Dictionary<Domain.DateRangeFilter, string> GetValueFilter()
+        {
+            return new Dictionary<DateRangeFilter, string>
+            {
+                { DateRangeFilter.LastDay, "No events found for the last day filter." },
+                { DateRangeFilter.ThreeDays, "No events found for the last 3 days filter." },
+                { DateRangeFilter.LastWeek, "No events found for the last week filter." }
+            };
+        }
+        
+        # endregion
     }
 }

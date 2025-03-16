@@ -7,15 +7,15 @@ namespace MetaBond.Application.Interfaces.Repository
     {
         Task<PagedResult<ProgressEntry>> GetPagedProgressEntryAsync(int pageSize, int pageNumber, CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressEntry>> GetOrderByIdAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<ProgressEntry>> GetOrderByIdAsync(Guid progressBoardId,CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressEntry>> GetEntriesByDateRangeAsync(DateTime startTime ,DateTime endTime,CancellationToken cancellationToken);
+        Task<IEnumerable<ProgressEntry>> GetEntriesByDateRangeAsync(Guid progressBoardId,DateTime startTime ,DateTime endTime,CancellationToken cancellationToken);
 
         Task<int> CountEntriesByBoardIdAsync(Guid id, CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressEntry>> GetRecentEntriesAsync(int topCount, CancellationToken cancellationToken);
+        Task<IEnumerable<ProgressEntry>> GetRecentEntriesAsync(Guid progressBoardId,int topCount, CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressEntry>> GetOrderByDescriptionAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<ProgressEntry>> GetOrderByDescriptionAsync(Guid progressBoardId,CancellationToken cancellationToken);
 
         Task<IEnumerable<ProgressEntry>> GetByIdProgressEntryWithProgressBoard(Guid progressEntry, CancellationToken cancellationToken);
     }

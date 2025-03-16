@@ -6,28 +6,30 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent
 {
-    internal sealed class GetEventsWithParticipationInEventQueryHandler : IQueryHandler<GetEventsWithParticipationInEventQuery, EventsWithParticipationInEventsDTos>
+    internal sealed class GetEventsWithParticipationInEventQueryHandler(
+        IEventsRepository eventsRepository,
+        ILogger<GetEventsWithParticipationInEventQueryHandler> logger)
+        : IQueryHandler<GetEventsWithParticipationInEventQuery, EventsWithParticipationInEventsDTos>
     {
-        private readonly IEventsRepository _eventsRepository;
-        private readonly ILogger<GetEventsWithParticipationInEventQueryHandler> _logger;
-
-        public GetEventsWithParticipationInEventQueryHandler(
-            IEventsRepository eventsRepository, 
-            ILogger<GetEventsWithParticipationInEventQueryHandler> logger)
-        {
-            _eventsRepository = eventsRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<EventsWithParticipationInEventsDTos>> Handle(
                 GetEventsWithParticipationInEventQuery request,
                 CancellationToken cancellationToken)
         {
-            var events = await _eventsRepository.GetByIdAsync(request.EventsId ?? Guid.Empty);
+            var events = await eventsRepository.GetByIdAsync(request.EventsId ?? Guid.Empty);
             if (events != null)
             {
-                Domain.Models.Events eventsWithParticipationInEvents = await _eventsRepository.GetEventsWithParticipationsAsync(events.Id, cancellationToken);
-
+                Domain.Models.Events eventsWithParticipationInEvents = await eventsRepository.GetEventsWithParticipationsAsync(events.Id, cancellationToken);
+                
+                if (eventsWithParticipationInEvents.EventParticipations != null)
+                {
+                    logger.LogInformation("Event {EventId} has {Count} participations.",
+                        eventsWithParticipationInEvents.Id, eventsWithParticipationInEvents.EventParticipations.Count);
+                }
+                else
+                {
+                    logger.LogError("EventParticipations is NULL for event {EventId}.", eventsWithParticipationInEvents.Id);
+                }
+                
                 EventsWithParticipationInEventsDTos inEventsDTos = new
                 (
                     EventsId: eventsWithParticipationInEvents.Id,
@@ -38,12 +40,12 @@ namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationIn
                     CreatedAt: eventsWithParticipationInEvents.CreateAt
                 );
 
-                _logger.LogInformation("Successfully retrieved event with ID: {EventId} and its participations.", eventsWithParticipationInEvents.Id);
+                logger.LogInformation("Successfully retrieved event with ID: {EventId} and its participations.", eventsWithParticipationInEvents.Id);
 
                 return ResultT<EventsWithParticipationInEventsDTos>.Success(inEventsDTos);
             }
 
-            _logger.LogError("Event with ID: {EventId} not found.", request.EventsId);
+            logger.LogError("Event with ID: {EventId} not found.", request.EventsId);
 
             return ResultT<EventsWithParticipationInEventsDTos>.Failure(Error.NotFound("404", $"{request.EventsId} not found"));
         }

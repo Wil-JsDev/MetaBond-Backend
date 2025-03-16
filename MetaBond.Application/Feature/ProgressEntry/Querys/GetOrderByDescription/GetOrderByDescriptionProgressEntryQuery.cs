@@ -6,6 +6,6 @@ namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetOrderByDescriptio
 {
     public sealed class GetOrderByDescriptionProgressEntryQuery : IQuery<IEnumerable<ProgressEntryWithDescriptionDTos>>
     {
-
+        public Guid ProgressBoardId { get; set; }
     }
 }

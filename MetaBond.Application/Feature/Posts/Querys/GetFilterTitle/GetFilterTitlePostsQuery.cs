@@ -5,6 +5,7 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetFilterTitle
 {
     public sealed class GetFilterTitlePostsQuery : IQuery<IEnumerable<PostsDTos>>
     {
+        public Guid CommunitiesId { get; set; }
         public string? Title { get; set; }
     }
 }

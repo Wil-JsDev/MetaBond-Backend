@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MetaBond.Domain.Models;
@@ -18,7 +19,8 @@ namespace MetaBond.Domain.Models;
         public ProgressBoard? ProgressBoard { get; set; }
     
         public ICollection<Posts>? Posts { get; set; }
-
+        
+        [JsonIgnore]
         public ICollection<Events>? Events { get; set; }
     }
 

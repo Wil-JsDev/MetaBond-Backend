@@ -8,6 +8,6 @@ namespace MetaBond.Application.DTOs.Events
         string? Title,
         DateTime? DateAndTime,
         DateTime? CreatedAt,
-        Communities Communities
+        List<CommunitySummaryDto> Communities
     );
 }

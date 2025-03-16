@@ -6,6 +6,7 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
 {
     public sealed class FilterByDateRangeEventsQuery : IQuery<IEnumerable<EventsDto>>
     {
+        public Guid CommunitiesId { get; set; }
         public DateRangeFilter DateRangeFilter { get; set; }
     }
 }

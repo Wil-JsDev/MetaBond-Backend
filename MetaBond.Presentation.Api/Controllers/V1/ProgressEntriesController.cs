@@ -20,19 +20,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:ApiVersion}/progress-entries")]
-    public class ProgressEntriesController : ControllerBase
+    public class ProgressEntriesController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-        public ProgressEntriesController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateAsync([FromBody] CreateProgressEntryCommand createProgress,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(createProgress,cancellationToken);
+            var result = await mediator.Send(createProgress,cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -43,9 +37,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [DisableRateLimiting]
         public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateProgressEntryCommand updateProgressEntry,CancellationToken cancellationToken)
         {
-            updateProgressEntry.ProgressEntryId = id;
-
-            var result = await _mediator.Send(updateProgressEntry,cancellationToken);
+            var result = await mediator.Send(updateProgressEntry,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -58,7 +50,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new DeleteProgressEntryCommand { Id = id };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -71,7 +63,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetByIdProgressEntryQuery { ProgressEntryId = id };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                     return NotFound(result.Error);
 
@@ -83,55 +75,72 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         public async Task<IActionResult> GetCountAsync([FromRoute] Guid progressBoardId, CancellationToken cancellationToken)
         {
             var query = new GetCountByBoardIdQuery { ProgressBoardId = progressBoardId };
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("date-range")]
+        [HttpGet("progress-board/{progressBoardId}/date-range")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetDateRangeAsync([FromQuery] DateRangeType dateRange,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetDateRangeAsync(
+            [FromRoute] Guid progressBoardId,
+            [FromQuery] DateRangeType dateRange,
+            CancellationToken cancellationToken)
         {
-            var query = new GetEntriesByDateRangeQuery { Range = dateRange };
+            var query = new GetEntriesByDateRangeQuery
+            {
+                ProgressBoardId = progressBoardId,
+                Range = dateRange
+            };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess) 
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("recent")]
+        [HttpGet("progress-board/{progressBoardId}/recent")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetFilterByRecentAsync([FromQuery] int topCount,CancellationToken cancellationToken)
+        public async Task<IActionResult> GetFilterByRecentAsync(
+            [FromRoute] Guid progressBoardId,
+            [FromQuery] int topCount,
+            CancellationToken cancellationToken)
         {
-            var query = new GetRecentEntriesQuery { TopCount = topCount };
+            var query = new GetRecentEntriesQuery
+            {
+                ProgressBoardId = progressBoardId,
+                TopCount = topCount
+            };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("ordered-by-id")]
+        [HttpGet("progress-board/{progressBoardId}/ordered-by-id")]
         [DisableRateLimiting]
-        public async Task<IActionResult> OrderByIdAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> OrderByIdAsync([FromRoute] Guid progressBoardId,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetOrderByIdProgressEntryQuery(),cancellationToken);
+            var query = new GetOrderByIdProgressEntryQuery { ProgressBoardId = progressBoardId };
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpGet("ordered-by-description")]
+        [HttpGet("progress-board/{progressBoardId}/ordered-by-description")]
         [DisableRateLimiting]
-        public async Task<IActionResult> OrderByDescriptionAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> OrderByDescriptionAsync([FromRoute] Guid progressBoardId,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetOrderByDescriptionProgressEntryQuery(),cancellationToken);
+            var query = new GetOrderByDescriptionProgressEntryQuery { ProgressBoardId = progressBoardId };
+            
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -143,7 +152,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         public async Task<IActionResult> GetProgressEntryWithBoard([FromRoute] Guid id,CancellationToken cancellationToken)
         {
             var query = new GetProgressEntryWithBoardByIdQuery { ProgressEntryId = id };
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
             
@@ -160,7 +169,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
                 PageSize = pageSize
             };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess) 
                 return BadRequest(result.Error);
 

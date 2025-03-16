@@ -5,6 +5,7 @@ namespace MetaBond.Application.Feature.Posts.Querys.GetFilterRecent
 {
     public sealed class GetFilterRecentPostsQuery : IQuery<IEnumerable<PostsDTos>>
     {
+        public Guid CommunitiesId { get; set; }
         public int TopCount { get; set; }
     }
 }
