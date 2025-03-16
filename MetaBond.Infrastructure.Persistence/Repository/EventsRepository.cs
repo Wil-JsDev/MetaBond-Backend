@@ -39,7 +39,16 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                               .ToListAsync(cancellationToken);
             return query;
         }
-
+        
+        public async Task<IEnumerable<Events>> GetEventsByTitleAndCommunityIdAsync(Guid communitiesId, string title, CancellationToken cancellationToken)
+        {
+            var query = await _metaBondContext.Set<Events>()
+                .AsNoTracking()
+                .Where(e => e.CommunitiesId == communitiesId && e.Title == title)
+                .ToListAsync(cancellationToken);
+            return query;
+        }
+        
         public async Task<IEnumerable<Events>> GetOrderByIdAscAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Events>()
@@ -58,11 +67,11 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<Events>> FilterByDateRange(DateTime dateFilter, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Events>> FilterByDateRange(Guid communitiesId,DateTime dateFilter, CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Events>()
                                               .AsNoTracking()
-                                              .Where(x => x.CreateAt == dateFilter)
+                                              .Where(x => x.CommunitiesId == communitiesId &&  x.CreateAt == dateFilter)
                                               .ToListAsync(cancellationToken);
 
             return query;
@@ -85,19 +94,20 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                                .AsNoTracking()
                                                .Where(x => x.Id == eventId)
                                                .Include(ep => ep.EventParticipations)
+                                                    .ThenInclude(x => x.ParticipationInEvent)
                                                .AsSplitQuery()
-                                               .ToListAsync();
+                                               .ToListAsync(cancellationToken);
             return query;
         }
 
         public async Task<Events?> GetEventsWithParticipationsAsync(Guid eventId, CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Events>()
-                                               .AsNoTracking()     
+                                               .Where(x => x.Id == eventId)     
                                                .Include(ep => ep.EventParticipations)
-                                               .ThenInclude(ev => ev.ParticipationInEvent)
+                                                    .ThenInclude(ev => ev.ParticipationInEvent)
                                                .AsSplitQuery()
-                                               .FirstOrDefaultAsync(e => e.Id == eventId,cancellationToken);
+                                               .FirstOrDefaultAsync(cancellationToken);
 
             return query;
         }

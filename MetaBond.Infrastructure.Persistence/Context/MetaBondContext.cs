@@ -27,7 +27,7 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
         public DbSet<ProgressEntry> ProgressEntry { get; set; }
 
-        public DbSet<EventParticipation> eventParticipations { get; set; }
+        public DbSet<EventParticipation> EventParticipation { get; set; }
 
         #endregion
 
@@ -43,12 +43,14 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<Events>()
                         .ToTable("Events");
 
-
+            modelBuilder.Entity<EventParticipation>()
+                .ToTable("EventParticipation");
+            
             modelBuilder.Entity<Friendship>()
                         .ToTable("Friendship");
 
             modelBuilder.Entity<ParticipationInEvent>()
-                        .ToTable("ParticiationInEvent");
+                        .ToTable("ParticipationInEvent");
 
             modelBuilder.Entity<Posts>()
                         .ToTable("Posts");
