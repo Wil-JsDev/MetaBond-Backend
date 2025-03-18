@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
@@ -6,53 +7,55 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Querys.GetPostByIdCommunities
 {
-    internal sealed class GetPostsByIdCommunitiesQueryHandler : IQueryHandler<GetPostsByIdCommunitiesQuery, IEnumerable<PostsWithCommunitiesDTos>>
+    internal sealed class GetPostsByIdCommunitiesQueryHandler(
+        IPostsRepository postsRepository,
+        ILogger<GetPostsByIdCommunitiesQueryHandler> logger)
+        : IQueryHandler<GetPostsByIdCommunitiesQuery, IEnumerable<PostsWithCommunitiesDTos>>
     {
-        private readonly IPostsRepository _postsRepository;
-        private readonly ILogger<GetPostsByIdCommunitiesQueryHandler> _logger;
-
-        public GetPostsByIdCommunitiesQueryHandler(
-            IPostsRepository postsRepository, 
-            ILogger<GetPostsByIdCommunitiesQueryHandler> logger)
-        {
-            _postsRepository = postsRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<IEnumerable<PostsWithCommunitiesDTos>>> Handle(
             GetPostsByIdCommunitiesQuery request, 
             CancellationToken cancellationToken)
         {
-            var posts = await _postsRepository.GetByIdAsync(request.PostsId);
+            var posts = await postsRepository.GetByIdAsync(request.PostsId);
             if (posts == null)
             {
-                _logger.LogError("Post with ID '{PostsId}' not found.", request.PostsId);
+                logger.LogError("Post with ID '{PostsId}' not found.", request.PostsId);
 
                 return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
             }
 
-            var postsWithCommunities = await _postsRepository.GetPostsByIdWithCommunitiesAsync(request.PostsId,cancellationToken);
-            if (!postsWithCommunities.Any())
+            var postsWithCommunities = await postsRepository.GetPostsByIdWithCommunitiesAsync(request.PostsId,cancellationToken);
+            IEnumerable<Domain.Models.Posts> withCommunities = postsWithCommunities.ToList();
+            if (!withCommunities.Any())
             {
-                _logger.LogError("No communities found for post with ID '{PostsId}'.", request.PostsId);
+                logger.LogError("No communities found for post with ID '{PostsId}'.", request.PostsId);
 
                 return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.Failure("400","The list is empty"));
             }
 
-            IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTos = postsWithCommunities.Select(x => new PostsWithCommunitiesDTos
+            IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTos = withCommunities.Select(x => new PostsWithCommunitiesDTos
             (
                     PostsId: x.Id,
                     Title: x.Title,
                     Content: x.Content,
                     ImageUrl: x.Image,
-                    Communities: x.Communities,
+                    Communities: x.Communities != null 
+                        ?
+                    [
+                        new CommunitySummaryDto(
+                            x.Communities.Description,
+                            x.Communities.Category,
+                            x.Communities.CreateAt
+                            )
+                    ] : new List<CommunitySummaryDto>(),
                     CreatedAt: x.CreatedAt
             ));
 
-            _logger.LogInformation("Successfully retrieved {Count} posts with their associated communities for post ID '{PostsId}'.", 
-                                     postsWithCommunitiesDTos.Count(), request.PostsId);
+            IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTosEnumerable = postsWithCommunitiesDTos.ToList();
+            logger.LogInformation("Successfully retrieved {Count} posts with their associated communities for post ID '{PostsId}'.", 
+                                     postsWithCommunitiesDTosEnumerable.Count(), request.PostsId);
 
-            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(postsWithCommunitiesDTos);
+            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(postsWithCommunitiesDTosEnumerable);
         }
     }
 }
