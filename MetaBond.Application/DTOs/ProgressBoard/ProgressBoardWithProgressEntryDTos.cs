@@ -5,7 +5,7 @@ namespace MetaBond.Application.DTOs.ProgressBoard
     (
         Guid ProgressBoardId,
         Guid CommunitiesId,
-        ICollection<Domain.Models.ProgressEntry> ProgressEntries,
+        List<ProgressEntrySummaryDTos> ProgressEntries,
         DateTime? CreatedAt,
         DateTime? UpdatedAt
     );

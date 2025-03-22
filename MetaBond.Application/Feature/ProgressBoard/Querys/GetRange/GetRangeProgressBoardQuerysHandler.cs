@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
+using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -7,20 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
 {
-    internal sealed class GetRangeProgressBoardQuerysHandler : IQueryHandler<GetRangeProgressBoardQuerys, IEnumerable<ProgressBoardWithProgressEntryDTos>>
+    internal sealed class GetRangeProgressBoardQuerysHandler(
+        IProgressBoardRepository progressBoardRepository,
+        IProgressEntryRepository progressEntryRepository,
+        ILogger<GetRangeProgressBoardQuerysHandler> logger)
+        : IQueryHandler<GetRangeProgressBoardQuerys, IEnumerable<ProgressBoardWithProgressEntryDTos>>
     {
-
-        private readonly IProgressBoardRepository _progressBoardRepository;
-        private readonly ILogger<GetRangeProgressBoardQuerysHandler> _logger;
-
-        public GetRangeProgressBoardQuerysHandler(
-            IProgressBoardRepository progressBoardRepository, 
-            ILogger<GetRangeProgressBoardQuerysHandler> logger)
-        {
-            _progressBoardRepository = progressBoardRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> Handle(
             GetRangeProgressBoardQuerys request, 
             CancellationToken cancellationToken)
@@ -29,34 +22,65 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
             if (progressBoard.TryGetValue((request.DateRangeType), out var progressBoardValue))
             {
                 var progressBoardList = await progressBoardValue(cancellationToken);
-                if ( progressBoardList == null || !progressBoardList.Any())
+                IEnumerable<Domain.Models.ProgressBoard> progressBoards = progressBoardList.ToList();
+                if ( !progressBoards.Any())
                 {
-                    _logger.LogError("No progress board entries found for DateRangeType: {DateRangeType}", request.DateRangeType);
+                    logger.LogError("No progress board entries found for DateRangeType: {DateRangeType}", request.DateRangeType);
 
                     return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
                         Error.Failure("400", "The list is empty")
                     );
                 }
 
-                IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTos = progressBoardList.Select(x => new ProgressBoardWithProgressEntryDTos
+                if (request.Page <= 0 || request.PageSize <= 0)
+                {
+                    logger.LogWarning("Invalid pagination parameters: Page = {Page}, PageSize = {PageSize}", request.Page, request.PageSize);
+
+                    return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
+                        Error.Failure("400", "Page number and page size must be greater than zero. Please provide valid pagination values."));
+                }
+                
+                var progressEntryPaged = await progressEntryRepository.GetPagedProgressEntryAsync(
+                    request.PageSize, 
+                    request.Page, 
+                    cancellationToken);
+                
+                var progressEntryList = progressEntryPaged.Items!.Select(x => new ProgressEntrySummaryDTos
+                (
+                    ProgressEntryId: x.Id,
+                    Description: x.Description,
+                    CreatedAt: x.CreatedAt,
+                    ModifiedAt: x.UpdateAt
+                ));
+                
+                IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTos = progressBoards.Select(x => new ProgressBoardWithProgressEntryDTos
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
-                    ProgressEntries: x.ProgressEntries,
+                    ProgressEntries: x.ProgressEntries != null ?
+                        progressEntryList.Select(pe => new ProgressEntrySummaryDTos
+                        (
+                            ProgressEntryId: pe.ProgressEntryId,
+                            Description: pe.Description,
+                            CreatedAt: pe.CreatedAt,
+                            ModifiedAt: pe.ModifiedAt
+                        )).ToList() : 
+                        new List<ProgressEntrySummaryDTos>(),
                     CreatedAt: x.CreatedAt,
                     UpdatedAt: x.UpdatedAt
                 ));
 
-                _logger.LogInformation("Successfully retrieved {Count} progress board entries for DateRangeType: {DateRangeType}",
-                           progressBoardWithProgressEntryDTos.Count(), request.DateRangeType);
+                IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTosEnumerable = progressBoardWithProgressEntryDTos.ToList();
+                logger.LogInformation("Successfully retrieved {Count} progress board entries for DateRangeType: {DateRangeType}",
+                           progressBoardWithProgressEntryDTosEnumerable.Count(), request.DateRangeType);
 
-                return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Success(progressBoardWithProgressEntryDTos);
+                return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Success(progressBoardWithProgressEntryDTosEnumerable);
            
             }
-                _logger.LogError("Invalid DateRangeType: {DateRangeType}. No matching progress board found.", request.DateRangeType);
+            logger.LogError("Invalid DateRangeType: {DateRangeType}. No matching progress board found.", request.DateRangeType);
 
-                return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
-                    Error.Failure("400", "Invalid DateRangeType provided"));
+            return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
+                Error.Failure("400", "Invalid DateRangeType provided"));
         }
 
         #region Private Methods
@@ -66,28 +90,28 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
             {
                 {DateRangeType.Today, 
                     async cancellationToken =>
-                        await _progressBoardRepository.GetBoardsByDateRangeAsync(
+                        await progressBoardRepository.GetBoardsByDateRangeAsync(
                             DateTime.UtcNow.Date,
                             DateTime.UtcNow.AddDays(1).AddTicks(-1),
                             cancellationToken) },
 
                 {DateRangeType.Week,
                     async cancellationToken => 
-                        await _progressBoardRepository.GetBoardsByDateRangeAsync(
+                        await progressBoardRepository.GetBoardsByDateRangeAsync(
                             DateTime.UtcNow.Date.AddDays(-7),
                             DateTime.UtcNow.Date.AddTicks(-7),
                             cancellationToken)},
 
                 {DateRangeType.Month,
                     async cancellationToken =>
-                        await _progressBoardRepository.GetBoardsByDateRangeAsync(
+                        await progressBoardRepository.GetBoardsByDateRangeAsync(
                             new DateTime(DateTime.UtcNow.Year,DateTime.UtcNow.Month, 1),
                             new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(1).AddTicks(-1),
                             cancellationToken)},
 
                 {DateRangeType.Week,
                     async cancellationToken =>
-                        await _progressBoardRepository.GetBoardsByDateRangeAsync(
+                        await progressBoardRepository.GetBoardsByDateRangeAsync(
                             new DateTime(DateTime.UtcNow.Year, 1, 1),
                             new DateTime(DateTime.UtcNow.Year + 1 , 1, 1).AddTicks(-1),
                             cancellationToken)},
