@@ -7,19 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRecent
 {
-    internal sealed class GetRecentProgressBoardQuerysHandler : IQueryHandler<GetRecentProgressBoardQuerys, IEnumerable<ProgressBoardDTos>>
+    internal sealed class GetRecentProgressBoardQuerysHandler(
+        IProgressBoardRepository progressBoardRepository,
+        ILogger<GetRecentProgressBoardQuerysHandler> logger)
+        : IQueryHandler<GetRecentProgressBoardQuerys, IEnumerable<ProgressBoardDTos>>
     {
-        private readonly IProgressBoardRepository _progressBoardRepository;
-        private readonly ILogger<GetRecentProgressBoardQuerysHandler> _logger;
-
-        public GetRecentProgressBoardQuerysHandler(
-            IProgressBoardRepository progressBoardRepository, 
-            ILogger<GetRecentProgressBoardQuerysHandler> logger)
-        {
-            _progressBoardRepository = progressBoardRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<IEnumerable<ProgressBoardDTos>>> Handle(
             GetRecentProgressBoardQuerys request, 
             CancellationToken cancellationToken)
@@ -28,14 +20,15 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRecent
             if (progressBoardDictionary.TryGetValue((request.dateFilter), out var statusFilter))
             {
                 var progressBoard = await statusFilter(cancellationToken);
-                if (progressBoard == null || !progressBoard.Any())
+                IEnumerable<Domain.Models.ProgressBoard> progressBoards = progressBoard.ToList();
+                if (!progressBoards.Any())
                 {
-                    _logger.LogWarning("No progress boards found for the given date filter: {DateFilter}", request.dateFilter);
+                    logger.LogWarning("No progress boards found for the given date filter: {DateFilter}", request.dateFilter);
 
                     return ResultT<IEnumerable<ProgressBoardDTos>>.Failure(Error.Failure("400", "No progress boards found"));
                 }
 
-                IEnumerable<ProgressBoardDTos> progressBoardDTos = progressBoard.Select(x => new ProgressBoardDTos
+                IEnumerable<ProgressBoardDTos> progressBoardDTos = progressBoards.Select(x => new ProgressBoardDTos
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
@@ -43,11 +36,13 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRecent
                     UpdatedAt: x.UpdatedAt
                 ));
 
-                _logger.LogInformation("Retrieved {Count} progress boards for date filter: {DateFilter}", progressBoardDTos.Count(), request.dateFilter);
+                IEnumerable<ProgressBoardDTos> progressBoardDTosEnumerable = progressBoardDTos.ToList();
+                
+                logger.LogInformation("Retrieved {Count} progress boards for date filter: {DateFilter}", progressBoardDTosEnumerable.Count(), request.dateFilter);
 
-                return ResultT<IEnumerable<ProgressBoardDTos>>.Success(progressBoardDTos);
+                return ResultT<IEnumerable<ProgressBoardDTos>>.Success(progressBoardDTosEnumerable);
             }
-            _logger.LogError("Invalid date filter provided: {DateFilter}", request.dateFilter);
+            logger.LogError("Invalid date filter provided: {DateFilter}", request.dateFilter);
 
             return ResultT<IEnumerable<ProgressBoardDTos>>.Failure(Error.Failure("400", "Invalid date filter"));
         }
@@ -57,9 +52,9 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRecent
         {
             return new Dictionary<DateRangeFilter, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressBoard>>>>
             {
-                {(DateRangeFilter.LastDay), async cancellationToken => await _progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddDays(-1),cancellationToken)},
-                {(DateRangeFilter.ThreeDays), async cancellationToken => await _progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddTicks(-3),cancellationToken)},
-                {(DateRangeFilter.LastWeek), async cancellationToken => await _progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddDays(-5),cancellationToken)},
+                {(DateRangeFilter.LastDay), async cancellationToken => await progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddDays(-1),cancellationToken)},
+                {(DateRangeFilter.ThreeDays), async cancellationToken => await progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddTicks(-3),cancellationToken)},
+                {(DateRangeFilter.LastWeek), async cancellationToken => await progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddDays(-5),cancellationToken)},
 
             };
         }
