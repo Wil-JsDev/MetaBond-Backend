@@ -1,6 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
-using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -51,21 +50,13 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
                     Description: x.Description,
                     CreatedAt: x.CreatedAt,
                     ModifiedAt: x.UpdateAt
-                ));
+                )).ToList();
                 
                 IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTos = progressBoards.Select(x => new ProgressBoardWithProgressEntryDTos
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
-                    ProgressEntries: x.ProgressEntries != null ?
-                        progressEntryList.Select(pe => new ProgressEntrySummaryDTos
-                        (
-                            ProgressEntryId: pe.ProgressEntryId,
-                            Description: pe.Description,
-                            CreatedAt: pe.CreatedAt,
-                            ModifiedAt: pe.ModifiedAt
-                        )).ToList() : 
-                        new List<ProgressEntrySummaryDTos>(),
+                    ProgressEntries: progressEntryList ,
                     CreatedAt: x.CreatedAt,
                     UpdatedAt: x.UpdatedAt
                 ));
@@ -91,32 +82,30 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
                 {DateRangeType.Today, 
                     async cancellationToken =>
                         await progressBoardRepository.GetBoardsByDateRangeAsync(
-                            DateTime.UtcNow.Date,
-                            DateTime.UtcNow.AddDays(1).AddTicks(-1),
+                            DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc),  // Aseguramos que la fecha sea UTC
+                            DateTime.SpecifyKind(DateTime.UtcNow.AddDays(1).AddTicks(-1), DateTimeKind.Utc),  // Fin del día de hoy en UTC
                             cancellationToken) },
 
                 {DateRangeType.Week,
                     async cancellationToken => 
                         await progressBoardRepository.GetBoardsByDateRangeAsync(
-                            DateTime.UtcNow.Date.AddDays(-7),
-                            DateTime.UtcNow.Date.AddTicks(-7),
+                            DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-7), DateTimeKind.Utc),  // Inicio de la semana pasada en UTC
+                            DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-1), DateTimeKind.Utc),  // Fin de la semana pasada en UTC
                             cancellationToken)},
 
                 {DateRangeType.Month,
                     async cancellationToken =>
                         await progressBoardRepository.GetBoardsByDateRangeAsync(
-                            new DateTime(DateTime.UtcNow.Year,DateTime.UtcNow.Month, 1),
-                            new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(1).AddTicks(-1),
+                            DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1), DateTimeKind.Utc),  // Inicio del mes en UTC
+                            DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(1).AddTicks(-1), DateTimeKind.Utc),  // Fin del mes en UTC
                             cancellationToken)},
 
-                {DateRangeType.Week,
+                {DateRangeType.Year,
                     async cancellationToken =>
                         await progressBoardRepository.GetBoardsByDateRangeAsync(
-                            new DateTime(DateTime.UtcNow.Year, 1, 1),
-                            new DateTime(DateTime.UtcNow.Year + 1 , 1, 1).AddTicks(-1),
+                            DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year, 1, 1), DateTimeKind.Utc),  // Inicio del año en UTC
+                            DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year + 1, 1, 1).AddTicks(-1), DateTimeKind.Utc),  // Fin del año en UTC
                             cancellationToken)},
-
-
             };
         }
         #endregion

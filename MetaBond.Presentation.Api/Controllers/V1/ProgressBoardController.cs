@@ -85,14 +85,14 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetProgressEntriesAsync(
             [FromRoute] Guid id, 
-            [FromQuery] int page,
+            [FromQuery] int pageNumber,
             [FromQuery] int pageSize,
             CancellationToken cancellationToken)
         {
             var query = new GetProgressBoardIdWithEntriesQuerys
             {
                 ProgressBoardId = id,
-                PageNumber = page,
+                PageNumber = pageNumber,
                 PageSize = pageSize
             };
 

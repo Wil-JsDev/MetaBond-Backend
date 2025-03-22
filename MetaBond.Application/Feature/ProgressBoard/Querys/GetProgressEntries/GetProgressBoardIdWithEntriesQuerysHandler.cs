@@ -49,20 +49,13 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetProgressEntries;
                     Description: x.Description,
                     CreatedAt: x.CreatedAt,
                     ModifiedAt: x.UpdateAt
-                ));
+                )).ToList();
                 
                 IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDs = progressBoards.Select(x => new ProgressBoardWithProgressEntryDTos
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
-                    ProgressEntries: x.ProgressEntries != null ? 
-                    progressEntry.Select(summaryDTos => new ProgressEntrySummaryDTos
-                    (
-                        ProgressEntryId: summaryDTos.ProgressEntryId,
-                        Description: summaryDTos.Description,
-                        CreatedAt: summaryDTos.CreatedAt,
-                        ModifiedAt: summaryDTos.ModifiedAt
-                    )).ToList() : [],
+                    ProgressEntries:progressEntry,
                     CreatedAt: x.CreatedAt,
                     UpdatedAt: x.UpdatedAt
                 ));
