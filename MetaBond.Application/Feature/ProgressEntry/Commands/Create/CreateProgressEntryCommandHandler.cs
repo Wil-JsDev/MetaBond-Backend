@@ -30,8 +30,7 @@ namespace MetaBond.Application.Feature.ProgressEntry.Commands.Create
                 {
                     Id = Guid.NewGuid(),
                     ProgressBoardId = request.ProgressBoardId,
-                    Description = request.Description,
-                    UpdateAt = DateTime.UtcNow,
+                    Description = request.Description
                 };
 
                 await _progressEntryRepository.CreateAsync(progressEntry,cancellationToken);

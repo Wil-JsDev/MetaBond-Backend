@@ -7,28 +7,28 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Querys.Pagination
 {
-    internal sealed class GetPagedProgressEntryQueryHandler : IQueryHandler<GetPagedProgressEntryQuery, PagedResult<ProgressEntryDTos>>
+    internal sealed class GetPagedProgressEntryQueryHandler(
+        IProgressEntryRepository progressEntryRepository,
+        ILogger<GetPagedProgressEntryQueryHandler> logger)
+        : IQueryHandler<GetPagedProgressEntryQuery, PagedResult<ProgressEntryDTos>>
     {
-        private readonly IProgressEntryRepository _progressEntryRepository;
-        private readonly ILogger<GetPagedProgressEntryQueryHandler> _logger;
-
-        public GetPagedProgressEntryQueryHandler(
-            IProgressEntryRepository progressEntryRepository, 
-            ILogger<GetPagedProgressEntryQueryHandler> logger)
-        {
-            _progressEntryRepository = progressEntryRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<PagedResult<ProgressEntryDTos>>> Handle(
             GetPagedProgressEntryQuery request, 
             CancellationToken cancellationToken)
         {
             if (request != null)
             {
-                var getPagedProgressEntry = await _progressEntryRepository.GetPagedProgressEntryAsync(request.PageSize,request.PageNumber,cancellationToken);
 
-                var dtoItems = getPagedProgressEntry.Items.Select(x => new ProgressEntryDTos
+                if (request.PageNumber <= 0 || request.PageSize <= 0)
+                {
+                    logger.LogError("");
+
+                    return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400", "Page Number and Page Size are required"));
+                }
+                
+                var getPagedProgressEntry = await progressEntryRepository.GetPagedProgressEntryAsync(request.PageSize,request.PageNumber,cancellationToken);
+
+                var dtoItems = getPagedProgressEntry.Items!.Select(x => new ProgressEntryDTos
                 (
                      ProgressEntryId: x.Id,
                     ProgressBoardId: x.ProgressBoardId,
@@ -36,9 +36,10 @@ namespace MetaBond.Application.Feature.ProgressEntry.Querys.Pagination
                     CreatedAt: x.CreatedAt,
                     UpdateAt: x.UpdateAt
                 ));
-                if (!dtoItems.Any())
+                IEnumerable<ProgressEntryDTos> progressEntryDTosEnumerable = dtoItems.ToList();
+                if (!progressEntryDTosEnumerable.Any())
                 {
-                    _logger.LogError("No progress entries found for the given page request. Page: {PageNumber}, Size: {PageSize}", 
+                    logger.LogError("No progress entries found for the given page request. Page: {PageNumber}, Size: {PageSize}", 
                         request.PageNumber, request.PageSize);
 
                     return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400", "The list is empty"));
@@ -49,16 +50,16 @@ namespace MetaBond.Application.Feature.ProgressEntry.Querys.Pagination
                     TotalItems = getPagedProgressEntry.TotalItems,
                     CurrentPage = getPagedProgressEntry.CurrentPage,
                     TotalPages = getPagedProgressEntry.TotalPages,
-                    Items = dtoItems
+                    Items = progressEntryDTosEnumerable
                 };
 
-                _logger.LogInformation("Successfully retrieved {TotalItems} progress entries for page {PageNumber} with page size {PageSize}.", 
+                logger.LogInformation("Successfully retrieved {TotalItems} progress entries for page {PageNumber} with page size {PageSize}.", 
                     getPagedProgressEntry.TotalItems, request.PageNumber, request.PageSize);
 
                 return ResultT<PagedResult<ProgressEntryDTos>>.Success(result);
             }
 
-            _logger.LogError("Invalid request received. Page: {PageNumber}, Size: {PageSize}", request.PageNumber, request.PageSize);
+            logger.LogError("Invalid request received. Page: {PageNumber}, Size: {PageSize}", request!.PageNumber, request.PageSize);
 
             return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400", "Invalid request"));
         }
