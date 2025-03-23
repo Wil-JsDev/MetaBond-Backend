@@ -1,8 +1,8 @@
 using FluentValidation;
 
-namespace MetaBond.Application.Feature.Communities.Commands;
+namespace MetaBond.Application.Feature.Communities.Commands.Create;
 
-public class CreateCommunitiesCommandValidator : AbstractValidator<CreateCommuntiesCommand>
+public class CreateCommunitiesCommandValidator : AbstractValidator<CreateCommunitiesCommand>
 {
     public CreateCommunitiesCommandValidator()
     {

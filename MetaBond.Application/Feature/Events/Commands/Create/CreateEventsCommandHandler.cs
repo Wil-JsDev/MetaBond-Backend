@@ -6,19 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Commands.Create
 {
-    internal sealed class CreateEventsCommandHandler : ICommandHandler<CreateEventsCommand, EventsDto>
+    internal sealed class CreateEventsCommandHandler(
+        IEventsRepository eventsRepository,
+        ILogger<CreateEventsCommandHandler> logger)
+        : ICommandHandler<CreateEventsCommand, EventsDto>
     {
-        private readonly IEventsRepository _eventsRepository;
-        private readonly ILogger<CreateEventsCommandHandler> _logger;
-
-        public CreateEventsCommandHandler(
-            IEventsRepository eventsRepository, 
-            ILogger<CreateEventsCommandHandler> logger)
-        {
-            _eventsRepository = eventsRepository;
-            _logger = logger;
-        }
-
         public async Task<ResultT<EventsDto>> Handle(
             CreateEventsCommand request, 
             CancellationToken cancellationToken)
@@ -35,9 +27,9 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
                     CommunitiesId = request.CommunitiesId
                 };
 
-                await _eventsRepository.CreateAsync(events,cancellationToken);
+                await eventsRepository.CreateAsync(events,cancellationToken);
 
-                _logger.LogInformation("Community {CommunityId} created successfully.", events.Id);
+                logger.LogInformation("Community {CommunityId} created successfully.", events.Id);
 
                 EventsDto eventsDto = new 
                 (
@@ -52,7 +44,7 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
                 return ResultT<EventsDto>.Success(eventsDto);
             }
 
-            _logger.LogError("An error occurred while creating the event. Request: {@Request}", request);
+            logger.LogError("An error occurred while creating the event. Request: {@Request}", request);
 
             return ResultT<EventsDto>.Failure(Error.Failure("400", "Failed to create the event. Please check the provided data."));
 

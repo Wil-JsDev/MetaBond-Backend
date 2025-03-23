@@ -4,8 +4,8 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent
-{
+namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
+
     internal sealed class GetEventsWithParticipationInEventQueryHandler(
         IEventsRepository eventsRepository,
         ILogger<GetEventsWithParticipationInEventQueryHandler> logger)
@@ -18,16 +18,16 @@ namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationIn
             var events = await eventsRepository.GetByIdAsync(request.EventsId ?? Guid.Empty);
             if (events != null)
             {
-                Domain.Models.Events eventsWithParticipationInEvents = await eventsRepository.GetEventsWithParticipationsAsync(events.Id, cancellationToken);
+                Domain.Models.Events? eventsWithParticipationInEvents = await eventsRepository.GetEventsWithParticipationsAsync(events.Id, cancellationToken);
                 
-                if (eventsWithParticipationInEvents.EventParticipations != null)
+                if (eventsWithParticipationInEvents!.EventParticipations != null)
                 {
                     logger.LogInformation("Event {EventId} has {Count} participations.",
                         eventsWithParticipationInEvents.Id, eventsWithParticipationInEvents.EventParticipations.Count);
                 }
                 else
                 {
-                    logger.LogError("EventParticipations is NULL for event {EventId}.", eventsWithParticipationInEvents.Id);
+                    logger.LogError("EventParticipation is NULL for event {EventId}.", eventsWithParticipationInEvents.Id);
                 }
                 
                 EventsWithParticipationInEventsDTos inEventsDTos = new
@@ -50,4 +50,3 @@ namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationIn
             return ResultT<EventsWithParticipationInEventsDTos>.Failure(Error.NotFound("404", $"{request.EventsId} not found"));
         }
     }
-}

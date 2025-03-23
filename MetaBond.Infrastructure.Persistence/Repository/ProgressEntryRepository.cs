@@ -27,7 +27,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         {
             var query = await _metaBondContext.Set<ProgressEntry>()
                 .AsNoTracking()
-                .Where(x => x.ProgressBoardId == progressEntry)
+                .Where(x => x.Id == progressEntry)
                 .Include(x => x.ProgressBoard)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);

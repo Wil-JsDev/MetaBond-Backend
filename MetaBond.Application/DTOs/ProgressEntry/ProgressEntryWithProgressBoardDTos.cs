@@ -1,10 +1,12 @@
+using MetaBond.Application.DTOs.ProgressBoard;
+
 namespace MetaBond.Application.DTOs.ProgressEntry;
 
 public record ProgressEntryWithProgressBoardDTos
 (
     Guid ProgressEntryId,
-    Domain.Models.ProgressBoard ProgressBoard,
-    string Description,
+    ProgressBoardSummaryDTos ProgressBoard,
+    string? Description,
     DateTime CreatedAt,
     DateTime UpdateAt
 );

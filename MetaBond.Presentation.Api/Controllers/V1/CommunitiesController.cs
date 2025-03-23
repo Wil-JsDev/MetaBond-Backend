@@ -1,12 +1,13 @@
 ﻿using Asp.Versioning;
 using MediatR;
 using MetaBond.Application.Feature.Communities.Commands;
+using MetaBond.Application.Feature.Communities.Commands.Create;
 using MetaBond.Application.Feature.Communities.Commands.Delete;
 using MetaBond.Application.Feature.Communities.Commands.Update;
-using MetaBond.Application.Feature.Communities.Querys.Filter;
-using MetaBond.Application.Feature.Communities.Querys.GetById;
-using MetaBond.Application.Feature.Communities.Querys.GetPostsAndEvents;
-using MetaBond.Application.Feature.Communities.Querys.Pagination;
+using MetaBond.Application.Feature.Communities.Query.Filter;
+using MetaBond.Application.Feature.Communities.Query.GetById;
+using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
+using MetaBond.Application.Feature.Communities.Query.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -20,7 +21,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     {
         [HttpPost]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> AddAsync([FromBody] CreateCommuntiesCommand createCommand, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddAsync([FromBody] CreateCommunitiesCommand createCommand, CancellationToken cancellationToken)
         {
             var result = await mediator.Send(createCommand,cancellationToken);
             if (!result.IsSuccess)

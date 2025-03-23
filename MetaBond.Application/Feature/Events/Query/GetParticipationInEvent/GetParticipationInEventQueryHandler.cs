@@ -20,15 +20,16 @@ namespace MetaBond.Application.Feature.Events.Query.GetParticipationInEvent
             {
 
                 IEnumerable<Domain.Models.Events> eventsWithParticipationInEvent = await eventsRepository.GetParticipationInEventAsync(events.Id,cancellationToken);
-                if ( eventsWithParticipationInEvent == null || !eventsWithParticipationInEvent.Any())
+                IEnumerable<Domain.Models.Events> withParticipationInEvent = eventsWithParticipationInEvent.ToList();
+                if ( !withParticipationInEvent.Any())
                 {
                     logger.LogError("No participation found for the event with ID: {EventId}", events.Id);
 
                     return ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Failure(Error.Failure("400", "The list is empty"));
                 }
-                logger.LogInformation("Found {Count} participation for the event with ID: {EventId}", eventsWithParticipationInEvent.Count(), events.Id);
+                logger.LogInformation("Found {Count} participation for the event with ID: {EventId}", withParticipationInEvent.Count(), events.Id);
 
-                IEnumerable<EventsWithParticipationInEventsDTos> eventsWithParticipationInEventsDtos = eventsWithParticipationInEvent.Select(x => new EventsWithParticipationInEventsDTos
+                IEnumerable<EventsWithParticipationInEventsDTos> eventsWithParticipationInEventsDtos = withParticipationInEvent.Select(x => new EventsWithParticipationInEventsDTos
                 (
                     EventsId: x.Id,
                     Description: x.Description,

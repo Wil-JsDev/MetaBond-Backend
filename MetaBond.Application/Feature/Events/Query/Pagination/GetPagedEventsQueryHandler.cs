@@ -26,7 +26,7 @@ namespace MetaBond.Application.Feature.Events.Query.Pagination
                 
                 var eventsPaged = await eventsRepository.GetPagedEventsAsync(request.PageNumber, request.PageSize, cancellationToken);
 
-                var dtoItems = eventsPaged.Items.Select(e => new EventsDto
+                var dtoItems = eventsPaged.Items!.Select(e => new EventsDto
                 (
                     Id: e.Id,
                     Description: e.Description,
@@ -50,7 +50,7 @@ namespace MetaBond.Application.Feature.Events.Query.Pagination
                 return ResultT<PagedResult<EventsDto>>.Success(result);
             }
 
-            logger.LogError("No events were found for the specified criteria. Page {PageNumber}.", request.PageNumber);
+            logger.LogError("No events were found for the specified criteria. Page {PageNumber}.", request!.PageNumber);
 
             return ResultT<PagedResult<EventsDto>>.Failure
                 (Error.Failure("400", "No events were found for the specified criteria."));

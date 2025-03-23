@@ -1,4 +1,6 @@
 ﻿
+using MetaBond.Application.DTOs.Events;
+
 namespace MetaBond.Application.DTOs.Posts
 {
     public sealed record PostsWithCommunitiesDTos
@@ -7,7 +9,7 @@ namespace MetaBond.Application.DTOs.Posts
         string? Title,
         string? Content,
         string? ImageUrl,
-        Domain.Models.Communities? Communities,
+        List<CommunitySummaryDto> Communities,
         DateTime? CreatedAt
     );
 }

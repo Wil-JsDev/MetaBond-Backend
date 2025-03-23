@@ -4,51 +4,41 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.ParticipationInEvent.Commands.Create
+namespace MetaBond.Application.Feature.ParticipationInEvent.Commands.Create;
+
+internal sealed class CreateParticipationInEventCommandHandler(
+    IParticipationInEventRepository participationInEventRepository,
+    ILogger<CreateParticipationInEventCommandHandler> logger)
+    : ICommandHandler<CreateParticipationInEventCommand, ParticipationInEventDTos>
 {
-    internal sealed class CreateParticipationInEventCommandHandler : ICommandHandler<CreateParticipationInEventCommand, ParticipationInEventDTos>
+    public async Task<ResultT<ParticipationInEventDTos>> Handle(
+        CreateParticipationInEventCommand request, 
+        CancellationToken cancellationToken)
     {
-
-        private readonly IParticipationInEventRepository _participationInEventRepository;
-        private readonly ILogger<CreateParticipationInEventCommandHandler> _logger;
-
-        public CreateParticipationInEventCommandHandler(
-            IParticipationInEventRepository participationInEventRepository, 
-            ILogger<CreateParticipationInEventCommandHandler> logger)
+        if (request != null)
         {
-            _participationInEventRepository = participationInEventRepository;
-            _logger = logger;
-        }
-
-        public async Task<ResultT<ParticipationInEventDTos>> Handle(
-            CreateParticipationInEventCommand request, 
-            CancellationToken cancellationToken)
-        {
-            if (request != null)
+            Domain.Models.ParticipationInEvent inEvent = new()
             {
-                Domain.Models.ParticipationInEvent inEvent = new()
-                {
-                    Id = Guid.NewGuid(),
-                    EventId = request.EventId
-                };
+                Id = Guid.NewGuid(),
+                EventId = request.EventId
+            };
 
-                await _participationInEventRepository.CreateAsync(inEvent, cancellationToken);
+            await participationInEventRepository.CreateAsync(inEvent, cancellationToken);
 
-                _logger.LogInformation("Participation created for EventId: {EventId} with ParticipationId: {ParticipationId}",
-                                           inEvent.EventId, inEvent.Id);
+            logger.LogInformation("Participation created for EventId: {EventId} with ParticipationId: {ParticipationId}",
+                inEvent.EventId, inEvent.Id);
 
-                ParticipationInEventDTos inEventDTos = new
-                (
-                   ParticipationInEventId: inEvent.Id,
-                   EventId: inEvent.EventId
-                );
+            ParticipationInEventDTos inEventDTos = new
+            (
+                ParticipationInEventId: inEvent.Id,
+                EventId: inEvent.EventId
+            );
                 
-                return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
-            }
-
-            _logger.LogError("Invalid request received for creating participation in event.");
-
-            return ResultT<ParticipationInEventDTos>.Failure(Error.Failure("400", "Request data is invalid"));
+            return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
         }
+
+        logger.LogError("Invalid request received for creating participation in event.");
+
+        return ResultT<ParticipationInEventDTos>.Failure(Error.Failure("400", "Request data is invalid"));
     }
 }
