@@ -3,38 +3,29 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.ProgressEntry.Commands.Delete
+namespace MetaBond.Application.Feature.ProgressEntry.Commands.Delete;
+
+internal sealed class DeleteProgressEntryCommandHandler(
+    IProgressEntryRepository repository,
+    ILogger<DeleteProgressEntryCommandHandler> logger)
+    : ICommandHandler<DeleteProgressEntryCommand, Guid>
 {
-    internal sealed class DeleteProgressEntryCommandHandler : ICommandHandler<DeleteProgressEntryCommand, Guid>
+    public async Task<ResultT<Guid>> Handle(
+        DeleteProgressEntryCommand request, 
+        CancellationToken cancellationToken)
     {
-        private readonly IProgressEntryRepository _repository;
-        private readonly ILogger<DeleteProgressEntryCommandHandler> _logger;
-
-        public DeleteProgressEntryCommandHandler(
-            IProgressEntryRepository repository, 
-            ILogger<DeleteProgressEntryCommandHandler> logger)
+        var progressEntry = await repository.GetByIdAsync(request.Id);
+        if (progressEntry != null)
         {
-            _repository = repository;
-            _logger = logger;
-        }
-
-        public async Task<ResultT<Guid>> Handle(
-            DeleteProgressEntryCommand request, 
-            CancellationToken cancellationToken)
-        {
-            var progressEntry = await _repository.GetByIdAsync(request.Id);
-            if (progressEntry != null)
-            {
                
-                await _repository.DeleteAsync(progressEntry,cancellationToken);
-                _logger.LogInformation("Progress entry with ID {Id} successfully deleted.", request.Id);
+            await repository.DeleteAsync(progressEntry,cancellationToken);
+            logger.LogInformation("Progress entry with ID {Id} successfully deleted.", request.Id);
 
-                return ResultT<Guid>.Success(request.Id);
-            }
-
-            _logger.LogError("Progress entry with ID {Id} not found.", request.Id);
-
-            return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+            return ResultT<Guid>.Success(request.Id);
         }
+
+        logger.LogError("Progress entry with ID {Id} not found.", request.Id);
+
+        return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
     }
 }

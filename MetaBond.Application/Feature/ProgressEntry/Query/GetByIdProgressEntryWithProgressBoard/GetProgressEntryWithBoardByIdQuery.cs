@@ -1,8 +1,7 @@
-using System.Collections;
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
 
-namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetByIdProgressEntryWithProgressBoard;
+namespace MetaBond.Application.Feature.ProgressEntry.Query.GetByIdProgressEntryWithProgressBoard;
 
 public class GetProgressEntryWithBoardByIdQuery : IQuery<IEnumerable<ProgressEntryWithProgressBoardDTos>>
 {

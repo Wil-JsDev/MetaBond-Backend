@@ -3,39 +3,30 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetCountByBoard
+namespace MetaBond.Application.Feature.ProgressEntry.Query.GetCountByBoard;
+
+internal sealed class GetCountByBoardIdQueryHandler(
+    IProgressEntryRepository progressEntryRepository,
+    ILogger<GetCountByBoardIdQueryHandler> logger)
+    : IQueryHandler<GetCountByBoardIdQuery, int>
 {
-    internal sealed class GetCountByBoardIdQueryHandler : IQueryHandler<GetCountByBoardIdQuery, int>
+    public async Task<ResultT<int>> Handle(
+        GetCountByBoardIdQuery request, 
+        CancellationToken cancellationToken)
     {
-        private readonly IProgressEntryRepository _progressEntryRepository;
-        private readonly ILogger<GetCountByBoardIdQueryHandler> _logger;
 
-        public GetCountByBoardIdQueryHandler(
-            IProgressEntryRepository progressEntryRepository, 
-            ILogger<GetCountByBoardIdQueryHandler> logger)
+        if (request != null)
         {
-            _progressEntryRepository = progressEntryRepository;
-            _logger = logger;
+            var countBoard = await progressEntryRepository.CountEntriesByBoardIdAsync(request.ProgressBoardId,cancellationToken);
+
+            logger.LogInformation("Successfully retrieved the count of progress entries for ProgressBoardId: {BoardId}. Count: {Count}", 
+                request.ProgressBoardId, countBoard);
+
+            return ResultT<int>.Success(countBoard);
         }
 
-        public async Task<ResultT<int>> Handle(
-            GetCountByBoardIdQuery request, 
-            CancellationToken cancellationToken)
-        {
+        logger.LogError("Invalid request: The request object is null.");
 
-            if (request != null)
-            {
-                var countBoard = await _progressEntryRepository.CountEntriesByBoardIdAsync(request.ProgressBoardId,cancellationToken);
-
-                _logger.LogInformation("Successfully retrieved the count of progress entries for ProgressBoardId: {BoardId}. Count: {Count}", 
-                    request.ProgressBoardId, countBoard);
-
-                return ResultT<int>.Success(countBoard);
-            }
-
-            _logger.LogError("Invalid request: The request object is null.");
-
-            return ResultT<int>.Failure(Error.Failure("400", "Invalid request."));
-        }
+        return ResultT<int>.Failure(Error.Failure("400", "Invalid request."));
     }
 }

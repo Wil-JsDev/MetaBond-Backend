@@ -1,9 +1,8 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 
-namespace MetaBond.Application.Feature.ProgressEntry.Querys.GetCountByBoard
+namespace MetaBond.Application.Feature.ProgressEntry.Query.GetCountByBoard;
+
+public sealed class GetCountByBoardIdQuery : IQuery<int>
 {
-    public sealed class GetCountByBoardIdQuery : IQuery<int>
-    {
-        public Guid ProgressBoardId { get; set; }
-    }
+    public Guid ProgressBoardId { get; set; }
 }
