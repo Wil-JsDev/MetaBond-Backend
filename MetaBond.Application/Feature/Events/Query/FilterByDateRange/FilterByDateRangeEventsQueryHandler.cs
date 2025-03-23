@@ -26,12 +26,12 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
                 
                 if (!eventsEnumerable.Any())
                 {
-                    var valuesFilter = GetValueFilter();
-                    if (valuesFilter.TryGetValue((request.DateRangeFilter), out var values))
+                    var valuesFilter = GetValueFilter().TryGetValue((request.DateRangeFilter), out var values);
+                    if (valuesFilter)
                     {
                         logger.LogInformation("No events found for the given filter");
                         
-                        return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", values));
+                        return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", values!));
                     }
 
                     logger.LogError("The events list is empty due to an unknown error.");
@@ -70,7 +70,7 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
                 { DateRangeFilter.LastWeek, async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,DateTime.UtcNow.AddDays(- 7),cancellationToken)  }
             };
         }
-        private Dictionary<Domain.DateRangeFilter, string> GetValueFilter()
+        private static Dictionary<Domain.DateRangeFilter, string> GetValueFilter()
         {
             return new Dictionary<DateRangeFilter, string>
             {
