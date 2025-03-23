@@ -5,63 +5,54 @@ using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.ParticipationInEvent.Querys.Pagination
+namespace MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;
+
+internal sealed class GetPagedParticipationInEventQueryHandler(
+    IParticipationInEventRepository repository,
+    ILogger<GetPagedParticipationInEventQueryHandler> logger)
+    : IQueryHandler<GetPagedParticipationInEventQuery, PagedResult<ParticipationInEventDTos>>
 {
-    internal sealed class GetPagedParticipationInEventQueryHandler : IQueryHandler<GetPagedParticipationInEventQuery, PagedResult<ParticipationInEventDTos>>
+    public async Task<ResultT<PagedResult<ParticipationInEventDTos>>> Handle(
+        GetPagedParticipationInEventQuery request, 
+        CancellationToken cancellationToken)
     {
-        private readonly IParticipationInEventRepository _repository;
-        private readonly ILogger<GetPagedParticipationInEventQueryHandler> _logger;
-
-        public GetPagedParticipationInEventQueryHandler(
-            IParticipationInEventRepository repository, 
-            ILogger<GetPagedParticipationInEventQueryHandler> logger)
+        if (request != null)
         {
-            _repository = repository;
-            _logger = logger;
-        }
+            var participationInEvent = await repository.GetPagedParticipationInEventAsync(
+                request.PageNumber,
+                request.PageSize,
+                cancellationToken);
 
-        public async Task<ResultT<PagedResult<ParticipationInEventDTos>>> Handle(
-            GetPagedParticipationInEventQuery request, 
-            CancellationToken cancellationToken)
-        {
-            if (request != null)
+            var dtoItems = participationInEvent.Items!.Select(p => new ParticipationInEventDTos
+            (
+                ParticipationInEventId: p.Id,
+                EventId: p.EventId
+            )).ToList();
+
+            if (!dtoItems.Any())
             {
-                var participationInEvent = await _repository.GetPagedParticipationInEventAsync(
-                    request.PageNumber,
-                    request.PageSize,
-                    cancellationToken);
+                logger.LogWarning("No participation found for the given page: {PageNumber}, size: {PageSize}.", 
+                    request.PageNumber, request.PageSize);
 
-                var dtoItems = participationInEvent.Items.Select(p => new ParticipationInEventDTos
-                (
-                    ParticipationInEventId: p.Id,
-                    EventId: p.EventId
-                )).ToList();
-
-                if (!dtoItems.Any())
-                {
-                    _logger.LogWarning("No participation found for the given page: {PageNumber}, size: {PageSize}.", 
-                                        request.PageNumber, request.PageSize);
-
-                    return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.NotFound("400", "No participations found"));
-                }
-
-                PagedResult<ParticipationInEventDTos> result = new()
-                {
-                    TotalItems = participationInEvent.TotalItems,
-                    CurrentPage = participationInEvent.CurrentPage,
-                    TotalPages = participationInEvent.TotalPages,
-                    Items = dtoItems
-                };
-
-                _logger.LogInformation("Successfully retrieved {TotalItems} participations for page {PageNumber} of {TotalPages}.",
-                                        participationInEvent.TotalItems, request.PageNumber, participationInEvent.TotalPages);
-
-
-                return ResultT<PagedResult<ParticipationInEventDTos>>.Success(result);
+                return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.NotFound("400", "No participation found"));
             }
-            _logger.LogError("Invalid request: The provided query parameters are null.");
 
-            return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.Failure("400", "Bad request: Invalid query parameters"));
+            PagedResult<ParticipationInEventDTos> result = new()
+            {
+                TotalItems = participationInEvent.TotalItems,
+                CurrentPage = participationInEvent.CurrentPage,
+                TotalPages = participationInEvent.TotalPages,
+                Items = dtoItems
+            };
+
+            logger.LogInformation("Successfully retrieved {TotalItems} participation for page {PageNumber} of {TotalPages}.",
+                participationInEvent.TotalItems, request.PageNumber, participationInEvent.TotalPages);
+
+
+            return ResultT<PagedResult<ParticipationInEventDTos>>.Success(result);
         }
+        logger.LogError("Invalid request: The provided query parameters are null.");
+
+        return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.Failure("400", "Bad request: Invalid query parameters"));
     }
 }

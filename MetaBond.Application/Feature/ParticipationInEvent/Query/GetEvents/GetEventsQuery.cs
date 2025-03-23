@@ -1,10 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
 
-namespace MetaBond.Application.Feature.ParticipationInEvent.Querys.GetEvents
+namespace MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
+
+public sealed class GetEventsQuery : IQuery<IEnumerable<EventsWithParticipationInEventDTos>>
 {
-    public sealed class GetEventsQuery : IQuery<IEnumerable<EventsWithParticipationInEventDTos>>
-    {
-        public Guid? EventsId { get; set; }
-    }
+    public Guid? EventsId { get; set; }
 }

@@ -4,48 +4,39 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.ParticipationInEvent.Commands.Update
+namespace MetaBond.Application.Feature.ParticipationInEvent.Commands.Update;
+
+internal sealed class UpdateParticipationInEventCommandHandler(
+    IParticipationInEventRepository participationInEventRepository,
+    ILogger<UpdateParticipationInEventCommandHandler> logger)
+    : ICommandHandler<UpdateParticipationInEventCommand, ParticipationInEventDTos>
 {
-    internal sealed class UpdateParticipationInEventCommandHandler : ICommandHandler<UpdateParticipationInEventCommand, ParticipationInEventDTos>
+    public async Task<ResultT<ParticipationInEventDTos>> Handle(
+        UpdateParticipationInEventCommand request, 
+        CancellationToken cancellationToken)
     {
-        private readonly IParticipationInEventRepository _participationInEventRepository;
-        private readonly ILogger<UpdateParticipationInEventCommandHandler> _logger;
+        var participationInEvent = await participationInEventRepository.GetByIdAsync(request.Id);
 
-        public UpdateParticipationInEventCommandHandler(
-            IParticipationInEventRepository participationInEventRepository, 
-            ILogger<UpdateParticipationInEventCommandHandler> logger)
+        if (participationInEvent != null)
         {
-            _participationInEventRepository = participationInEventRepository;
-            _logger = logger;
+            participationInEvent.EventId = request.EventId;
+
+            await participationInEventRepository.UpdateAsync(participationInEvent,cancellationToken);
+
+            logger.LogInformation("Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
+                participationInEvent.Id, participationInEvent.EventId);
+
+            ParticipationInEventDTos inEventDTos = new
+            (
+                ParticipationInEventId: participationInEvent.Id,
+                EventId: participationInEvent.EventId
+            );
+
+            return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
         }
 
-        public async Task<ResultT<ParticipationInEventDTos>> Handle(
-            UpdateParticipationInEventCommand request, 
-            CancellationToken cancellationToken)
-        {
-            var participationInEvent = await _participationInEventRepository.GetByIdAsync(request.Id);
+        logger.LogError("Participation with Id: {ParticipationId} not found for update.", request.Id);
 
-            if (participationInEvent != null)
-            {
-                participationInEvent.EventId = request.EventId;
-
-                await _participationInEventRepository.UpdateAsync(participationInEvent,cancellationToken);
-
-                _logger.LogInformation("Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
-                                        participationInEvent.Id, participationInEvent.EventId);
-
-                ParticipationInEventDTos inEventDTos = new
-                (
-                    ParticipationInEventId: participationInEvent.Id,
-                    EventId: participationInEvent.EventId
-                );
-
-                return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
-            }
-
-            _logger.LogError("Participation with Id: {ParticipationId} not found for update.", request.Id);
-
-            return ResultT<ParticipationInEventDTos>.Failure(Error.NotFound("404", $"{request.Id} Participation not found"));
-        }
+        return ResultT<ParticipationInEventDTos>.Failure(Error.NotFound("404", $"{request.Id} Participation not found"));
     }
 }
