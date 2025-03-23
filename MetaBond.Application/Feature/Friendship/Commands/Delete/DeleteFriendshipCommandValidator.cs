@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace MetaBond.Application.Feature.Friendship.Command.Delete;
+namespace MetaBond.Application.Feature.Friendship.Commands.Delete;
 
 public class DeleteFriendshipCommandValidator : AbstractValidator<DeleteFriendshipCommand>
 {

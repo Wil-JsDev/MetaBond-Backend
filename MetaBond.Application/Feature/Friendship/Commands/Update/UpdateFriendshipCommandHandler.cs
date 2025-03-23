@@ -4,7 +4,7 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Friendship.Command.Update;
+namespace MetaBond.Application.Feature.Friendship.Commands.Update;
 
 internal sealed class UpdateFriendshipCommandHandler(
     IFriendshipRepository friendshipRepository,

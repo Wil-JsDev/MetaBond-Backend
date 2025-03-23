@@ -4,7 +4,7 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Friendship.Command.Create;
+namespace MetaBond.Application.Feature.Friendship.Commands.Create;
 
 internal sealed class CreateFriendshipCommandHandler(
     IFriendshipRepository friendshipRepository,

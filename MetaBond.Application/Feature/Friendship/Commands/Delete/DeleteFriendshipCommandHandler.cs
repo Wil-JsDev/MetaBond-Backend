@@ -3,7 +3,7 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Friendship.Command.Delete;
+namespace MetaBond.Application.Feature.Friendship.Commands.Delete;
 
 internal sealed class DeleteFriendshipCommandHandler(
     IFriendshipRepository friendshipRepository,

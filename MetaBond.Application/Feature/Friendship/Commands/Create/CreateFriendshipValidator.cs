@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace MetaBond.Application.Feature.Friendship.Command.Create;
+namespace MetaBond.Application.Feature.Friendship.Commands.Create;
 
 public class CreateFriendshipValidator : AbstractValidator<CreateFriendshipCommand>
 {
