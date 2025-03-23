@@ -1,10 +1,9 @@
 ﻿
 using MetaBond.Application.Abstractions.Messaging;
 
-namespace MetaBond.Application.Feature.Rewards.Querys.GetCount
+namespace MetaBond.Application.Feature.Rewards.Query.GetCount;
+
+public sealed class GetCountRewardsQuery : IQuery<int>
 {
-    public sealed class GetCountRewardsQuery : IQuery<int>
-    {
         
-    }
 }

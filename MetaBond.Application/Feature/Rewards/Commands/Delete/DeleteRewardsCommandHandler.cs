@@ -3,38 +3,29 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Rewards.Commands.Delete
+namespace MetaBond.Application.Feature.Rewards.Commands.Delete;
+
+internal sealed class DeleteRewardsCommandHandler(
+    IRewardsRepository repository,
+    ILogger<DeleteRewardsCommandHandler> logger)
+    : ICommandHandler<DeleteRewardsCommand, Guid>
 {
-    internal sealed class DeleteRewardsCommandHandler : ICommandHandler<DeleteRewardsCommand, Guid>
+    public async Task<ResultT<Guid>> Handle(
+        DeleteRewardsCommand request, 
+        CancellationToken cancellationToken)
     {
-        private readonly IRewardsRepository _repository;
-        private readonly ILogger<DeleteRewardsCommandHandler> _logger;
-
-        public DeleteRewardsCommandHandler(
-            IRewardsRepository repository, 
-            ILogger<DeleteRewardsCommandHandler> logger)
+        var reward = await repository.GetByIdAsync(request.RewardsId);
+        if (reward != null)
         {
-            _repository = repository;
-            _logger = logger;
+            await repository.DeleteAsync(reward,cancellationToken);
+
+            logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Id);
+
+            return ResultT<Guid>.Success(reward.Id);
         }
 
-        public async Task<ResultT<Guid>> Handle(
-            DeleteRewardsCommand request, 
-            CancellationToken cancellationToken)
-        {
-            var reward = await _repository.GetByIdAsync(request.RewardsId);
-            if (reward != null)
-            {
-                await _repository.DeleteAsync(reward,cancellationToken);
+        logger.LogError("Reward with ID {RewardsId} not found", request.RewardsId);
 
-                _logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Id);
-
-                return ResultT<Guid>.Success(reward.Id);
-            }
-
-            _logger.LogError("Reward with ID {RewardsId} not found", request.RewardsId);
-
-            return ResultT<Guid>.Failure(Error.Failure("404", "Reward not found"));
-        }
+        return ResultT<Guid>.Failure(Error.Failure("404", "Reward not found"));
     }
 }

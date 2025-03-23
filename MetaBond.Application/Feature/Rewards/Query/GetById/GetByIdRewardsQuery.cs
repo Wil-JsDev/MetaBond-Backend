@@ -1,10 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
 
-namespace MetaBond.Application.Feature.Rewards.Querys.GetById
+namespace MetaBond.Application.Feature.Rewards.Query.GetById;
+
+public sealed class GetByIdRewardsQuery : IQuery<RewardsDTos>
 {
-    public sealed class GetByIdRewardsQuery : IQuery<RewardsDTos>
-    {
-        public Guid RewardsId { get; set; }
-    }
+    public Guid RewardsId { get; set; }
 }

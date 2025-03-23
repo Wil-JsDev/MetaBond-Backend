@@ -3,53 +3,44 @@ using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
-using Serilog.Core;
 
-namespace MetaBond.Application.Feature.Rewards.Querys.GetTop
+namespace MetaBond.Application.Feature.Rewards.Query.GetTop;
+
+internal sealed class GetTopRewardsQueryHandler(
+    IRewardsRepository rewardsRepository,
+    ILogger<GetTopRewardsQueryHandler> logger)
+    : IQueryHandler<GetTopRewardsQuery, IEnumerable<RewardsDTos>>
 {
-    internal sealed class GetTopRewardsQueryHandler : IQueryHandler<GetTopRewardsQuery, IEnumerable<RewardsDTos>>
+    public async Task<ResultT<IEnumerable<RewardsDTos>>> Handle(
+        GetTopRewardsQuery request, 
+        CancellationToken cancellationToken)
     {
-        private readonly IRewardsRepository _rewardsRepository;
-        private readonly ILogger<GetTopRewardsQueryHandler> _logger;
 
-        public GetTopRewardsQueryHandler(
-            IRewardsRepository rewardsRepository, 
-            ILogger<GetTopRewardsQueryHandler> logger)
+        if (request != null)
         {
-            _rewardsRepository = rewardsRepository;
-            _logger = logger;
-        }
-
-        public async Task<ResultT<IEnumerable<RewardsDTos>>> Handle(
-            GetTopRewardsQuery request, 
-            CancellationToken cancellationToken)
-        {
-
-            if (request != null)
+            var rewardsList = await rewardsRepository.GetTopRewardsByPointsAsync(request.TopCount,cancellationToken);
+            IEnumerable<Domain.Models.Rewards> rewardsEnumerable = rewardsList.ToList();
+            if (rewardsList == null || !rewardsEnumerable.Any())
             {
-                var rewardsList = await _rewardsRepository.GetTopRewardsByPointsAsync(request.TopCount,cancellationToken);
-                if (rewardsList == null || !rewardsList.Any())
-                {
-                    _logger.LogError("No top rewards found");
+                logger.LogError("No top rewards found");
 
-                    return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400","The list is empty"));
-                }
-
-                IEnumerable<RewardsDTos> rewardsDTos = rewardsList.Select(x => new RewardsDTos
-                (
-                    RewardsId: x.Id,
-                    Description: x.Description,
-                    PointAwarded: x.PointAwarded,
-                    DateAwarded:  x.DateAwarded
-                ));
-
-                _logger.LogInformation("Successfully retrieved {Count} top rewards.", rewardsList.Count());
-
-                return ResultT<IEnumerable<RewardsDTos>>.Success(rewardsDTos);
+                return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400","The list is empty"));
             }
-            _logger.LogError("Received a null request for fetching top rewards.");
 
-            return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400","Invalid request"));
+            IEnumerable<RewardsDTos> rewardsDTos = rewardsEnumerable.Select(x => new RewardsDTos
+            (
+                RewardsId: x.Id,
+                Description: x.Description,
+                PointAwarded: x.PointAwarded,
+                DateAwarded:  x.DateAwarded
+            ));
+
+            logger.LogInformation("Successfully retrieved {Count} top rewards.", rewardsEnumerable.Count());
+
+            return ResultT<IEnumerable<RewardsDTos>>.Success(rewardsDTos);
         }
+        logger.LogError("Received a null request for fetching top rewards.");
+
+        return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400","Invalid request"));
     }
 }

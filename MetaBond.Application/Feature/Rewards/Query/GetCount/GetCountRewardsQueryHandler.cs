@@ -3,38 +3,29 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Rewards.Querys.GetCount
+namespace MetaBond.Application.Feature.Rewards.Query.GetCount;
+
+internal sealed class GetCountRewardsQueryHandler(
+    IRewardsRepository repository,
+    ILogger<GetCountRewardsQueryHandler> logger)
+    : IQueryHandler<GetCountRewardsQuery, int>
 {
-    internal sealed class GetCountRewardsQueryHandler : IQueryHandler<GetCountRewardsQuery, int>
+    public async Task<ResultT<int>> Handle(
+        GetCountRewardsQuery request,
+        CancellationToken cancellationToken)
     {
-        private readonly IRewardsRepository _repository;
-        private readonly ILogger<GetCountRewardsQueryHandler> _logger;
-
-        public GetCountRewardsQueryHandler(
-            IRewardsRepository repository, 
-            ILogger<GetCountRewardsQueryHandler> logger)
+        if (request != null)
         {
-            _repository = repository;
-            _logger = logger;
+            var rewardsCount = await repository.CountRewardsAsync(cancellationToken);
+
+            logger.LogInformation("Total rewards counted: {Count}.", rewardsCount);
+
+            return ResultT<int>.Success(rewardsCount);
         }
 
-        public async Task<ResultT<int>> Handle(
-            GetCountRewardsQuery request,
-            CancellationToken cancellationToken)
-        {
-            if (request != null)
-            {
-                var rewardsCount = await _repository.CountRewardsAsync(cancellationToken);
+        logger.LogWarning("Failed to count rewards: The request was invalid or encountered an issue during processing.");
 
-                _logger.LogInformation("Total rewards counted: {Count}.", rewardsCount);
-
-                return ResultT<int>.Success(rewardsCount);
-            }
-
-            _logger.LogWarning("Failed to count rewards: The request was invalid or encountered an issue during processing.");
-
-            return ResultT<int>.Failure(Error.NotFound("400", "Unable to count rewards due to an invalid request or processing error."));
-        }
-
+        return ResultT<int>.Failure(Error.NotFound("400", "Unable to count rewards due to an invalid request or processing error."));
     }
+
 }
