@@ -22,13 +22,17 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
             {
                 var progressBoardList = await progressBoardValue(cancellationToken);
                 IEnumerable<Domain.Models.ProgressBoard> progressBoards = progressBoardList.ToList();
-                if ( !progressBoards.Any())
+                if (!progressBoards.Any())
                 {
                     logger.LogError("No progress board entries found for DateRangeType: {DateRangeType}", request.DateRangeType);
-
-                    return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
-                        Error.Failure("400", "The list is empty")
-                    );
+                    
+                    var getMessage = GetMessage().TryGetValue(request.DateRangeType, out var messageValue);
+                    if (getMessage)
+                    {
+                        logger.LogWarning("No progress board found for the given date range");
+                        
+                        return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(Error.NotFound("404", messageValue!));
+                    }
                 }
 
                 if (request.Page <= 0 || request.PageSize <= 0)
@@ -75,6 +79,17 @@ namespace MetaBond.Application.Feature.ProgressBoard.Querys.GetRange
         }
 
         #region Private Methods
+        private static Dictionary<DateRangeType, string> GetMessage()
+        {
+            return new Dictionary<DateRangeType, string>
+            {
+                { DateRangeType.Today, "No records available for today." },
+                { DateRangeType.Week, "No records available for this week." },
+                { DateRangeType.Month, "No records available for this month." },
+                { DateRangeType.Year, "No records available for this year." },
+            };
+        }
+        
         private Dictionary<DateRangeType, Func<CancellationToken,Task<IEnumerable<Domain.Models.ProgressBoard>>>> GetValue()
         {
             return new Dictionary<DateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressBoard>>>>
