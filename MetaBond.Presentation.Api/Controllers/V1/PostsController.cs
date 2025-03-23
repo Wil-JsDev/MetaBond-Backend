@@ -2,12 +2,12 @@
 using MediatR;
 using MetaBond.Application.Feature.Posts.Commands.Create;
 using MetaBond.Application.Feature.Posts.Commands.Delete;
-using MetaBond.Application.Feature.Posts.Querys.GetById;
-using MetaBond.Application.Feature.Posts.Querys.GetFilterRecent;
-using MetaBond.Application.Feature.Posts.Querys.GetFilterTitle;
-using MetaBond.Application.Feature.Posts.Querys.GetFilterTop10;
-using MetaBond.Application.Feature.Posts.Querys.GetPostByIdCommunities;
-using MetaBond.Application.Feature.Posts.Querys.Pagination;
+using MetaBond.Application.Feature.Posts.Query.GetById;
+using MetaBond.Application.Feature.Posts.Query.GetFilterRecent;
+using MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
+using MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
+using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
+using MetaBond.Application.Feature.Posts.Query.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -45,7 +45,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [DisableRateLimiting]
         public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var query = new GetByIdPostsQuerys { PostsId= id };
+            var query = new GetByIdPostsQuery { PostsId= id };
 
             var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
@@ -129,7 +129,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetPagedResultAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
         {
-            var query = new GetPagedPostsQuerys
+            var query = new GetPagedPostsQuery
             {
                 PageNumber = pageNumber,
                 PageSize = pageSize
