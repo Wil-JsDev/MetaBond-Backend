@@ -7,10 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 
-internal sealed class GetRangeProgressBoardQuerysHandler(
+internal sealed class GetRangeProgressBoardQueryHandler(
     IProgressBoardRepository progressBoardRepository,
     IProgressEntryRepository progressEntryRepository,
-    ILogger<GetRangeProgressBoardQuerysHandler> logger)
+    ILogger<GetRangeProgressBoardQueryHandler> logger)
     : IQueryHandler<GetRangeProgressBoardQuery, IEnumerable<ProgressBoardWithProgressEntryDTos>>
 {
     public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> Handle(

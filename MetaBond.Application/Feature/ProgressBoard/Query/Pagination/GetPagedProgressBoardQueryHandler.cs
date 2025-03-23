@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.Pagination
 {
-    internal sealed class GetPagedProgressBoardQuerysHandler(
+    internal sealed class GetPagedProgressBoardQueryHandler(
         IProgressBoardRepository progressBoardRepository,
-        ILogger<GetPagedProgressBoardQuerysHandler> logger)
+        ILogger<GetPagedProgressBoardQueryHandler> logger)
         : IQueryHandler<GetPagedProgressBoardQuery, PagedResult<ProgressBoardDTos>>
     {
         public async Task<ResultT<PagedResult<ProgressBoardDTos>>> Handle(

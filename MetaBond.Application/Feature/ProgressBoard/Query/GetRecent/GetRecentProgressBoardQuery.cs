@@ -4,7 +4,7 @@ using MetaBond.Domain;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
 
-public sealed class GetRecentProgressBoardQuerys : IQuery<IEnumerable<ProgressBoardDTos>>
+public sealed class GetRecentProgressBoardQuery : IQuery<IEnumerable<ProgressBoardDTos>>
 {
-    public DateRangeFilter dateFilter {  get; set; }
+    public DateRangeFilter DateFilter {  get; set; }
 }

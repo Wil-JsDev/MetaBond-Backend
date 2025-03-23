@@ -2,47 +2,45 @@
 using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
-using MetaBond.Domain.Models;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.ProgressBoard.Commands.Create
+namespace MetaBond.Application.Feature.ProgressBoard.Commands.Create;
+
+internal sealed class CreateProgressBoardCommandHandler(
+    IProgressBoardRepository progressBoardRepository,
+    ILogger<CreateProgressBoardCommandHandler> logger)
+    : ICommandHandler<CreateProgressBoardCommand, ProgressBoardDTos>
 {
-    internal sealed class CreateProgressBoardCommandHandler(
-        IProgressBoardRepository progressBoardRepository,
-        ILogger<CreateProgressBoardCommandHandler> logger)
-        : ICommandHandler<CreateProgressBoardCommand, ProgressBoardDTos>
+    public async Task<ResultT<ProgressBoardDTos>> Handle(
+        CreateProgressBoardCommand request,
+        CancellationToken cancellationToken)
     {
-        public async Task<ResultT<ProgressBoardDTos>> Handle(
-            CreateProgressBoardCommand request,
-            CancellationToken cancellationToken)
+
+        if (request != null)
         {
-
-            if (request != null)
+            Domain.Models.ProgressBoard progressBoard = new()
             {
-                Domain.Models.ProgressBoard progressBoard = new()
-                {
-                    Id = Guid.NewGuid(),
-                    CommunitiesId = request.CommunitiesId
-                };
+                Id = Guid.NewGuid(),
+                CommunitiesId = request.CommunitiesId
+            };
 
-                await progressBoardRepository.CreateAsync(progressBoard, cancellationToken);
+            await progressBoardRepository.CreateAsync(progressBoard, cancellationToken);
 
-                logger.LogInformation("Progress board created successfully with ID: {ProgressBoardId}", progressBoard.Id);
+            logger.LogInformation("Progress board created successfully with ID: {ProgressBoardId}", progressBoard.Id);
 
-                ProgressBoardDTos progressBoardDTos = new
-                (
-                    ProgressBoardId: progressBoard.Id,
-                    CommunitiesId: progressBoard.CommunitiesId,
-                    CreatedAt: progressBoard.CreatedAt,
-                    UpdatedAt: progressBoard.UpdatedAt
-                );
+            ProgressBoardDTos progressBoardDTos = new
+            (
+                ProgressBoardId: progressBoard.Id,
+                CommunitiesId: progressBoard.CommunitiesId,
+                CreatedAt: progressBoard.CreatedAt,
+                UpdatedAt: progressBoard.UpdatedAt
+            );
 
-                return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
+            return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
 
-            }
-            logger.LogError("Failed to create progress board. Request is null.");
-
-            return ResultT<ProgressBoardDTos>.Failure(Error.Failure("400", "Invalid request data"));
         }
+        logger.LogError("Failed to create progress board. Request is null.");
+
+        return ResultT<ProgressBoardDTos>.Failure(Error.Failure("400", "Invalid request data"));
     }
 }

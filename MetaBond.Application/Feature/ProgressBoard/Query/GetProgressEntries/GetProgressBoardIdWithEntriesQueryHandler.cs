@@ -6,10 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
 
-    internal sealed class GetProgressBoardIdWithEntriesQuerysHandler(
+    internal sealed class GetProgressBoardIdWithEntriesQueryHandler(
         IProgressBoardRepository repository,
         IProgressEntryRepository progressEntryRepository,
-        ILogger<GetProgressBoardIdWithEntriesQuerysHandler> logger)
+        ILogger<GetProgressBoardIdWithEntriesQueryHandler> logger)
         : IQueryHandler<GetProgressBoardIdWithEntriesQuery, IEnumerable<ProgressBoardWithProgressEntryDTos>>
     {
         public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> Handle(

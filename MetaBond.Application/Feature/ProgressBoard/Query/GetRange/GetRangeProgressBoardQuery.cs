@@ -4,7 +4,7 @@ using MetaBond.Domain;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 
-public sealed class GetRangeProgressBoardQuerys : IQuery<IEnumerable<ProgressBoardWithProgressEntryDTos>>
+public sealed class GetRangeProgressBoardQuery : IQuery<IEnumerable<ProgressBoardWithProgressEntryDTos>>
 {
     public int Page { get; set; }
         

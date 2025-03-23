@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
 {
-    internal sealed class GetRecentProgressBoardQuerysHandler(
+    internal sealed class GetRecentProgressBoardQueryHandler(
         IProgressBoardRepository progressBoardRepository,
-        ILogger<GetRecentProgressBoardQuerysHandler> logger)
+        ILogger<GetRecentProgressBoardQueryHandler> logger)
         : IQueryHandler<GetRecentProgressBoardQuery, IEnumerable<ProgressBoardDTos>>
     {
         public async Task<ResultT<IEnumerable<ProgressBoardDTos>>> Handle(

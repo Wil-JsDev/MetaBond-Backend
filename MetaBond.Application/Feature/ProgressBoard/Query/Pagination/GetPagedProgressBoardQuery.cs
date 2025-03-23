@@ -4,7 +4,7 @@ using MetaBond.Application.Pagination;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.Pagination;
 
-public sealed class GetPagedProgressBoardQuerys : IQuery<PagedResult<ProgressBoardDTos>>
+public sealed class GetPagedProgressBoardQuery : IQuery<PagedResult<ProgressBoardDTos>>
 {
     public int PageNumber { get; set; }
 
