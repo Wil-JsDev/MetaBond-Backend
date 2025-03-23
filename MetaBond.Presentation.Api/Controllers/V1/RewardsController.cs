@@ -3,12 +3,12 @@ using MediatR;
 using MetaBond.Application.Feature.Rewards.Commands.Create;
 using MetaBond.Application.Feature.Rewards.Commands.Delete;
 using MetaBond.Application.Feature.Rewards.Commands.Update;
-using MetaBond.Application.Feature.Rewards.Querys.GetById;
-using MetaBond.Application.Feature.Rewards.Querys.GetCount;
-using MetaBond.Application.Feature.Rewards.Querys.GetRange;
-using MetaBond.Application.Feature.Rewards.Querys.GetRecent;
-using MetaBond.Application.Feature.Rewards.Querys.GetTop;
-using MetaBond.Application.Feature.Rewards.Querys.Pagination;
+using MetaBond.Application.Feature.Rewards.Query.GetById;
+using MetaBond.Application.Feature.Rewards.Query.GetCount;
+using MetaBond.Application.Feature.Rewards.Query.GetRange;
+using MetaBond.Application.Feature.Rewards.Query.GetRecent;
+using MetaBond.Application.Feature.Rewards.Query.GetTop;
+using MetaBond.Application.Feature.Rewards.Query.Pagination;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -131,7 +131,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetPagedRewardsQuery
             {
-                PageNmber = pageNumber,
+                PageNumber = pageNumber,
                 PageSize = pageSize
             };
 

@@ -39,13 +39,14 @@ public class GetEventsByTitleAndCommunityIdQueryHandler(
         }
 
         var eventsAndCommunity = await  eventsRepository.GetEventsByTitleAndCommunityIdAsync(request.CommunitiesId, request.Title,cancellationToken);
-        if (!eventsAndCommunity.Any())
+        IEnumerable<Domain.Models.Events> eventsEnumerable = eventsAndCommunity.ToList();
+        if (!eventsEnumerable.Any())
         {
             logger.LogError($"No events found for the title '{request.Title}' in the community with ID {request.CommunitiesId}.");
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"No events found for title '{request.Title}' in the community."));
         }
 
-        IEnumerable<EventsDto> eventsList = eventsAndCommunity.Select(x => new EventsDto
+        IEnumerable<EventsDto> eventsList = eventsEnumerable.Select(x => new EventsDto
         (
             Id: x.Id,
             Description: x.Description,

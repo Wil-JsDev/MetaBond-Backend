@@ -5,69 +5,60 @@ using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedBefore
+namespace MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedBefore;
+
+internal sealed class GetCreatedBeforeFriendshipQueryHandler(
+    IFriendshipRepository friendshipRepository,
+    ILogger<GetCreatedBeforeFriendshipQueryHandler> logger)
+    : IQueryHandler<GetCreatedBeforeFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
-    internal sealed class GetCreatedBeforeFriendshipQueryHandler : IQueryHandler<GetCreatedBeforeFriendshipQuery, IEnumerable<FriendshipDTos>>
+    public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
+        GetCreatedBeforeFriendshipQuery request, 
+        CancellationToken cancellationToken)
     {
 
-        private readonly IFriendshipRepository _friendshipRepository;
-        private readonly ILogger<GetCreatedBeforeFriendshipQueryHandler> _logger;
+        var friendshipBefore = GetCreatedBefore();
 
-        public GetCreatedBeforeFriendshipQueryHandler(
-            IFriendshipRepository friendshipRepository, 
-            ILogger<GetCreatedBeforeFriendshipQueryHandler> logger)
+        if (friendshipBefore.TryGetValue((request.PastDateRangeType), out var beforeAsync))
         {
-            _friendshipRepository = friendshipRepository;
-            _logger = logger;
-        }
-
-        public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
-            GetCreatedBeforeFriendshipQuery request, 
-            CancellationToken cancellationToken)
-        {
-
-            var friendshipBefore = GetCreatedBefore();
-
-            if (friendshipBefore.TryGetValue((request.PastDateRangeType), out var beforeAsync))
+            var friendshipList = await beforeAsync(cancellationToken);
+            IEnumerable<Domain.Models.Friendship> friendships = friendshipList.ToList();
+            if (friendshipList == null || !friendships.Any())
             {
-                var friendshipList = await beforeAsync(cancellationToken);
-                if (friendshipList == null || !friendshipList.Any())
-                {
-                    _logger.LogError("No friendships found before the specified date range: {PastDateRangeType}", request.PastDateRangeType);
+                logger.LogError("No friendships found before the specified date range: {PastDateRangeType}", request.PastDateRangeType);
 
-                    return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "The list is empty"));
-                }
-
-                var friendshipDTos = friendshipList.Select(x => new FriendshipDTos
-                (
-                    FriendshipId: x.Id,
-                    Status: x.Status,
-                    CreatedAt: x.CreateAdt
-                ));
-
-                _logger.LogInformation("Retrieved {Count} friendships before the date range: {PastDateRangeType}", 
-                                        friendshipDTos.Count(), request.PastDateRangeType);
-
-                return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTos);
-
+                return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "The list is empty"));
             }
 
-            _logger.LogError("Failed to retrieve friendships: Invalid date range type {PastDateRangeType}", request.PastDateRangeType);
+            var friendshipDTos = friendships.Select(x => new FriendshipDTos
+            (
+                FriendshipId: x.Id,
+                Status: x.Status,
+                CreatedAt: x.CreateAdt
+            ));
 
-            return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "Invalid status"));
+            IEnumerable<FriendshipDTos> friendshipDTosEnumerable = friendshipDTos.ToList();
+            logger.LogInformation("Retrieved {Count} friendships before the date range: {PastDateRangeType}", 
+                friendshipDTosEnumerable.Count(), request.PastDateRangeType);
+
+            return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
+
         }
+        logger.LogError("Failed to retrieve friendships: Invalid date range type {PastDateRangeType}", request.PastDateRangeType);
 
-
-        private Dictionary<PastDateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>> GetCreatedBefore()
-        {
-            return new Dictionary<PastDateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>>
-            {
-                {PastDateRangeType.BeforeToday, async cancellationToken => await _friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.Date, cancellationToken) },
-                {PastDateRangeType.BeforeWeek, async cancellationToken => await _friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.AddDays(-7), cancellationToken) },
-                {PastDateRangeType.BeforeMonth, async cancellationToken => await _friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.AddMonths(-1), cancellationToken) },
-                {PastDateRangeType.BeforeYear, async cancellationToken => await _friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.AddYears(-1), cancellationToken) }
-            };
-        }
-
+        return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "Invalid status"));
     }
+
+    #region Private Methods
+    private Dictionary<PastDateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>> GetCreatedBefore()
+    {
+        return new Dictionary<PastDateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>>
+        {
+            {PastDateRangeType.BeforeToday, async cancellationToken => await friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.Date, cancellationToken) },
+            {PastDateRangeType.BeforeWeek, async cancellationToken => await friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.AddDays(-7), cancellationToken) },
+            {PastDateRangeType.BeforeMonth, async cancellationToken => await friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.AddMonths(-1), cancellationToken) },
+            {PastDateRangeType.BeforeYear, async cancellationToken => await friendshipRepository.GetCreatedBeforeAsync(DateTime.UtcNow.AddYears(-1), cancellationToken) }
+        };
+    }
+    #endregion
 }

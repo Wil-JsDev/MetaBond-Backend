@@ -1,14 +1,10 @@
 ﻿using Asp.Versioning;
 using MediatR;
-using MetaBond.Application.Feature.Friendship.Command.Create;
-using MetaBond.Application.Feature.Friendship.Command.Update;
-using MetaBond.Application.Feature.Friendship.Query.GetById;
-using MetaBond.Application.Feature.Friendship.Query.Pagination;
 using MetaBond.Application.Feature.ParticipationInEvent.Commands.Create;
 using MetaBond.Application.Feature.ParticipationInEvent.Commands.Update;
-using MetaBond.Application.Feature.ParticipationInEvent.Querys.GetById;
-using MetaBond.Application.Feature.ParticipationInEvent.Querys.GetEvents;
-using MetaBond.Application.Feature.ParticipationInEvent.Querys.Pagination;
+using MetaBond.Application.Feature.ParticipationInEvent.Query.GetById;
+using MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
+using MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 

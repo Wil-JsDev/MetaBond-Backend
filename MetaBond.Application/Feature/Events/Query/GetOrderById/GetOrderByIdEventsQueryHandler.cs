@@ -14,17 +14,18 @@ namespace MetaBond.Application.Feature.Events.Query.GetOrderById
         public async Task<ResultT<IEnumerable<EventsDto>>> Handle(GetOrderByIdEventsQuery request, CancellationToken cancellationToken)
         {
             var eventsSort = GetSortValues();
-            if (eventsSort.TryGetValue((request.Order), out var GetSort))
+            if (eventsSort.TryGetValue((request.Order!), out var getSort))
             {
-                var eventsListSort = await GetSort(cancellationToken);
-                if (eventsListSort == null || !eventsListSort.Any())
+                var eventsListSort = await getSort(cancellationToken);
+                IEnumerable<Domain.Models.Events> eventsEnumerable = eventsListSort.ToList();
+                if (!eventsEnumerable.Any())
                 {
                     logger.LogError("No events found for the specified order.");
 
                     return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "No events found for the given order."));
                 }
 
-                IEnumerable<EventsDto> eventsDtos = eventsListSort.Select(x => new EventsDto
+                IEnumerable<EventsDto> eventsDtos = eventsEnumerable.Select(x => new EventsDto
                 (
                     Id: x.Id,
                     Description: x.Description,
@@ -34,15 +35,16 @@ namespace MetaBond.Application.Feature.Events.Query.GetOrderById
                     CommunitiesId: x.CommunitiesId
                 ));
 
-                logger.LogInformation("Successfully retrieved {Count} events ordered by {Order}.", eventsDtos.Count(), request.Order);
+                IEnumerable<EventsDto> value = eventsDtos.ToList();
+                logger.LogInformation("Successfully retrieved {Count} events ordered by {Order}.", value.Count(), request.Order);
 
-                return ResultT<IEnumerable<EventsDto>>.Success(eventsDtos);
+                return ResultT<IEnumerable<EventsDto>>.Success(value);
             }
             logger.LogError("Invalid order parameter received: {Order}. Please specify 'asc' or 'desc'.", request.Order);
 
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "Invalid order parameter. Please specify 'asc' or 'desc'."));
         }
-
+        #region Private Methods
         private Dictionary<string, Func<CancellationToken, Task<IEnumerable<Domain.Models.Events>>>> GetSortValues()
         {
             return new Dictionary<string, Func<CancellationToken, Task<IEnumerable<Domain.Models.Events>>>>
@@ -51,6 +53,7 @@ namespace MetaBond.Application.Feature.Events.Query.GetOrderById
                 {"desc", async cancellationToken => await eventsRepository.GetOrderByIdDescAsync(cancellationToken) }
             };
         }
-
+        
+        #endregion
     }
 }

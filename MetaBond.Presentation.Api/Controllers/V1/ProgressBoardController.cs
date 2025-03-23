@@ -3,12 +3,12 @@ using MediatR;
 using MetaBond.Application.Feature.ProgressBoard.Commands.Create;
 using MetaBond.Application.Feature.ProgressBoard.Commands.Delete;
 using MetaBond.Application.Feature.ProgressBoard.Commands.Update;
-using MetaBond.Application.Feature.ProgressBoard.Querys.GetById;
-using MetaBond.Application.Feature.ProgressBoard.Querys.GetCount;
-using MetaBond.Application.Feature.ProgressBoard.Querys.GetProgressEntries;
-using MetaBond.Application.Feature.ProgressBoard.Querys.GetRange;
-using MetaBond.Application.Feature.ProgressBoard.Querys.GetRecent;
-using MetaBond.Application.Feature.ProgressBoard.Querys.Pagination;
+using MetaBond.Application.Feature.ProgressBoard.Query.GetById;
+using MetaBond.Application.Feature.ProgressBoard.Query.GetCount;
+using MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
+using MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
+using MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
+using MetaBond.Application.Feature.ProgressBoard.Query.Pagination;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -61,7 +61,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [DisableRateLimiting]
         public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id,CancellationToken cancellationToken)
         {
-            var query = new GetByIdProgressBoardQuerys { ProgressBoardId= id };
+            var query = new GetByIdProgressBoardQuery { ProgressBoardId= id };
 
             var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
@@ -74,7 +74,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetCountAsync(CancellationToken cancellationToken)
         {
-            var result = await mediator.Send(new GetCountProgressBoardQuerys(),cancellationToken);
+            var result = await mediator.Send(new GetCountProgressBoardQuery(),cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -89,7 +89,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             [FromQuery] int pageSize,
             CancellationToken cancellationToken)
         {
-            var query = new GetProgressBoardIdWithEntriesQuerys
+            var query = new GetProgressBoardIdWithEntriesQuery
             {
                 ProgressBoardId = id,
                 PageNumber = pageNumber,
@@ -111,7 +111,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             [FromQuery] int pageSize,
             CancellationToken cancellationToken)
         {
-            var query = new GetRangeProgressBoardQuerys
+            var query = new GetRangeProgressBoardQuery
             {
                 Page = page,
                 PageSize = pageSize,
@@ -129,7 +129,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetFilterRecentAsync([FromQuery] DateRangeFilter dateRange,CancellationToken cancellationToken)
         {
-            var query = new GetRecentProgressBoardQuerys { dateFilter = dateRange };
+            var query = new GetRecentProgressBoardQuery { DateFilter = dateRange };
 
             var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess) 
@@ -142,7 +142,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
         {
-            var query = new GetPagedProgressBoardQuerys
+            var query = new GetPagedProgressBoardQuery
             {
                 PageNumber = pageNumber,
                 PageSize = pageSize

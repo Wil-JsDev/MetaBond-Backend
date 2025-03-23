@@ -1,8 +1,8 @@
 ﻿using Asp.Versioning;
 using MediatR;
-using MetaBond.Application.Feature.Friendship.Command.Create;
-using MetaBond.Application.Feature.Friendship.Command.Delete;
-using MetaBond.Application.Feature.Friendship.Command.Update;
+using MetaBond.Application.Feature.Friendship.Commands.Create;
+using MetaBond.Application.Feature.Friendship.Commands.Delete;
+using MetaBond.Application.Feature.Friendship.Commands.Update;
 using MetaBond.Application.Feature.Friendship.Query.GetById;
 using MetaBond.Application.Feature.Friendship.Query.GetCountByStatus;
 using MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAfter;

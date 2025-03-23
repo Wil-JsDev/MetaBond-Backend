@@ -1,12 +1,11 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
 
-namespace MetaBond.Application.Feature.Rewards.Commands.Create
-{
-    public sealed class CreateRewardsCommand : ICommand<RewardsDTos>
-    {
-        public string? Description { get; set; }
+namespace MetaBond.Application.Feature.Rewards.Commands.Create;
 
-        public int PointAwarded { get; set; }
-    }
+public sealed class CreateRewardsCommand : ICommand<RewardsDTos>
+{
+    public string? Description { get; set; }
+
+    public int PointAwarded { get; set; }
 }

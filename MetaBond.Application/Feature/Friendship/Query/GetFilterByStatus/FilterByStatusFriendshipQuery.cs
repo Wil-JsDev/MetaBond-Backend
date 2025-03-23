@@ -1,16 +1,10 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MetaBond.Application.Feature.Friendship.Query.GetFilterByStatus
+namespace MetaBond.Application.Feature.Friendship.Query.GetFilterByStatus;
+
+public sealed class FilterByStatusFriendshipQuery : IQuery<IEnumerable<FriendshipDTos>>
 {
-    public sealed class FilterByStatusFriendshipQuery : IQuery<IEnumerable<FriendshipDTos>>
-    {
-        public Status Status { get; set; }
-    }
+    public Status Status { get; set; }
 }

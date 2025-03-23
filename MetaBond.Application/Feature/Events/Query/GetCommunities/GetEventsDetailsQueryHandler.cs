@@ -1,11 +1,12 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent
-{
+namespace MetaBond.Application.Feature.Events.Query.GetCommunities;
+
     internal sealed class GetEventsDetailsQueryHandler(
         IEventsRepository eventsRepository,
         ILogger<GetEventsDetailsQueryHandler> logger)
@@ -55,4 +56,3 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipati
             return ResultT<IEnumerable<DTOs.Events.CommunitiesDTos>>.Success(inEventDTos);
         }
     }
-}
