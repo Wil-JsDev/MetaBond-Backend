@@ -3,34 +3,25 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Communities.Commands.Delete
+namespace MetaBond.Application.Feature.Communities.Commands.Delete;
+
+internal sealed class DeleteCommunitiesCommandHandler(
+    ICommunitiesRepository communitiesRepository,
+    ILogger<DeleteCommunitiesCommandHandler> logger)
+    : ICommandHandler<DeleteCommunitiesCommand, Guid>
 {
-    internal sealed class DeleteCommunitiesCommandHandler : ICommandHandler<DeleteCommunitiesCommand, Guid>
+    public async Task<ResultT<Guid>> Handle(DeleteCommunitiesCommand request, CancellationToken cancellationToken)
     {
-
-        private readonly ICommunitiesRepository _communitiesRepository;
-        private readonly ILogger<DeleteCommunitiesCommandHandler> _logger;
-
-        public DeleteCommunitiesCommandHandler(ICommunitiesRepository communitiesRepository, ILogger<DeleteCommunitiesCommandHandler> logger)
+        var communities = await communitiesRepository.GetByIdAsync(request.Id);
+        if (communities != null)
         {
-            _communitiesRepository = communitiesRepository;
-            _logger = logger;
+            await communitiesRepository.DeleteAsync(communities,cancellationToken);
+            logger.LogInformation("Community with ID {CommunityId} successfully deleted.", request.Id);
+
+            return ResultT<Guid>.Success(request.Id);
         }
 
-        public async Task<ResultT<Guid>> Handle(DeleteCommunitiesCommand request, CancellationToken cancellationToken)
-        {
-            var communities = await _communitiesRepository.GetByIdAsync(request.Id);
-            if (communities != null)
-            {
-                await _communitiesRepository.DeleteAsync(communities,cancellationToken);
-                _logger.LogInformation("Community with ID {CommunityId} successfully deleted.", request.Id);
-
-                return ResultT<Guid>.Success(request.Id);
-            }
-
-            _logger.LogError("Community with ID {CommunityId} not found for deletion.", request.Id);
-            return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
-
-        }
+        logger.LogError("Community with ID {CommunityId} not found for deletion.", request.Id);
+        return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
     }
 }
