@@ -7,27 +7,19 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.Pagination;
 
-internal class GetPagedPostsQuerysHandler : IQueryHandler<GetPagedPostsQuery, PagedResult<PostsDTos>>
+internal class GetPagedPostsQueryHandler(IPostsRepository postsRepository, ILogger<GetPagedPostsQueryHandler> logger)
+    : IQueryHandler<GetPagedPostsQuery, PagedResult<PostsDTos>>
 {
-    private readonly IPostsRepository _postsRepository;
-    private readonly ILogger<GetPagedPostsQuerysHandler> _logger;
-
-    public GetPagedPostsQuerysHandler(IPostsRepository postsRepository, ILogger<GetPagedPostsQuerysHandler> logger)
-    {
-        _postsRepository = postsRepository;
-        _logger = logger;
-    }
-
     public async Task<ResultT<PagedResult<PostsDTos>>> Handle(GetPagedPostsQuery request, CancellationToken cancellationToken)
     {
         if (request != null)
         {
-            var pagedPosts = await _postsRepository.GetPagedPostsAsync(
+            var pagedPosts = await postsRepository.GetPagedPostsAsync(
                 request.PageNumber,
                 request.PageSize,
                 cancellationToken);
 
-            var postsDto = pagedPosts.Items.Select(x => new PostsDTos
+            var postsDto = pagedPosts.Items!.Select(x => new PostsDTos
             (
                 PostsId: x.Id,
                 Title: x.Title,
@@ -37,9 +29,10 @@ internal class GetPagedPostsQuerysHandler : IQueryHandler<GetPagedPostsQuery, Pa
                 CreatedAt: x.CreatedAt
             ));
 
-            if (!postsDto.Any())
+            IEnumerable<PostsDTos> postsDTosEnumerable = postsDto.ToList();
+            if (!postsDTosEnumerable.Any())
             {
-                _logger.LogError("No posts found for the requested page: {PageNumber}, PageSize: {PageSize}", 
+                logger.LogError("No posts found for the requested page: {PageNumber}, PageSize: {PageSize}", 
                     request.PageNumber, request.PageSize);
 
                 return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("400", ""));
@@ -50,15 +43,15 @@ internal class GetPagedPostsQuerysHandler : IQueryHandler<GetPagedPostsQuery, Pa
                 TotalItems = pagedPosts.TotalItems,
                 TotalPages = pagedPosts.TotalPages,
                 CurrentPage = pagedPosts.CurrentPage,
-                Items = postsDto
+                Items = postsDTosEnumerable
             };
 
-            _logger.LogInformation("Retrieved {TotalItems} posts for page {CurrentPage} of {TotalPages}.", 
+            logger.LogInformation("Retrieved {TotalItems} posts for page {CurrentPage} of {TotalPages}.", 
                 pagedPosts.TotalItems, pagedPosts.CurrentPage, pagedPosts.TotalPages);
 
             return ResultT<PagedResult<PostsDTos>>.Success(result);
         }
-        _logger.LogError("Invalid request: GetPagedPostsQuerys request is null.");
+        logger.LogError("Invalid request: GetPagedPostsQuerys request is null.");
 
 
         return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("400",""));

@@ -4,7 +4,7 @@ using MetaBond.Application.Pagination;
 
 namespace MetaBond.Application.Feature.Posts.Query.Pagination;
 
-public sealed class GetPagedPostsQuerys : IQuery<PagedResult<PostsDTos>>
+public sealed class GetPagedPostsQuery : IQuery<PagedResult<PostsDTos>>
 {
     public int PageNumber { get; set; }
 

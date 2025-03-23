@@ -3,34 +3,27 @@ using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Posts.Commands.Delete
+namespace MetaBond.Application.Feature.Posts.Commands.Delete;
+
+internal sealed class DeletePostsCommandHandler(
+    IPostsRepository postsRepository,
+    ILogger<DeletePostsCommandHandler> logger)
+    : ICommandHandler<DeletePostsCommand, Guid>
 {
-    internal sealed class DeletePostsCommandHandler : ICommandHandler<DeletePostsCommand, Guid>
+    public async Task<ResultT<Guid>> Handle(DeletePostsCommand request, CancellationToken cancellationToken)
     {
-        private readonly IPostsRepository _postsRepository;
-        private readonly ILogger<DeletePostsCommandHandler> _logger;
-
-        public DeletePostsCommandHandler(IPostsRepository postsRepository, ILogger<DeletePostsCommandHandler> logger)
+        var posts = await postsRepository.GetByIdAsync(request.PostsId);
+        if (posts == null)
         {
-            _postsRepository = postsRepository;
-            _logger = logger;
+            logger.LogError("Post with ID {PostId} not found.", request.PostsId);
+
+            return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
         }
 
-        public async Task<ResultT<Guid>> Handle(DeletePostsCommand request, CancellationToken cancellationToken)
-        {
-            var posts = await _postsRepository.GetByIdAsync(request.PostsId);
-            if (posts == null)
-            {
-                _logger.LogError("");
+        await postsRepository.DeleteAsync(posts, cancellationToken);
 
-                return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
-            }
-
-            await _postsRepository.DeleteAsync(posts, cancellationToken);
-
-            _logger.LogInformation("");
-
-            return ResultT<Guid>.Success(posts.Id);
-        }
+        logger.LogInformation("Post with ID {PostId} successfully deleted.", request.PostsId);
+        
+        return ResultT<Guid>.Success(posts.Id);
     }
 }

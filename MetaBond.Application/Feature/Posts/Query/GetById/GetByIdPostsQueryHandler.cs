@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.GetById;
 
-internal sealed class GetByIdPostsQuerysHandler(
+internal sealed class GetByIdPostsQueryHandler(
     IPostsRepository postsRepository,
-    ILogger<GetByIdPostsQuerysHandler> logger)
+    ILogger<GetByIdPostsQueryHandler> logger)
     : IQueryHandler<GetByIdPostsQuery, PostsDTos>
 {
     public async Task<ResultT<PostsDTos>> Handle(GetByIdPostsQuery request, CancellationToken cancellationToken)
