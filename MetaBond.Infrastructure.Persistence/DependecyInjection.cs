@@ -33,6 +33,7 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<IRewardsRepository, RewardsRepository>();
             services.AddTransient<IProgressEntryRepository, ProgressEntryRepository>();
             services.AddTransient<IProgressBoardRepository, ProgressBoardRepository>();
+            services.AddTransient<IEventParticipationRepository, EventParticipationRepository>();
             #endregion
 
         }

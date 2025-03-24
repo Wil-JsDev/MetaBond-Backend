@@ -50,11 +50,11 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result.Value);
         }
 
-        [HttpGet("{eventId}/participation")]
+        [HttpGet("{participationInEventId}/events")]
         [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetParticipationInEventDetailsAsync([FromRoute] Guid eventId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetParticipationInEventDetailsAsync([FromRoute] Guid participationInEventId, CancellationToken cancellationToken)
         {
-            var query = new GetEventsQuery { EventsId = eventId};
+            var query = new GetEventsQuery { ParticipationInEventId = participationInEventId};
 
             var result = await mediator.Send(query, cancellationToken);
             if(!result.IsSuccess)
