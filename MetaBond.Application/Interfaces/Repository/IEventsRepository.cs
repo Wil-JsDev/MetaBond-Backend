@@ -18,9 +18,7 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task<IEnumerable<Events>> GetCommunities(Guid id,CancellationToken cancellationToken);
 
-        Task<IEnumerable<Events>> GetParticipationInEventAsync(Guid eventId, CancellationToken cancellationToken);
-
-        Task<Events?> GetEventsWithParticipationsAsync(Guid eventId, CancellationToken cancellationToken);
+        Task<IEnumerable<Events>> GetEventsWithParticipationAsync(Guid eventId, CancellationToken cancellationToken);
 
         Task<IEnumerable<Events>> GetEventsByTitleAndCommunityIdAsync(Guid communitiesId, string title, CancellationToken cancellationToken);
     }
