@@ -8,6 +8,7 @@ namespace MetaBond.Application.Feature.ParticipationInEvent.Commands.Create;
 
 internal sealed class CreateParticipationInEventCommandHandler(
     IParticipationInEventRepository participationInEventRepository,
+    IEventParticipationRepository eventParticipationRepository,
     ILogger<CreateParticipationInEventCommandHandler> logger)
     : ICommandHandler<CreateParticipationInEventCommand, ParticipationInEventDTos>
 {
@@ -27,7 +28,18 @@ internal sealed class CreateParticipationInEventCommandHandler(
 
             logger.LogInformation("Participation created for EventId: {EventId} with ParticipationId: {ParticipationId}",
                 inEvent.EventId, inEvent.Id);
-
+            
+            Domain.Models.EventParticipation eventParticipation = new()
+            {
+                EventId   = request.EventId,
+                ParticipationInEventId = inEvent.Id
+            };
+            
+            await eventParticipationRepository.CreateAsync(eventParticipation, cancellationToken);
+            
+            logger.LogInformation("EventParticipation record created for EventId: {EventId} with ParticipationInEventId: {ParticipationInEventId}", 
+                eventParticipation.EventId, eventParticipation.ParticipationInEventId);
+            
             ParticipationInEventDTos inEventDTos = new
             (
                 ParticipationInEventId: inEvent.Id,
