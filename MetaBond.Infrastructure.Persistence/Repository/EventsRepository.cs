@@ -88,26 +88,14 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<Events>> GetParticipationInEventAsync(Guid eventId, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                               .AsNoTracking()
-                                               .Where(x => x.Id == eventId)
-                                               .Include(ep => ep.EventParticipations)
-                                                    .ThenInclude(x => x.ParticipationInEvent)
-                                               .AsSplitQuery()
-                                               .ToListAsync(cancellationToken);
-            return query;
-        }
-
-        public async Task<Events?> GetEventsWithParticipationsAsync(Guid eventId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Events>> GetEventsWithParticipationAsync(Guid eventId, CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Events>()
                                                .Where(x => x.Id == eventId)     
                                                .Include(ep => ep.EventParticipations)
                                                     .ThenInclude(ev => ev.ParticipationInEvent)
                                                .AsSplitQuery()
-                                               .FirstOrDefaultAsync(cancellationToken);
+                                               .ToListAsync(cancellationToken);
 
             return query;
         }

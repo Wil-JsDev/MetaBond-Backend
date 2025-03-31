@@ -10,7 +10,6 @@ using MetaBond.Application.Feature.Events.Query.GetById;
 using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetOrderById;
-using MetaBond.Application.Feature.Events.Query.GetParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.Pagination;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -153,19 +152,6 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         public async Task<IActionResult> OrderByIdAsync([FromQuery] string orderBy,CancellationToken cancellationToken)
         {
             var query = new GetOrderByIdEventsQuery { Order = orderBy };
-
-            var result = await mediator.Send(query,cancellationToken);
-            if(!result.IsSuccess) 
-                return NotFound(result.Error);
-
-            return Ok(result.Value);
-        }
-
-        [HttpGet("{eventId}/participation")]
-        [EnableRateLimiting("fixed")]
-        public async Task<IActionResult> GetEventsWithParticipationAsync([FromRoute] Guid eventId,CancellationToken cancellationToken)
-        {
-            var query = new GetParticipationInEventQuery { EventsId= eventId };
 
             var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess) 

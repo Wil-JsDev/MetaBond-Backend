@@ -5,5 +5,5 @@ namespace MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
 
 public sealed class GetEventsQuery : IQuery<IEnumerable<EventsWithParticipationInEventDTos>>
 {
-    public Guid? EventsId { get; set; }
+    public Guid? ParticipationInEventId { get; set; }
 }

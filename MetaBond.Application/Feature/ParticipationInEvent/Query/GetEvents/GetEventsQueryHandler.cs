@@ -1,7 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Models;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
@@ -15,7 +17,7 @@ internal sealed class GetEventsQueryHandler(
         GetEventsQuery request,
         CancellationToken cancellationToken)
     {
-        var participationInEventId = await participationInEventRepository.GetByIdAsync(request.EventsId ?? Guid.Empty);
+        var participationInEventId = await participationInEventRepository.GetByIdAsync(request.ParticipationInEventId ?? Guid.Empty);
         if (participationInEventId != null)
         {
             logger.LogInformation("Participation in event found with ID: {ParticipationInEventId}", participationInEventId.Id);
@@ -30,10 +32,22 @@ internal sealed class GetEventsQueryHandler(
                 return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Failure(Error.Failure("400", "The list is empty"));
             }
 
-            IEnumerable<EventsWithParticipationInEventDTos> participationInEventDTos = inEvents.Select(x => new EventsWithParticipationInEventDTos
+            var eventsDTos = inEvents.Select(x => new EventParticipation()
+            {
+                Event = x.EventParticipations!.Select(eventParticipation => eventParticipation.Event).FirstOrDefault()
+            });
+            
+            var participationInEventDTos = inEvents.Select(x => new EventsWithParticipationInEventDTos
             (
                 ParticipationInEventId: x.Id,
-                EventParticipation: x.EventParticipations
+                Events: eventsDTos.Select(ep => new EventsDto(
+                    Id: ep.Event!.Id,
+                    Description: ep.Event.Description,
+                    Title: ep.Event.Title,
+                    DateAndTime: ep.Event.DateAndTime,
+                    CreatedAt: ep.Event.CreateAt,
+                    CommunitiesId: ep.Event.CommunitiesId
+                    ))
             ));
 
             IEnumerable<EventsWithParticipationInEventDTos> eventsWithParticipationInEventDTosEnumerable = participationInEventDTos.ToList();
@@ -41,9 +55,9 @@ internal sealed class GetEventsQueryHandler(
 
             return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Success(eventsWithParticipationInEventDTosEnumerable);
         }
-        logger.LogError("No participation in event found with ID: {EventId}", request.EventsId);
+        logger.LogError("No participation in event found with ID: {EventId}", request.ParticipationInEventId);
 
-        return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Failure(Error.NotFound("404",$"{request.EventsId} not found"));
+        return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Failure(Error.NotFound("404",$"{request.ParticipationInEventId} not found"));
     }
 
 }

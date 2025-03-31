@@ -23,6 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaBond.Presentation.Api",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaBond.Infrastructure.Shared", "MetaBond.Infrastructure.Shared\MetaBond.Infrastructure.Shared.csproj", "{77467A0E-7904-4C32-85FC-68B78E961774}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B42880A2-4FB2-4051-BADC-5CA9F37B277E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaBond.Tests", "MetaBond.Tests\MetaBond.Tests.csproj", "{6A929846-FCE9-49F5-BDFB-3D46D3462022}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +53,10 @@ Global
 		{77467A0E-7904-4C32-85FC-68B78E961774}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77467A0E-7904-4C32-85FC-68B78E961774}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77467A0E-7904-4C32-85FC-68B78E961774}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A929846-FCE9-49F5-BDFB-3D46D3462022}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A929846-FCE9-49F5-BDFB-3D46D3462022}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A929846-FCE9-49F5-BDFB-3D46D3462022}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A929846-FCE9-49F5-BDFB-3D46D3462022}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -63,6 +71,7 @@ Global
 		{71340592-E30B-463D-99D5-07A679999627} = {942D7956-6E22-41CE-B3E5-D66AB6287621}
 		{809D7C8F-49F7-4505-A7E6-E139183C57A3} = {90C47A44-17D0-4876-AA46-BFAFABC08DE6}
 		{77467A0E-7904-4C32-85FC-68B78E961774} = {942D7956-6E22-41CE-B3E5-D66AB6287621}
+		{6A929846-FCE9-49F5-BDFB-3D46D3462022} = {B42880A2-4FB2-4051-BADC-5CA9F37B277E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED224D02-40B9-4204-94A0-1EF01831B848}

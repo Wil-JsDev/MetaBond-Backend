@@ -8,7 +8,7 @@ namespace MetaBond.Application.DTOs.Events
         string? Description,
         string? Title,
         DateTime? DateAndTime,
-        ICollection<EventParticipation>? EventParticipations,
+        IEnumerable<ParticipationInEventBasicDTos> ParticipationInEvents,
         DateTime? CreatedAt
     );
 }
