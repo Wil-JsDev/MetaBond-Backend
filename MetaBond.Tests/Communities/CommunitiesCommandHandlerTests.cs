@@ -215,7 +215,7 @@ public class CommunitiesCommandHandlerTests
                 Category: "New Category",
                 CreatedAt: DateTime.UtcNow,
                 Posts: new List<Posts>(),
-                Events: new List<Events>()
+                Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
                 CommunitieId: Guid.NewGuid(),
@@ -223,7 +223,7 @@ public class CommunitiesCommandHandlerTests
                 Category: "Technology",
                 CreatedAt: DateTime.UtcNow,
                 Posts: new List<Posts>(),
-                Events: new List<Events>()
+                Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
                 CommunitieId: Guid.NewGuid(),
@@ -231,7 +231,7 @@ public class CommunitiesCommandHandlerTests
                 Category: "Cooking",
                 CreatedAt: DateTime.UtcNow,
                 Posts: new List<Posts>(),
-                Events: new List<Events>()
+                Events: new List<Domain.Models.Events>()
             )
         };
 
