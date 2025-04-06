@@ -214,7 +214,7 @@ public class CommunitiesCommandHandlerTests
                 Name: "New Name",
                 Category: "New Category",
                 CreatedAt: DateTime.UtcNow,
-                Posts: new List<Posts>(),
+                Posts: new List<Domain.Models.Posts>(),
                 Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
@@ -222,7 +222,7 @@ public class CommunitiesCommandHandlerTests
                 Name: "Tech Talk",
                 Category: "Technology",
                 CreatedAt: DateTime.UtcNow,
-                Posts: new List<Posts>(),
+                Posts: new List<Domain.Models.Posts>(),
                 Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
@@ -230,7 +230,7 @@ public class CommunitiesCommandHandlerTests
                 Name: "Cooking 101",
                 Category: "Cooking",
                 CreatedAt: DateTime.UtcNow,
-                Posts: new List<Posts>(),
+                Posts: new List<Domain.Models.Posts>(),
                 Events: new List<Domain.Models.Events>()
             )
         };
