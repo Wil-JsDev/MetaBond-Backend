@@ -1,8 +1,8 @@
 services:
     
-  Postgres:
+  postgres:
     image: ${POSTGRES_IMAGE}
-    container_name: postgreSql
+    container_name: PostgreSql
     restart: always
     environment:
     - POSTGRES_USER=${POSTGRES_USER}
@@ -12,13 +12,19 @@ services:
     - ${POSTGRES_PORTS}:5432
     volumes:
     - postgreDb:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} "]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   
-  PgAdmin:
+  pgAdmin:
     image: ${PG_ADMIN_IMAGE}
     container_name: PgAdmin
     restart: always
     depends_on:
-      - Postgres
+      postgres:
+        condition: service_healthy
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
@@ -27,7 +33,7 @@ services:
     volumes:
       - PgAdmin:/var/lib/pgadmin
       
-  Seq:
+  seq:
     image: datalust/seq:latest
     container_name: SEQ
     restart: always
@@ -39,17 +45,25 @@ services:
     volumes:
     - Seq:/data
   
-  Redis:
+  redis:
     image: ${REDIS_IMAGE}
     container_name: Redis-Cache
     restart: always
     ports:
       - ${REDIS_PORTS}:6379
-    volumes:
-      - Cache:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5 
+    networks:
+     - redis
     
 volumes:
   PgAdmin:
   Seq:    
   postgreDb:
-  Cache:
+
+networks:
+  redis:
+    driver: bridge
