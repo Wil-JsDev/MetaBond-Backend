@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAfter;
 
 internal sealed class GetCreatedAfterFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetCreatedAfterFriendshipQueryHandler> logger)
     : IQueryHandler<GetCreatedAfterFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
@@ -17,10 +19,14 @@ internal sealed class GetCreatedAfterFriendshipQueryHandler(
         CancellationToken cancellationToken)
     {
         var friendshipAfter = GetCreatedAfterFriendship();
-        DateTime dateTime = DateTime.UtcNow;
         if (friendshipAfter.TryGetValue((request.DateRange), out var createdAfter))
         {
-            var friendshipList = await createdAfter(cancellationToken);
+            string cacheKey = $"GetCreatedAfterFriendshipQuery-{request.DateRange}";
+            var friendshipList = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await createdAfter(cancellationToken), 
+                cancellationToken: cancellationToken);
+
             IEnumerable<Domain.Models.Friendship> friendships = friendshipList.ToList();
             if (!friendships.Any())
             {

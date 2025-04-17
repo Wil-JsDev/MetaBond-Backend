@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetFilterByStatus;
 
 internal sealed class FilterByStatusFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<FilterByStatusFriendshipQueryHandler> logger)
     : IQueryHandler<FilterByStatusFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
@@ -23,12 +25,17 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
     
             return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.NotFound("404", $"No active friendship exists with status '{request.Status}'.")); 
         }
+        
         var getStatusFriendship = GetStatusFriendship();
         if (getStatusFriendship.TryGetValue((request.Status), out var statusFilter))
         {
-            var friendship = await statusFilter(cancellationToken);
-            IEnumerable<Domain.Models.Friendship> friendships = friendship.ToList();
-            if (friendship == null || !friendships.Any())
+            string cacheKey = $"FilterStatusFriendship-{request.Status}";
+            var friendshipStatusFilter = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await statusFilter(cancellationToken), 
+                cancellationToken: cancellationToken);
+            IEnumerable<Domain.Models.Friendship> friendships = friendshipStatusFilter.ToList();
+            if (!friendships.Any())
             {
                 logger.LogError("No friendships found with status: {Status}", request.Status);
 

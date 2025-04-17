@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetById;
 
 internal sealed class GetByIdFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetByIdFriendshipQueryHandler> logger)
     : IQueryHandler<GetByIdFriendshipQuery, FriendshipDTos>
 {
@@ -15,7 +17,11 @@ internal sealed class GetByIdFriendshipQueryHandler(
         GetByIdFriendshipQuery request, 
         CancellationToken cancellationToken)
     {
-        var friendship = await friendshipRepository.GetByIdAsync(request.Id);
+        var friendship = await decoratedCache.GetOrCreateAsync(
+            $"friendship-{request.Id}", 
+            async () => await friendshipRepository.GetByIdAsync(request.Id), 
+            cancellationToken: cancellationToken);
+        
         if (friendship != null)
         {
             FriendshipDTos friendshipDTos = new

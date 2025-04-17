@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetOrderById;
 
 internal sealed class GetOrderByIdFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetOrderByIdFriendshipQueryHandler> logger)
     : IQueryHandler<GetOrderByIdFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
@@ -19,9 +21,14 @@ internal sealed class GetOrderByIdFriendshipQueryHandler(
         var friendshipSort = GetSort();
         if (friendshipSort.TryGetValue((request.Sort!.ToUpper()), out var getSortFriendship))
         {
-            var friendshipList = await getSortFriendship(cancellationToken);
+            string cacheKey = $"GetOrderByIdFriendshipQuery-{request.Sort}";
+            var friendshipList = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await getSortFriendship(cancellationToken), 
+                cancellationToken: cancellationToken);
+
             IEnumerable<Domain.Models.Friendship> friendships = friendshipList.ToList();
-            if (friendshipList == null || !friendships.Any())
+            if (!friendships.Any())
             {
                 logger.LogError("No friendships found for the sorted order: {Sort}", request.Sort);
 
