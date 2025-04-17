@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
 {
     internal sealed class GetRecentProgressBoardQueryHandler(
         IProgressBoardRepository progressBoardRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetRecentProgressBoardQueryHandler> logger)
         : IQueryHandler<GetRecentProgressBoardQuery, IEnumerable<ProgressBoardDTos>>
     {
@@ -19,8 +21,12 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
             var progressBoardDictionary = GetValue();
             if (progressBoardDictionary.TryGetValue((request.DateFilter), out var statusFilter))
             {
-                var progressBoard = await statusFilter(cancellationToken);
-                IEnumerable<Domain.Models.ProgressBoard> progressBoards = progressBoard.ToList();
+                var progressBoardFilter = await decoratedCache.GetOrCreateAsync(
+                    $"progress-board-get-recent-{request.DateFilter}",
+                    async () => await statusFilter(cancellationToken), 
+                    cancellationToken: cancellationToken);
+                
+                IEnumerable<Domain.Models.ProgressBoard> progressBoards = progressBoardFilter.ToList();
                 if (!progressBoards.Any())
                 {
                     logger.LogWarning("No progress boards found for the given date filter: {DateFilter}", request.DateFilter);

@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Rewards.Query.GetTop;
 
 internal sealed class GetTopRewardsQueryHandler(
     IRewardsRepository rewardsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetTopRewardsQueryHandler> logger)
     : IQueryHandler<GetTopRewardsQuery, IEnumerable<RewardsDTos>>
 {
@@ -18,9 +20,14 @@ internal sealed class GetTopRewardsQueryHandler(
 
         if (request != null)
         {
-            var rewardsList = await rewardsRepository.GetTopRewardsByPointsAsync(request.TopCount,cancellationToken);
+            var rewardsList = await decoratedCache.GetOrCreateAsync(
+                $"rewards-get-top-by-points-{request.TopCount}",
+                async () =>
+                    await rewardsRepository.GetTopRewardsByPointsAsync(request.TopCount, cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             IEnumerable<Domain.Models.Rewards> rewardsEnumerable = rewardsList.ToList();
-            if (rewardsList == null || !rewardsEnumerable.Any())
+            if (!rewardsEnumerable.Any())
             {
                 logger.LogError("No top rewards found");
 

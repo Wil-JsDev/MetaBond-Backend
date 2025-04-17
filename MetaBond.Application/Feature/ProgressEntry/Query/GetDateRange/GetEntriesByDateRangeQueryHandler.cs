@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetDateRange;
 
 internal sealed class GetEntriesByDateRangeQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetEntriesByDateRangeQueryHandler> logger)
     : IQueryHandler<GetEntriesByDateRangeQuery, IEnumerable<ProgressEntryDTos>>
 {
@@ -19,8 +21,12 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
         var progressEntry = GetValue(request.ProgressBoardId);
         if (progressEntry.TryGetValue((request.Range), out var dateRange))
         {
-            var progressEntryList = await dateRange(cancellationToken);
-            if (progressEntry == null || !progressEntry.Any())
+            var progressEntryList = await decoratedCache.GetOrCreateAsync(
+                $"progress-entry-get-by-date-range-{request.Range}",
+                async () => await dateRange(cancellationToken), 
+                cancellationToken: cancellationToken);
+            
+            if (!progressEntry.Any())
             {
                 logger.LogError("No progress entries found for the specified date range.");
 

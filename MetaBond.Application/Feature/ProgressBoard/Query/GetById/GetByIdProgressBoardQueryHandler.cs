@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetById;
 
 internal sealed class GetByIdProgressBoardQueryHandler(
     IProgressBoardRepository progressBoardRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetByIdProgressBoardQueryHandler> logger)
     : IQueryHandler<GetByIdProgressBoardQuery, ProgressBoardDTos>
 {
@@ -15,7 +17,11 @@ internal sealed class GetByIdProgressBoardQueryHandler(
         GetByIdProgressBoardQuery request, 
         CancellationToken cancellationToken)
     {
-        var progressBoard = await progressBoardRepository.GetByIdAsync(request.ProgressBoardId);
+        var progressBoard = await decoratedCache.GetOrCreateAsync(
+            $"progress-board-{request.ProgressBoardId}",
+            async () => await progressBoardRepository.GetByIdAsync(request.ProgressBoardId), 
+            cancellationToken: cancellationToken);
+        
         if (progressBoard != null)
         {
             ProgressBoardDTos progressBoardDTos = new

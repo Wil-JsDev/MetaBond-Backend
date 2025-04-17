@@ -4,6 +4,7 @@ using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.FilterByTitleCommunityId;
@@ -11,11 +12,14 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitleCommunityId;
 public class GetEventsByTitleAndCommunityIdQueryHandler(
     IEventsRepository eventsRepository,
     ILogger<GetEventsByTitleAndCommunityIdQueryHandler> logger,
+    IDistributedCache decoratedCache,
     ICommunitiesRepository communitiesRepository
     ) : IQueryHandler<GetEventsByTitleAndCommunityIdQuery,IEnumerable<EventsDto>>
 {
     
-    public async Task<ResultT<IEnumerable<EventsDto>>> Handle(GetEventsByTitleAndCommunityIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<IEnumerable<EventsDto>>> Handle(
+        GetEventsByTitleAndCommunityIdQuery request, 
+        CancellationToken cancellationToken)
     {
         var communitiesId = await communitiesRepository.GetByIdAsync(request.CommunitiesId);
         if (communitiesId == null)
@@ -37,8 +41,13 @@ public class GetEventsByTitleAndCommunityIdQueryHandler(
             logger.LogError($"Event with title '{request.Title}' not found in the system.");
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"Not found title: {request.Title}"));
         }
-
-        var eventsAndCommunity = await  eventsRepository.GetEventsByTitleAndCommunityIdAsync(request.CommunitiesId, request.Title,cancellationToken);
+        
+        string cacheKey = $"communityId-{request.CommunitiesId}-title-{request.Title}";
+        var eventsAndCommunity = await decoratedCache.GetOrCreateAsync(
+            cacheKey,
+            async () => await eventsRepository.GetEventsByTitleAndCommunityIdAsync(request.CommunitiesId, request.Title,
+                cancellationToken), cancellationToken: cancellationToken);
+        
         IEnumerable<Domain.Models.Events> eventsEnumerable = eventsAndCommunity.ToList();
         if (!eventsEnumerable.Any())
         {

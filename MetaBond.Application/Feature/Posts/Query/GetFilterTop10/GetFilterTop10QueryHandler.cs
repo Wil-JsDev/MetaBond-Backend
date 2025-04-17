@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
 
 internal sealed class GetFilterTop10QueryHandler(
     IPostsRepository postsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetFilterTop10QueryHandler> logger)
     : IQueryHandler<GetFilterTop10Query, IEnumerable<PostsDTos>>
 {
@@ -17,8 +19,14 @@ internal sealed class GetFilterTop10QueryHandler(
     {
         if (request != null)
         {
-            var top10Count = await postsRepository.FilterTop10RecentPostsAsync(request.CommunitiesId,cancellationToken);
-            IEnumerable<Domain.Models.Posts> postsEnumerable = top10Count.ToList();
+            string cacheKey = $"top-count-recent-posts-{request.CommunitiesId}";
+            var top10CountPosts = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await postsRepository.FilterTop10RecentPostsAsync(request.CommunitiesId,
+                    cancellationToken), 
+                cancellationToken: cancellationToken); 
+            
+            IEnumerable<Domain.Models.Posts> postsEnumerable = top10CountPosts.ToList();
             if (!postsEnumerable.Any())
             {
                 logger.LogError("No posts available in the top 10 recent posts list.");

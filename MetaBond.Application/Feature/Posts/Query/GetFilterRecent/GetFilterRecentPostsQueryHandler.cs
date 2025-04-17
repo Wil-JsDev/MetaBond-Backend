@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.GetFilterRecent;
 
 internal sealed class GetFilterRecentPostsQueryHandler(
     IPostsRepository postsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetFilterRecentPostsQueryHandler> logger)
     : IQueryHandler<GetFilterRecentPostsQuery, IEnumerable<PostsDTos>>
 {
@@ -17,7 +19,15 @@ internal sealed class GetFilterRecentPostsQueryHandler(
     {
         if (request != null)
         {
-            var filter = await postsRepository.FilterRecentPostsByCountAsync(request.CommunitiesId,request.TopCount,cancellationToken);
+            string cacheKey = $"get-filter-recent-top-count{request.TopCount}-community-{request.CommunitiesId}";
+            var filter = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await postsRepository.FilterRecentPostsByCountAsync(
+                    request.CommunitiesId, 
+                    request.TopCount,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+
             IEnumerable<Domain.Models.Posts> postsEnumerable = filter.ToList();
             if (!postsEnumerable.Any())
             {

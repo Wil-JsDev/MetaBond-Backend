@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetRecentlyCreated;
 
 internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetRecentlyCreatedFriendshipQueryHandler> logger)
     : IQueryHandler<GetRecentlyCreatedFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
@@ -17,9 +19,14 @@ internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
     {
         if (request != null)
         {
-            var friendshipRecently = await friendshipRepository.GetRecentlyCreatedAsync(request.Limit,cancellationToken);
+            string cacheKey = $"GetRecentlyCreatedFriendship-{request.Limit}";
+            var friendshipRecently = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, cancellationToken), 
+                cancellationToken: cancellationToken);
+
             IEnumerable<Domain.Models.Friendship> friendships = friendshipRecently.ToList();
-            if ( friendshipRecently == null || !friendships.Any())
+            if ( !friendships.Any())
             {
                 logger.LogError("No recent friendships found for the given limit: {Limit}", request.Limit);
 

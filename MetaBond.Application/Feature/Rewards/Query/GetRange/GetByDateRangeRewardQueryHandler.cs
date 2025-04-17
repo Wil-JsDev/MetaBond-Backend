@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Rewards.Query.GetRange;
 
 internal sealed class GetByDateRangeRewardQueryHandler(
     IRewardsRepository rewardsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetByDateRangeRewardQueryHandler> logger)
     : IQueryHandler<GetByDateRangeRewardQuery, IEnumerable<RewardsDTos>>
 {
@@ -19,9 +21,14 @@ internal sealed class GetByDateRangeRewardQueryHandler(
         var rewards = GetValue();
         if (rewards.TryGetValue((request.Range), out var dateRange))
         {
-            var rewardsList = await dateRange(cancellationToken);
+
+            var rewardsList = await decoratedCache.GetOrCreateAsync(
+                $"rewards-get-date-range-{request.Range}",
+                async () => await dateRange(cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             IEnumerable<Domain.Models.Rewards> rewardsEnumerable = rewardsList.ToList();
-            if (rewardsList == null || !rewardsEnumerable.Any())
+            if (!rewardsEnumerable.Any())
             {
                 logger.LogError("No rewards found for the given date range: {Range}", request.Range);
 

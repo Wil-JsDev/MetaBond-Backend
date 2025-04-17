@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.Pagination
 {
     internal sealed class GetPagedEventsQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetPagedEventsQueryHandler> logger)
         : IQueryHandler<GetPagedEventsQuery, PagedResult<EventsDto>>
     {
@@ -24,7 +26,13 @@ namespace MetaBond.Application.Feature.Events.Query.Pagination
                     return ResultT<PagedResult<EventsDto>>.Failure(Error.Failure("400", "PageNumber and PageSize must be greater than 0."));
                 }
                 
-                var eventsPaged = await eventsRepository.GetPagedEventsAsync(request.PageNumber, request.PageSize, cancellationToken);
+                string cacheKey = $"paged-events-page-{request.PageNumber}-size-{request.PageSize}";
+
+                var eventsPaged = await decoratedCache.GetOrCreateAsync(
+                    cacheKey,
+                    async () => await eventsRepository.GetPagedEventsAsync(request.PageNumber, request.PageSize,
+                        cancellationToken), 
+                    cancellationToken: cancellationToken);
 
                 var dtoItems = eventsPaged.Items!.Select(e => new EventsDto
                 (

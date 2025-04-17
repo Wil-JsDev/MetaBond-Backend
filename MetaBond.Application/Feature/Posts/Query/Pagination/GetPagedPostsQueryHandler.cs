@@ -3,22 +3,34 @@ using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.Pagination;
 
-internal class GetPagedPostsQueryHandler(IPostsRepository postsRepository, ILogger<GetPagedPostsQueryHandler> logger)
+internal class GetPagedPostsQueryHandler(
+    IPostsRepository postsRepository, 
+    IDistributedCache decoratedCache,
+    ILogger<GetPagedPostsQueryHandler> logger)
     : IQueryHandler<GetPagedPostsQuery, PagedResult<PostsDTos>>
 {
-    public async Task<ResultT<PagedResult<PostsDTos>>> Handle(GetPagedPostsQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<PostsDTos>>> Handle(
+        GetPagedPostsQuery request, 
+        CancellationToken cancellationToken)
     {
         if (request != null)
         {
-            var pagedPosts = await postsRepository.GetPagedPostsAsync(
-                request.PageNumber,
-                request.PageSize,
-                cancellationToken);
 
+            string cacheKey = $"get-paged-posts-{request.PageNumber}-size-{request.PageSize}";
+            
+            var pagedPosts = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await postsRepository.GetPagedPostsAsync(
+                    request.PageNumber, 
+                    request.PageSize, 
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             var postsDto = pagedPosts.Items!.Select(x => new PostsDTos
             (
                 PostsId: x.Id,
@@ -51,7 +63,7 @@ internal class GetPagedPostsQueryHandler(IPostsRepository postsRepository, ILogg
 
             return ResultT<PagedResult<PostsDTos>>.Success(result);
         }
-        logger.LogError("Invalid request: GetPagedPostsQuerys request is null.");
+        logger.LogError("Invalid request: GetPagedPostsQuery request is null.");
 
 
         return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("400",""));

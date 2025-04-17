@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.Pagination;
 
 internal sealed class GetPagedFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetPagedFriendshipQueryHandler> logger)
     : IQueryHandler<GetPagedFriendshipQuery, PagedResult<FriendshipDTos>>
 {
@@ -18,7 +20,13 @@ internal sealed class GetPagedFriendshipQueryHandler(
     {
         if (request != null)
         {
-            var pagedFriendship = await friendshipRepository.GetPagedFriendshipAsync(request.PageNumber,request.PageSize,cancellationToken);
+            string cacheKey = $"paged-friendship-page-{request.PageNumber}-size-{request.PageSize}";;
+            var pagedFriendship = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await friendshipRepository.GetPagedFriendshipAsync(request.PageNumber, request.PageSize,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+
             var friendshipDto = pagedFriendship.Items!.Select(c => new FriendshipDTos
             (
                 FriendshipId: c.Id,

@@ -214,24 +214,24 @@ public class CommunitiesCommandHandlerTests
                 Name: "New Name",
                 Category: "New Category",
                 CreatedAt: DateTime.UtcNow,
-                Posts: new List<Posts>(),
-                Events: new List<Events>()
+                Posts: new List<Domain.Models.Posts>(),
+                Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
                 CommunitieId: Guid.NewGuid(),
                 Name: "Tech Talk",
                 Category: "Technology",
                 CreatedAt: DateTime.UtcNow,
-                Posts: new List<Posts>(),
-                Events: new List<Events>()
+                Posts: new List<Domain.Models.Posts>(),
+                Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
                 CommunitieId: Guid.NewGuid(),
                 Name: "Cooking 101",
                 Category: "Cooking",
                 CreatedAt: DateTime.UtcNow,
-                Posts: new List<Posts>(),
-                Events: new List<Events>()
+                Posts: new List<Domain.Models.Posts>(),
+                Events: new List<Domain.Models.Events>()
             )
         };
 

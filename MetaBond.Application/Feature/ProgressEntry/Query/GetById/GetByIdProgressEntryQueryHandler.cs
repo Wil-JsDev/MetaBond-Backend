@@ -2,18 +2,24 @@
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetById;
 
 internal sealed class GetByIdProgressEntryQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetByIdProgressEntryQueryHandler> logger)
     : IQueryHandler<GetByIdProgressEntryQuery, ProgressEntryDTos>
 {
     public async Task<ResultT<ProgressEntryDTos>> Handle(GetByIdProgressEntryQuery request, CancellationToken cancellationToken)
     {
-        var progressEntry = await progressEntryRepository.GetByIdAsync(request.ProgressEntryId);
+        var progressEntry = await decoratedCache.GetOrCreateAsync(
+            $"progress-entry-{request.ProgressEntryId}",
+            async () => await progressEntryRepository.GetByIdAsync(request.ProgressEntryId), 
+            cancellationToken: cancellationToken);
+        
         if (progressEntry != null)
         {
             ProgressEntryDTos entryDTos = new

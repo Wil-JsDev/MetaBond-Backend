@@ -1,12 +1,14 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetCountByBoard;
 
 internal sealed class GetCountByBoardIdQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetCountByBoardIdQueryHandler> logger)
     : IQueryHandler<GetCountByBoardIdQuery, int>
 {
@@ -17,8 +19,11 @@ internal sealed class GetCountByBoardIdQueryHandler(
 
         if (request != null)
         {
-            var countBoard = await progressEntryRepository.CountEntriesByBoardIdAsync(request.ProgressBoardId,cancellationToken);
-
+            var countBoard = await decoratedCache.GetOrCreateAsync(
+                $"count-entries-by-board-{request.ProgressBoardId}",
+                async () => await progressEntryRepository.CountEntriesByBoardIdAsync(request.ProgressBoardId, cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             logger.LogInformation("Successfully retrieved the count of progress entries for ProgressBoardId: {BoardId}. Count: {Count}", 
                 request.ProgressBoardId, countBoard);
 

@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Communties;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Query.Filter;
 
     internal sealed class FilterCommunitiesQueryHandler(
         ICommunitiesRepository communitiesRepository,
+        IDistributedCache decoratedCache,
         ILogger<FilterCommunitiesQueryHandler> logger)
         : IQueryHandler<FilterCommunitiesQuery, IEnumerable<CommunitiesDTos>>
     {
@@ -22,9 +24,13 @@ namespace MetaBond.Application.Feature.Communities.Query.Filter;
                     logger.LogError("The specified category '{Category}' was not found.", request.Category);
                     return ResultT<IEnumerable<CommunitiesDTos>>.Failure(Error.NotFound("404", $"The category '{request.Category}' does not exist."));
                 }
-
-                var communitiesByCategory = await communitiesRepository.GetByFilterAsync(x => x.Category == request.Category,cancellationToken);
-                IEnumerable<Domain.Models.Communities> communitiesEnumerable = communitiesByCategory.ToList();
+                
+                var communitiesCategory = await decoratedCache.GetOrCreateAsync($"communitiesCategory-{request.Category}", async () =>
+                {
+                    return await communitiesRepository.GetByFilterAsync(x => x.Category == request.Category, cancellationToken);
+                }, cancellationToken: cancellationToken);
+                
+                IEnumerable<Domain.Models.Communities> communitiesEnumerable = communitiesCategory.ToList();
                 if (!communitiesEnumerable.Any())
                 {
                     logger.LogError("No communities found for category '{Category}'.", request.Category);

@@ -2,12 +2,14 @@
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Query.GetCountByStatus;
 
 internal sealed class GetCountByStatusFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetCountByStatusFriendshipQueryHandler> logger)
     : IQueryHandler<GetCountByStatusFriendshipQuery, int>
 {
@@ -18,7 +20,11 @@ internal sealed class GetCountByStatusFriendshipQueryHandler(
         var friendship = CountStatusAsync();
         if (friendship.TryGetValue((request.Status), out var countFriendship))
         {
-            var result = await countFriendship(cancellationToken);
+            string cacheKey = $"GetCountByStatusFriendshipQuery-{request.Status}";
+            var result = await decoratedCache.GetOrCreateAsync(
+                cacheKey, 
+                async () => await countFriendship(cancellationToken), 
+                cancellationToken: cancellationToken);
 
             logger.LogInformation("Successfully retrieved count for status {Status}: {Count}", request.Status, result);
 

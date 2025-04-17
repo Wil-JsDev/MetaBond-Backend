@@ -12,6 +12,15 @@ namespace MetaBond.Infrastructure.Persistence
 
         public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
         {
+            
+           #region Redis
+            string connectionString = configuration.GetConnectionString("Redis")!;
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = connectionString;
+            });
+            #endregion
+            
             #region DbContext
             services.AddDbContext<MetaBondContext>(postgres =>
             {

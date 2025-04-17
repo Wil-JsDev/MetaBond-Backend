@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.GetById
 {
     internal sealed class GetByIdEventsQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetByIdEventsQueryHandler> logger)
         : IQueryHandler<GetByIdEventsQuery, EventsDto>
     {
@@ -15,7 +17,11 @@ namespace MetaBond.Application.Feature.Events.Query.GetById
             GetByIdEventsQuery request, 
             CancellationToken cancellationToken)
         {
-            var events = await eventsRepository.GetByIdAsync(request.Id);
+            
+            var events =  await decoratedCache.GetOrCreateAsync(
+                $"events-{request.Id}",
+                async () => await eventsRepository.GetByIdAsync(request.Id), 
+                cancellationToken: cancellationToken);
             if (events != null)
             {
                 EventsDto eventsDto = new

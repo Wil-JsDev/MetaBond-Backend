@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Rewards.Query.GetRecent;
 
 internal sealed class GetMostRecentRewardsQueryHandler(
     IRewardsRepository rewardsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetMostRecentRewardsQueryHandler> logger)
     : IQueryHandler<GetMostRecentRewardsQuery, RewardsDTos>
 {
@@ -15,7 +17,11 @@ internal sealed class GetMostRecentRewardsQueryHandler(
         GetMostRecentRewardsQuery request, 
         CancellationToken cancellationToken)
     {
-        var rewardRecent = await rewardsRepository.GetMostRecentRewardAsync(cancellationToken);
+        var rewardRecent = await decoratedCache.GetOrCreateAsync(
+            "rewards-get-most-recent",
+            async () => await rewardsRepository.GetMostRecentRewardAsync(cancellationToken), 
+            cancellationToken: cancellationToken);
+        
         if (rewardRecent != null)
         {
             logger.LogInformation("Most recent reward found with ID: {RewardsId}", rewardRecent.Id);

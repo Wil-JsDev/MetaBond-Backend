@@ -2,12 +2,15 @@
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetOrderByDescription;
 
 internal sealed class GetOrderByDescriptionProgressEntryQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IProgressBoardRepository progressBoardRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetOrderByDescriptionProgressEntryQueryHandler> logger)
     : IQueryHandler<GetOrderByDescriptionProgressEntryQuery, IEnumerable<ProgressEntryWithDescriptionDTos>>
 {
@@ -15,10 +18,23 @@ internal sealed class GetOrderByDescriptionProgressEntryQueryHandler(
         GetOrderByDescriptionProgressEntryQuery request, 
         CancellationToken cancellationToken)
     {
+        var progressBoard = await progressEntryRepository.GetByIdAsync(request.ProgressBoardId);
+        if (progressBoard == null)
+        {
+            logger.LogError($"No progress board found with id: {request.ProgressBoardId}");
 
-        IEnumerable<Domain.Models.ProgressEntry> progressEntries = await progressEntryRepository.GetOrderByDescriptionAsync(request.ProgressBoardId,cancellationToken);
+            return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Failure(Error.NotFound("404","No progress board found"));
+        }
+
+
+        var progressEntries = await decoratedCache.GetOrCreateAsync(
+            $"order-by-description-progress-entry-{request.ProgressBoardId}",
+            async () => await progressEntryRepository.GetOrderByDescriptionAsync(request.ProgressBoardId,
+                cancellationToken), 
+            cancellationToken: cancellationToken);
+        
         IEnumerable<Domain.Models.ProgressEntry> enumerable = progressEntries.ToList();
-        if (progressEntries == null || !enumerable.Any())
+        if (!enumerable.Any())
         {
             logger.LogError("No progress entries found when ordering by description.");
 
