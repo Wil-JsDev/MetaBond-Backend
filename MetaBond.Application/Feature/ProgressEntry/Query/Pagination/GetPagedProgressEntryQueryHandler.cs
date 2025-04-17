@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.Pagination;
 
 internal sealed class GetPagedProgressEntryQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetPagedProgressEntryQueryHandler> logger)
     : IQueryHandler<GetPagedProgressEntryQuery, PagedResult<ProgressEntryDTos>>
 {
@@ -21,13 +23,19 @@ internal sealed class GetPagedProgressEntryQueryHandler(
 
             if (request.PageNumber <= 0 || request.PageSize <= 0)
             {
-                logger.LogError("");
+                logger.LogError("Invalid pagination parameters: PageNumber={PageNumber}, PageSize={PageSize}", request.PageNumber, request.PageSize);
 
-                return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400", "Page Number and Page Size are required"));
+                return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400", "Page Number and Page Size must be greater than zero."));
             }
-                
-            var getPagedProgressEntry = await progressEntryRepository.GetPagedProgressEntryAsync(request.PageSize,request.PageNumber,cancellationToken);
 
+            var getPagedProgressEntry = await decoratedCache.GetOrCreateAsync(
+                $"progress-entry-get-paged-{request.PageNumber}-size-{request.PageSize}",
+                async () => await progressEntryRepository.GetPagedProgressEntryAsync(
+                    request.PageSize,
+                    request.PageNumber, 
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             var dtoItems = getPagedProgressEntry.Items!.Select(x => new ProgressEntryDTos
             (
                 ProgressEntryId: x.Id,

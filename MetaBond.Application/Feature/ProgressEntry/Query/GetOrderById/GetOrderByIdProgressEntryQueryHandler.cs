@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetOrderById;
 
 internal sealed class GetOrderByIdProgressEntryQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetOrderByIdProgressEntryQueryHandler> logger)
     : IQueryHandler<GetOrderByIdProgressEntryQuery, IEnumerable<ProgressEntryBasicDTos>>
 {
@@ -15,8 +17,13 @@ internal sealed class GetOrderByIdProgressEntryQueryHandler(
         GetOrderByIdProgressEntryQuery request, 
         CancellationToken cancellationToken)
     {
-        IEnumerable<Domain.Models.ProgressEntry> progressEntries = await progressEntryRepository.GetOrderByIdAsync(request.ProgressBoardId,cancellationToken);
-        List<Domain.Models.ProgressEntry> enumerable = progressEntries.ToList();
+
+        var progressEntries = await decoratedCache.GetOrCreateAsync(
+            $"order-by-id-progress-board-{request.ProgressBoardId}",
+            async () => await progressEntryRepository.GetOrderByIdAsync(request.ProgressBoardId, cancellationToken), 
+            cancellationToken: cancellationToken);
+        
+        var enumerable = progressEntries.ToList();
         if (!enumerable.Any())
         {
             logger.LogError("No progress entries found when ordering by ID.");

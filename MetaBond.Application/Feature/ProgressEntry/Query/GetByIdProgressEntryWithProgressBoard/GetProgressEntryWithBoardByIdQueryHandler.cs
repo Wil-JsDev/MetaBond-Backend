@@ -2,12 +2,14 @@ using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetByIdProgressEntryWithProgressBoard;
 
 public class GetProgressEntryWithBoardByIdQueryHandler(
     IProgressEntryRepository repository,
+    IDistributedCache decoratedCache,
     ILogger<GetProgressEntryWithBoardByIdQueryHandler> logger)
     : IQueryHandler<GetProgressEntryWithBoardByIdQuery, IEnumerable<ProgressEntryWithProgressBoardDTos>>
 {
@@ -18,8 +20,12 @@ public class GetProgressEntryWithBoardByIdQueryHandler(
         var progressEntry = await repository.GetByIdAsync(request.ProgressEntryId);
         if (progressEntry != null)
         {
-          var progressEntryWithProgressBoard = await repository.GetByIdProgressEntryWithProgressBoard(request.ProgressEntryId,cancellationToken);
-          
+            var progressEntryWithProgressBoard = await decoratedCache.GetOrCreateAsync(
+                $"progress-entry-with-progress-board-{request.ProgressEntryId}",
+                async () => await repository.GetByIdProgressEntryWithProgressBoard(request.ProgressEntryId,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+
           IEnumerable<Domain.Models.ProgressEntry> entryWithProgressBoard = progressEntryWithProgressBoard.ToList();
           if (!entryWithProgressBoard.Any())
           {

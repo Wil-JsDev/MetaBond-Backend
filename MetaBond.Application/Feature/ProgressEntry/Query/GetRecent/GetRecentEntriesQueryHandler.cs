@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetRecent;
 
 internal sealed class GetRecentEntriesQueryHandler(
     IProgressEntryRepository repository,
+    IDistributedCache decoratedCache,
     ILogger<GetRecentEntriesQueryHandler> logger)
     : IQueryHandler<GetRecentEntriesQuery, IEnumerable<ProgressEntryDTos>>
 {
@@ -23,8 +25,13 @@ internal sealed class GetRecentEntriesQueryHandler(
     
                 return ResultT<IEnumerable<ProgressEntryDTos>>.Failure(Error.Failure("400", "TopCount must be greater than zero."));
             }
-                
-            IEnumerable<Domain.Models.ProgressEntry> progressEntries = await repository.GetRecentEntriesAsync(request.ProgressBoardId,request.TopCount,cancellationToken);
+
+            var progressEntries = await decoratedCache.GetOrCreateAsync(
+                $"progress-entry-get-recent-{request.ProgressBoardId}",
+                async () => await repository.GetRecentEntriesAsync(request.ProgressBoardId, request.TopCount,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             var enumerable = progressEntries.ToList();
             if (!enumerable.Any())
             {
