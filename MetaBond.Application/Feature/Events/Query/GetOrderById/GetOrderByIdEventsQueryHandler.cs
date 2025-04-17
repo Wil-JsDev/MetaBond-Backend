@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.GetOrderById
 {
     internal sealed class GetOrderByIdEventsQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetOrderByIdEventsQueryHandler> logger)
         : IQueryHandler<GetOrderByIdEventsQuery, IEnumerable<EventsDto>>
     {
@@ -16,7 +18,11 @@ namespace MetaBond.Application.Feature.Events.Query.GetOrderById
             var eventsSort = GetSortValues();
             if (eventsSort.TryGetValue((request.Order!), out var getSort))
             {
-                var eventsListSort = await getSort(cancellationToken);
+                var eventsListSort = await decoratedCache.GetOrCreateAsync(
+                    $"order-{request.Order}",
+                    async () => await getSort(cancellationToken), 
+                    cancellationToken: cancellationToken);
+                
                 IEnumerable<Domain.Models.Events> eventsEnumerable = eventsListSort.ToList();
                 if (!eventsEnumerable.Any())
                 {

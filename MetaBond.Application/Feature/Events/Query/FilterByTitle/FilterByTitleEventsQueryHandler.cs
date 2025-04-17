@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
 {
     internal sealed class FilterByTitleEventsQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<FilterByTitleEventsQueryHandler> logger)
         : IQueryHandler<FilterByTitleEventsQuery, IEnumerable<EventsDto>>
     {
@@ -22,7 +24,11 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
                     return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"The event '{request.Title}' does not exist."));
                 }
                 
-                var eventsTitle = await eventsRepository.GetFilterByTitleAsync(request.Title, cancellationToken);
+                var eventsTitle = await decoratedCache.GetOrCreateAsync(
+                    $"events-with-title-{request.Title}", 
+                    async () => await eventsRepository.GetFilterByTitleAsync(request.Title, cancellationToken), 
+                    cancellationToken: cancellationToken);
+                
                 IEnumerable<EventsDto> eventsDtos = eventsTitle.Select(c => new EventsDto 
                 (
                     Id: c.Id,
