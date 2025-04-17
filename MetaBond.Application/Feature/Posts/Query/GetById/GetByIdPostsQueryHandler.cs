@@ -2,18 +2,24 @@
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.GetById;
 
 internal sealed class GetByIdPostsQueryHandler(
     IPostsRepository postsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetByIdPostsQueryHandler> logger)
     : IQueryHandler<GetByIdPostsQuery, PostsDTos>
 {
     public async Task<ResultT<PostsDTos>> Handle(GetByIdPostsQuery request, CancellationToken cancellationToken)
     {
-        var posts = await postsRepository.GetByIdAsync(request.PostsId);
+
+        var posts = await decoratedCache.GetOrCreateAsync(
+            $"get-by-id-posts-{request.PostsId}",
+            async () => await postsRepository.GetByIdAsync(request.PostsId), 
+            cancellationToken: cancellationToken);
 
         if (posts != null)
         {

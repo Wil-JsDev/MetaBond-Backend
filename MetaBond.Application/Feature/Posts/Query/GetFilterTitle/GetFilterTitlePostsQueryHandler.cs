@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 
 internal sealed class GetFilterTitlePostsQueryHandler(
     IPostsRepository postsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetFilterTitlePostsQueryHandler> logger)
     : IQueryHandler<GetFilterTitlePostsQuery, IEnumerable<PostsDTos>>
 {
@@ -25,7 +27,16 @@ internal sealed class GetFilterTitlePostsQueryHandler(
     
                 return ResultT<IEnumerable<PostsDTos>>.Failure(Error.NotFound("404", $"No post exists with the title '{request.Title}'.")); 
             }
-            var postsWithTitle = await postsRepository.GetFilterByTitleAsync(request.CommunitiesId,request.Title,cancellationToken);
+
+            string cacheKey = $"community-filter-title-{request.CommunitiesId}-{request.Title}";
+            var postsWithTitle = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await postsRepository.GetFilterByTitleAsync(
+                    request.CommunitiesId, 
+                    request.Title, 
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+
             IEnumerable<Domain.Models.Posts> postsEnumerable = postsWithTitle.ToList();
             if (!postsEnumerable.Any())
             {
