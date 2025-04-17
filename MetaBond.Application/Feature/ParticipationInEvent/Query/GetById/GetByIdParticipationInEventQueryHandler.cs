@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.ParticipationInEvent;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ParticipationInEvent.Query.GetById;
 
 internal sealed class GetByIdParticipationInEventQueryHandler(
     IParticipationInEventRepository repository,
+    IDistributedCache decoratedCache,
     ILogger<GetByIdParticipationInEventQueryHandler> logger)
     : IQueryHandler<GetByIdParticipationInEventQuery, ParticipationInEventDTos>
 {
@@ -15,7 +17,10 @@ internal sealed class GetByIdParticipationInEventQueryHandler(
         GetByIdParticipationInEventQuery request, 
         CancellationToken cancellationToken)
     {
-        var participationInEvent = await repository.GetByIdAsync(request.ParticipationInEventId);
+        var participationInEvent = await decoratedCache.GetOrCreateAsync(
+            $"ParticipationInEvent-{request.ParticipationInEventId}",
+            async () => await repository.GetByIdAsync(request.ParticipationInEventId), 
+            cancellationToken: cancellationToken);
 
         if (participationInEvent != null)
         {
