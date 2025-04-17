@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
 
     internal sealed class GetEventsWithParticipationInEventQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetEventsWithParticipationInEventQueryHandler> logger)
         : IQueryHandler<GetEventsWithParticipationInEventQuery, IEnumerable<EventsWithParticipationInEventsDTos>>
     {
@@ -19,8 +21,12 @@ namespace MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationIn
             var events = await eventsRepository.GetByIdAsync(request.EventsId ?? Guid.Empty);
             if (events != null)
             {
-                var eventsWithParticipationInEvents = await eventsRepository.GetEventsWithParticipationAsync(events.Id, cancellationToken);
 
+                var eventsWithParticipationInEvents = await decoratedCache.GetOrCreateAsync(
+                    $"eventsId-{request.EventsId}",
+                    async () => await eventsRepository.GetEventsWithParticipationAsync(events.Id, cancellationToken), 
+                    cancellationToken: cancellationToken);
+                
                 IEnumerable<Domain.Models.Events> withParticipationInEvents = eventsWithParticipationInEvents.ToList();
                
                 if (!withParticipationInEvents.Any())

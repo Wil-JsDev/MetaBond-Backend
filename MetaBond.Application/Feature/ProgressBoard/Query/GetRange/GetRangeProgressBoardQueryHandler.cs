@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
@@ -10,6 +11,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 internal sealed class GetRangeProgressBoardQueryHandler(
     IProgressBoardRepository progressBoardRepository,
     IProgressEntryRepository progressEntryRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetRangeProgressBoardQueryHandler> logger)
     : IQueryHandler<GetRangeProgressBoardQuery, IEnumerable<ProgressBoardWithProgressEntryDTos>>
 {
@@ -20,7 +22,11 @@ internal sealed class GetRangeProgressBoardQueryHandler(
         var progressBoard = GetValue();
         if (progressBoard.TryGetValue((request.DateRangeType), out var progressBoardValue))
         {
-            var progressBoardList = await progressBoardValue(cancellationToken);
+            var progressBoardList = await decoratedCache.GetOrCreateAsync(
+                $"progress-board-get-range-{request.DateRangeType}",
+                async () => await progressBoardValue(cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             IEnumerable<Domain.Models.ProgressBoard> progressBoards = progressBoardList.ToList();
             if (!progressBoards.Any())
             {
@@ -42,11 +48,13 @@ internal sealed class GetRangeProgressBoardQueryHandler(
                 return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
                     Error.Failure("400", "Page number and page size must be greater than zero. Please provide valid pagination values."));
             }
-                
-            var progressEntryPaged = await progressEntryRepository.GetPagedProgressEntryAsync(
-                request.PageSize, 
-                request.Page, 
-                cancellationToken);
+
+            var progressEntryPaged = await decoratedCache.GetOrCreateAsync(
+                $"progress-entry-paged-get-range-{request.Page}-{request.PageSize}",
+                async () => await progressEntryRepository.GetPagedProgressEntryAsync(
+                    request.PageSize,
+                    request.Page,
+                    cancellationToken));
                 
             var progressEntryList = progressEntryPaged.Items!.Select(x => new ProgressEntrySummaryDTos
             (

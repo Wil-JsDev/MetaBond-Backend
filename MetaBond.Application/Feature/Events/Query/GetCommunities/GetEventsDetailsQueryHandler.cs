@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.GetCommunities;
 
     internal sealed class GetEventsDetailsQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetEventsDetailsQueryHandler> logger)
         : IQueryHandler<GetEventsDetailsQuery, IEnumerable<DTOs.Events.CommunitiesDTos>>
     {
@@ -24,7 +26,12 @@ namespace MetaBond.Application.Feature.Events.Query.GetCommunities;
                 return ResultT<IEnumerable<DTOs.Events.CommunitiesDTos>>.Failure(Error.NotFound("404", $"{request.Id} not found"));
             }
 
-            var eventsDetails = await eventsRepository.GetCommunities(request.Id,cancellationToken);
+            var eventsDetails = await decoratedCache.GetOrCreateAsync(
+                $"events-{request.Id}",
+                async () => await eventsRepository.GetCommunities(request.Id, cancellationToken),
+                cancellationToken: cancellationToken
+            );
+
             var eventsEnumerable = eventsDetails.ToList();
             if (!eventsEnumerable.Any())
             {

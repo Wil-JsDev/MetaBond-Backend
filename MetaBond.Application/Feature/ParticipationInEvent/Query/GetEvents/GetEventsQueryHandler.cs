@@ -4,12 +4,14 @@ using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
 
 internal sealed class GetEventsQueryHandler(
     IParticipationInEventRepository participationInEventRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetEventsQueryHandler> logger)
     : IQueryHandler<GetEventsQuery, IEnumerable<EventsWithParticipationInEventDTos>>
 {
@@ -22,10 +24,16 @@ internal sealed class GetEventsQueryHandler(
         {
             logger.LogInformation("Participation in event found with ID: {ParticipationInEventId}", participationInEventId.Id);
 
-            IEnumerable<Domain.Models.ParticipationInEvent> participationInEvents = await participationInEventRepository.GetEventsAsync(participationInEventId.Id, cancellationToken);
+            string cacheKey = $"GetEventsQueryHandler-{request.ParticipationInEventId}";
+            
+            var participationInEvents = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await participationInEventRepository.GetEventsAsync(participationInEventId.Id,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
 
             IEnumerable<Domain.Models.ParticipationInEvent> inEvents = participationInEvents.ToList();
-            if (participationInEvents == null || !inEvents.Any())
+            if (!inEvents.Any())
             {
                 logger.LogError("No events found for participation in event with ID: {ParticipationInEventId}", participationInEventId.Id);
 

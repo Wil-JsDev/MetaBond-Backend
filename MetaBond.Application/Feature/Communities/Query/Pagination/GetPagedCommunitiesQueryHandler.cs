@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Communties;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Query.Pagination;
 
     internal sealed class GetPagedCommunitiesQueryHandler(
         ICommunitiesRepository communitiesRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetPagedCommunitiesQueryHandler> logger)
         : IQueryHandler<GetPagedCommunitiesQuery, PagedResult<CommunitiesDTos>>
     {
@@ -16,8 +18,12 @@ namespace MetaBond.Application.Feature.Communities.Query.Pagination;
         {
             if (request != null)
             {
-                var communitiesPagedWithNumber = await communitiesRepository.GetPagedCommunitiesAsync(request.PageNumber, request.PageSize,cancellationToken);
-                var dtoItems = communitiesPagedWithNumber.Items!.Select(c => new CommunitiesDTos(
+                var cacheKey = $"paged-communities-page-{request.PageNumber}-size-{request.PageSize}";
+                var communitiesPaged = await decoratedCache.GetOrCreateAsync(cacheKey,
+                    async () => await communitiesRepository.GetPagedCommunitiesAsync(request.PageNumber,
+                        request.PageSize, cancellationToken), cancellationToken: cancellationToken);                
+                
+                var dtoItems = communitiesPaged.Items!.Select(c => new CommunitiesDTos(
                     CommunitieId: c.Id,
                     Name: c.Name,
                     Category: c.Category,
@@ -26,9 +32,9 @@ namespace MetaBond.Application.Feature.Communities.Query.Pagination;
 
                 PagedResult<CommunitiesDTos> pagedResult = new()
                 {
-                    TotalItems = communitiesPagedWithNumber.TotalItems,
-                    CurrentPage = communitiesPagedWithNumber.CurrentPage,
-                    TotalPages = communitiesPagedWithNumber.TotalPages,
+                    TotalItems = communitiesPaged.TotalItems,
+                    CurrentPage = communitiesPaged.CurrentPage,
+                    TotalPages = communitiesPaged.TotalPages,
                     Items = dtoItems
                 };
 

@@ -4,12 +4,14 @@ using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
 {
     internal sealed class FilterByDateRangeEventsQueryHandler(
         IEventsRepository eventsRepository,
+        IDistributedCache decoratedCache,
         ILogger<FilterByDateRangeEventsQueryHandler> logger)
         : IQueryHandler<FilterByDateRangeEventsQuery, IEnumerable<EventsDto>>
     {
@@ -21,8 +23,14 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
             var status = FilterByDateRange(request.CommunitiesId);
             if (status.TryGetValue((request.DateRangeFilter), out var getStatusList))
             {
-                var eventsList = await getStatusList(cancellationToken);
-                IEnumerable<Domain.Models.Events> eventsEnumerable = eventsList.ToList();
+                string cacheKey = $"events-community-{request.CommunitiesId}-filter-{request.DateRangeFilter}";
+                
+                var eventsLists = await decoratedCache.GetOrCreateAsync(
+                    cacheKey, 
+                    async () => await getStatusList(cancellationToken),
+                    cancellationToken: cancellationToken);
+                
+                IEnumerable<Domain.Models.Events> eventsEnumerable = eventsLists.ToList();
                 
                 if (!eventsEnumerable.Any())
                 {

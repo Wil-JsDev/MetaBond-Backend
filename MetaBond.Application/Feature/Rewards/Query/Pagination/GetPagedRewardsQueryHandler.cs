@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Rewards.Query.Pagination;
 
 internal sealed class GetPagedRewardsQueryHandler(
     IRewardsRepository rewardsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetPagedRewardsQueryHandler> logger)
     : IQueryHandler<GetPagedRewardsQuery, PagedResult<RewardsDTos>>
 {
@@ -26,12 +28,16 @@ internal sealed class GetPagedRewardsQueryHandler(
 
                 return ResultT<PagedResult<RewardsDTos>>.Failure(Error.Failure("400", "Page Number and Page Size must be greater than zero."));
             }
-            
-            var pagedRewards = await rewardsRepository.GetPagedRewardsAsync(
-                request.PageNumber,
-                request.PageSize,
-                cancellationToken);
 
+
+            var pagedRewards = await decoratedCache.GetOrCreateAsync(
+                $"get-paged-rewards-{request.PageNumber}-size-{request.PageSize}",
+                async () => await rewardsRepository.GetPagedRewardsAsync(
+                    request.PageNumber,
+                    request.PageSize,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
+            
             var rewardsDto = pagedRewards.Items!.Select(x => new RewardsDTos
             (
                 RewardsId: x.Id,

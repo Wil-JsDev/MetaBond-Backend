@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.Pagination
 {
     internal sealed class GetPagedProgressBoardQueryHandler(
         IProgressBoardRepository progressBoardRepository,
+        IDistributedCache decoratedCache,
         ILogger<GetPagedProgressBoardQueryHandler> logger)
         : IQueryHandler<GetPagedProgressBoardQuery, PagedResult<ProgressBoardDTos>>
     {
@@ -19,7 +21,15 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.Pagination
 
             if (request != null)
             {
-                var pageProgressBoard = await progressBoardRepository.GetPagedBoardsAsync(request.PageNumber, request.PageSize,cancellationToken);
+                string cacheKey = $"get-progress-board-paged-{request.PageNumber}-{request.PageSize}";
+                var pageProgressBoard = await decoratedCache.GetOrCreateAsync(
+                    cacheKey,
+                    async () => await progressBoardRepository.GetPagedBoardsAsync(
+                        request.PageNumber, 
+                        request.PageSize,
+                        cancellationToken), 
+                    cancellationToken: cancellationToken);
+                
                 var progressBoardList = pageProgressBoard.Items!.Select(x => new ProgressBoardDTos
                 (
                     ProgressBoardId: x.Id,
@@ -29,7 +39,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.Pagination
                 ));
 
                 IEnumerable<ProgressBoardDTos> progressBoardDTosEnumerable = progressBoardList.ToList();
-                if (progressBoardList == null ||!progressBoardDTosEnumerable.Any())
+                if (!progressBoardDTosEnumerable.Any())
                 {
                     logger.LogWarning("No progress boards found for page {PageNumber} with page size {PageSize}.", 
                         request.PageNumber, 

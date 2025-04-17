@@ -3,12 +3,14 @@ using MetaBond.Application.DTOs.ParticipationInEvent;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;
 
 internal sealed class GetPagedParticipationInEventQueryHandler(
     IParticipationInEventRepository repository,
+    IDistributedCache decoratedCache,
     ILogger<GetPagedParticipationInEventQueryHandler> logger)
     : IQueryHandler<GetPagedParticipationInEventQuery, PagedResult<ParticipationInEventDTos>>
 {
@@ -18,10 +20,14 @@ internal sealed class GetPagedParticipationInEventQueryHandler(
     {
         if (request != null)
         {
-            var participationInEvent = await repository.GetPagedParticipationInEventAsync(
-                request.PageNumber,
-                request.PageSize,
-                cancellationToken);
+            string cacheKey = $"get-participation-in-event-paged-{request.PageNumber}-size-{request.PageSize}";
+            var participationInEvent = await decoratedCache.GetOrCreateAsync(
+                cacheKey,
+                async () => await repository.GetPagedParticipationInEventAsync(
+                    request.PageNumber, 
+                    request.PageSize,
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
 
             var dtoItems = participationInEvent.Items!.Select(p => new ParticipationInEventDTos
             (
