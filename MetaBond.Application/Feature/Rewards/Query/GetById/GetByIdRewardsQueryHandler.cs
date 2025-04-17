@@ -2,12 +2,14 @@
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Rewards.Query.GetById;
 
 internal sealed class GetByIdRewardsQueryHandler(
     IRewardsRepository rewardsRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetByIdRewardsQueryHandler> logger)
     : IQueryHandler<GetByIdRewardsQuery, RewardsDTos>
 {
@@ -15,7 +17,12 @@ internal sealed class GetByIdRewardsQueryHandler(
         GetByIdRewardsQuery request, 
         CancellationToken cancellationToken)
     {
-        var reward = await rewardsRepository.GetByIdAsync(request.RewardsId);
+        
+        var reward = await decoratedCache.GetOrCreateAsync(
+            $"rewards-{request.RewardsId}",
+            async () => await rewardsRepository.GetByIdAsync(request.RewardsId), 
+            cancellationToken: cancellationToken);
+
         if (reward != null)
         {
             RewardsDTos rewardsDTos = new
