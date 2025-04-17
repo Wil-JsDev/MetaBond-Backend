@@ -1,12 +1,14 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressBoard.Query.GetCount;
 
 internal sealed class GetCountProgressBoardQueryHandler(
     IProgressBoardRepository progressBoardRepository,
+    IDistributedCache decoratedCache,
     ILogger<GetCountProgressBoardQueryHandler> logger)
     : IQueryHandler<GetCountProgressBoardQuery, int>
 {
@@ -14,7 +16,11 @@ internal sealed class GetCountProgressBoardQueryHandler(
         GetCountProgressBoardQuery request, 
         CancellationToken cancellationToken)
     {
-        var progressBoardCount = await progressBoardRepository.CountBoardsAsync(cancellationToken);
+        var progressBoardCount = await decoratedCache.GetOrCreateAsync(
+            "progress-board-count",
+            async () => await progressBoardRepository.CountBoardsAsync(cancellationToken), 
+            cancellationToken: cancellationToken);
+        
         if (progressBoardCount == 0)
         {
             logger.LogError("No progress boards found in the database.");
