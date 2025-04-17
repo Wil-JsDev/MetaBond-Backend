@@ -4,6 +4,7 @@ using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
@@ -11,6 +12,7 @@ namespace MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
     internal sealed class GetCommunityDetailsByIdQueryHandler(
         ICommunitiesRepository communitiesRepository,
         ILogger<GetCommunityDetailsByIdQueryHandler> logger,
+        IDistributedCache decoratedCache,
         IPostsRepository postsRepository,
         IEventsRepository eventsRepository)
         : IQueryHandler<GetCommunityDetailsByIdQuery, IEnumerable<PostsAndEventsDTos>>
@@ -25,9 +27,11 @@ namespace MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
                 return ResultT<IEnumerable<PostsAndEventsDTos>>.Failure(Error.NotFound("404", "Community not found."));
             }
 
-            var communitiesWithEventsAndPosts = await communitiesRepository.GetPostsAndEventsByCommunityIdAsync(request.Id, cancellationToken);
+            var communitiesWithEventsAndPosts = await decoratedCache.GetOrCreateAsync($"communities-{community.Id}",
+                async () => await communitiesRepository.GetPostsAndEventsByCommunityIdAsync(request.Id, cancellationToken), cancellationToken: cancellationToken);
 
             IEnumerable<Domain.Models.Communities> withEventsAndPosts = communitiesWithEventsAndPosts.ToList();
+
             if (!withEventsAndPosts.Any())
             {
                 logger.LogError("Community with ID {CommunityId} has no posts or events.", request.Id);
