@@ -18,7 +18,7 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
         FilterByStatusFriendshipQuery request, 
         CancellationToken cancellationToken)
     {
-        var exists = await friendshipRepository.ValidateAsync(x => x.Status == request.Status);
+        var exists = await friendshipRepository.ValidateAsync(x => x.Status == request.Status, cancellationToken);
         if (!exists)
         {
             logger.LogError("No active friendship found with status '{Status}'.", request.Status);
