@@ -12,8 +12,7 @@ interaction through **gamification tools**, real-time chat, and smart resources.
 
 - **Backend:** ASP.NET Core Web API
 - **Database:** PostgreSQL with EF Core as ORM
-- **Infrastructure & Deployment:** Docker, GitHub Actions (CI/CD), AWS Elastic
-  Beanstalk
+- **Infrastructure & Deployment:** Docker, GitHub Actions (CI/CD)
 - **Caching:** Redis
 - **Media Storage:** Cloudinary for image uploads
 
@@ -22,6 +21,7 @@ interaction through **gamification tools**, real-time chat, and smart resources.
 The backend is deployed using **Railway**.
 
 ## Architecture
+```plaintext
 MetaBond-Backend/
 ├── 📂 src/                                 # Source code root folder
 │   ├── 🧠 MetaBond.Application/               # Application logic and use cases (see detailed breakdown below) ⬇️
@@ -34,3 +34,4 @@ MetaBond-Backend/
 ├── 🐳 docker-compose.yml                   # Docker configuration file to spin up the environment
 ├── 🧷 MetaBond.sln                         # Visual Studio solution file
 └── 📄 README.md                            # Main repository documentation
+```
