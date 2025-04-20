@@ -18,7 +18,8 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task DeleteAsync(TEntity entity, CancellationToken cancellationToken);
 
-        Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken);
         
         Task SaveAsync(CancellationToken cancellationToken);
     }

@@ -35,7 +35,7 @@ public class GetEventsByTitleAndCommunityIdQueryHandler(
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "The title cannot be null or empty"));
         }
         
-        var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title);
+        var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title, cancellationToken);
         if (!exists)
         {
             logger.LogError($"Event with title '{request.Title}' not found in the system.");
