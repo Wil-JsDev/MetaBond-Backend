@@ -28,7 +28,23 @@ namespace MetaBond.Infrastructure.Persistence.Context
         public DbSet<ProgressEntry> ProgressEntry { get; set; }
 
         public DbSet<EventParticipation> EventParticipation { get; set; }
-
+        
+        public DbSet<User> Users { get; set; }
+        
+        public DbSet<CommunityManager> CommunityManagers { get; set; }
+        
+        public DbSet<CommunityUser> CommunityUsers { get; set; }
+        
+        public DbSet<EmailConfirmationToken> EmailConfirmationTokens { get; set; }
+        
+        public DbSet<Interest> Interests { get; set; }
+        
+        public DbSet<Moderator> Moderators { get; set; }
+        
+        public DbSet<ModeratorCommunity> ModeratorCommunities { get; set; }
+        
+        public DbSet<UserInterest> UserInterests { get; set; }
+        
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -64,6 +80,33 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<ProgressEntry>()
                         .ToTable("ProgressEntry");
 
+            modelBuilder.Entity<User>()
+                .ToTable("Users");
+            
+            modelBuilder.Entity<Moderator>()
+                .ToTable("Moderators");
+            
+            modelBuilder.Entity<Admin>()
+                .ToTable("Admins");
+            
+            modelBuilder.Entity<CommunityManager>()
+                .ToTable("CommunityManagers");
+            
+            modelBuilder.Entity<CommunityUser>()
+                .ToTable("CommunityUsers");
+            
+            modelBuilder.Entity<Interest>()
+                .ToTable("Interests");
+            
+            modelBuilder.Entity<ModeratorCommunity>()
+                .ToTable("ModeratorCommunity");
+            
+            modelBuilder.Entity<UserInterest>()
+                .ToTable("UserInterests");
+            
+            modelBuilder.Entity<EmailConfirmationToken>()
+                .ToTable("EmailConfirmationTokens");
+            
             #endregion
 
             #region PrimaryKey
@@ -101,6 +144,38 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<ProgressBoard>()
                         .HasKey(x => x.Id)
                         .HasName("PkProgressBoard");
+            
+            
+            modelBuilder.Entity<User>()
+                .HasKey(x => x.Id)
+                .HasName("PkUser");
+            
+            modelBuilder.Entity<Admin>()
+                .HasKey(x => x.Id)
+                .HasName("PkAdmin");
+            
+            modelBuilder.Entity<CommunityManager>()
+                .HasKey(x => x.Id)
+                .HasName("PkCommunityManager");
+            
+            modelBuilder.Entity<CommunityUser>()
+                .HasKey(x => x.Id)
+                .HasName("PkCommunityUser");
+            
+            modelBuilder.Entity<Interest>()
+                .HasKey(x => x.Id)
+                .HasName("PkInterest");
+
+            modelBuilder.Entity<EmailConfirmationToken>()
+                .HasKey(x => x.Id)
+                .HasName("PkEmailConfirmationToken");
+            
+            modelBuilder.Entity<ModeratorCommunity>()
+                .HasKey(mc => new { mc.ModeratorId, mc.CommunitiesId });
+            
+            modelBuilder.Entity<UserInterest>()
+                .HasKey(uc => new { uc.UserId, uc.InterestId });
+            
             #endregion
 
             #region Relationships
@@ -146,7 +221,99 @@ namespace MetaBond.Infrastructure.Persistence.Context
                         .IsRequired()
                         .HasConstraintName("FkProgressBoardId");
 
+            modelBuilder.Entity<Admin>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.AdminRoles)
+                .HasForeignKey(ad => ad.UserId)
+                .IsRequired()
+                .HasConstraintName("FkAdminsUserId");
+            
+            modelBuilder.Entity<CommunityManager>()
+                .HasOne(cm => cm.User)
+                .WithMany(us => us.CommunityManagerRoles)
+                .HasForeignKey(cm => cm.UserId)
+                .IsRequired()
+                .HasConstraintName("FkCommunityManagersUserId");
+            
+            modelBuilder.Entity<CommunityManager>()
+                .HasOne(cm => cm.Community)
+                .WithMany(cu => cu.CommunityManagers)
+                .IsRequired()
+                .HasConstraintName("FKCommunityManagerCommunity");
+            
+            modelBuilder.Entity<CommunityUser>()
+                .HasOne(cu => cu.User)
+                .WithMany(us => us.CommunityMemberships)
+                .HasForeignKey(cu => cu.UserId)
+                .IsRequired()
+                .HasConstraintName("FkCommunityUsersUserId");
+            
+            modelBuilder.Entity<CommunityUser>()
+                .HasOne(cu => cu.Community)
+                .WithMany(us => us.CommunityUsers)
+                .HasForeignKey(cu => cu.CommunityId)
+                .IsRequired()
+                .HasConstraintName("FkCommunitiesId");
+            
+            modelBuilder.Entity<UserInterest>()
+                .HasOne(ui => ui.Interest)
+                .WithMany(interest => interest.UserInterests)
+                .HasForeignKey(ui => ui.InterestId)
+                .HasConstraintName("FkInterestId");
+            
+            modelBuilder.Entity<UserInterest>()
+                .HasOne(ui => ui.User)
+                .WithMany(interest => interest.Interests)
+                .HasForeignKey(ui => ui.UserId)
+                .HasConstraintName("FkUserInterestsUserId");
+            
+            modelBuilder.Entity<Interest>()
+                .HasMany(interest => interest.UserInterests)
+                .WithOne(ui => ui.Interest)
+                .HasForeignKey(iui => iui.InterestId)
+                .IsRequired()
+                .HasConstraintName("FkInterestId");
+            
+            modelBuilder.Entity<Moderator>()
+                .HasOne(mo => mo.User)
+                .WithMany(us => us.ModeratorRoles)
+                .HasForeignKey(mo => mo.UserId)
+                .IsRequired()
+                .HasConstraintName("FkModeratorsUserId");
+            
+            modelBuilder.Entity<ModeratorCommunity>()
+                .HasOne(mc => mc.Moderator)
+                .WithMany(m => m.ModeratorCommunities)
+                .HasForeignKey(mc => mc.ModeratorId);
 
+            modelBuilder.Entity<ModeratorCommunity>()
+                .HasOne(mc => mc.Community)
+                .WithMany(c => c.ModeratorCommunities)
+                .HasForeignKey(mc => mc.CommunitiesId);
+
+            modelBuilder.Entity<Friendship>()
+                .HasOne(fp => fp.Requester)
+                .WithMany(us => us.SentFriendRequests)
+                .HasForeignKey(fp => fp.RequesterId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FkRequesterId");
+
+            modelBuilder.Entity<Friendship>()
+                .HasOne(fp => fp.Addressee)
+                .WithMany(us => us.ReceivedFriendRequests)
+                .HasForeignKey(fp => fp.AddresseeId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FkAddresseeId");
+            
+            modelBuilder.Entity<EmailConfirmationToken>()
+                .HasOne(em => em.User)
+                .WithMany(us => us.EmailConfirmationTokens)
+                .HasForeignKey(em => em.UserId)
+                .HasConstraintName("FkEmailConfirmationTokensUserId")
+                .IsRequired();
+            
             #endregion
 
             #region Communities
@@ -177,15 +344,15 @@ namespace MetaBond.Infrastructure.Persistence.Context
             #region Posts
             modelBuilder.Entity<Posts>(p =>
             {
-                p.Property(p => p.Title)
+                p.Property(post => post.Title)
                   .HasMaxLength(50)
                   .IsRequired();
 
-                p.Property(p => p.Content)
+                p.Property(post => post.Content)
                   .HasMaxLength(150)
                   .IsRequired();
                 
-                p.Property(p => p.Image)
+                p.Property(post => post.Image)
                  .HasMaxLength(250)
                  .IsRequired();
             });
@@ -195,11 +362,11 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<Events>(e =>
             {
-                e.Property(e => e.Title)
+                e.Property(events => events.Title)
                  .HasMaxLength(50)
                  .IsRequired();
 
-                e.Property(e => e.Description)
+                e.Property(events => events.Description)
                  .HasMaxLength(maxLength: 250)
                  .IsRequired();
             });
@@ -211,11 +378,11 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<Rewards>(p =>
             {
 
-                p.Property(p => p.Description)
+                p.Property(rewards => rewards.Description)
                  .HasMaxLength(250)
                  .IsRequired();
 
-                p.Property(p => p.PointAwarded)
+                p.Property(rewards => rewards.PointAwarded)
                  .IsRequired();
             });
 
@@ -230,6 +397,52 @@ namespace MetaBond.Infrastructure.Persistence.Context
             });
 
             #endregion
+
+            #region User
+
+            modelBuilder.Entity<User>(us =>
+            {
+                us.Property(p => p.FirstName)
+                    .HasMaxLength(50)
+                    .IsRequired();
+                
+                us.Property(p => p.LastName)
+                    .HasMaxLength(50)
+                    .IsRequired();
+                
+                us.Property(u => u.Email)
+                    .HasMaxLength(60)
+                    .IsRequired();
+                
+                us.Property(u => u.Password)
+                    .HasMaxLength(60)
+                    .IsRequired();
+            });
+
+            #endregion
+
+            #region Interest
+
+            modelBuilder.Entity<Interest>(interest =>
+            {
+                interest.Property(i => i.Name)
+                    .HasMaxLength(25)
+                    .IsRequired();
+            });
+
+            #endregion
+            
+            #region Email
+
+            modelBuilder.Entity<EmailConfirmationToken>(email =>
+            {
+                email.Property(em => em.Code)
+                    .HasMaxLength(50)
+                    .IsRequired();
+            });
+
+            #endregion
+
         }
     }
 }

@@ -20,6 +20,12 @@ namespace MetaBond.Domain.Models;
     
         public ICollection<Posts>? Posts { get; set; }
         
+        public ICollection<CommunityUser>? CommunityUsers { get; set; } = new List<CommunityUser>();
+        
+        public ICollection<CommunityManager>? CommunityManagers { get; set; } = new List<CommunityManager>();
+        
+        public ICollection<ModeratorCommunity>? ModeratorCommunities { get; set; } = new List<ModeratorCommunity>();
+        
         [JsonIgnore]
         public ICollection<Events>? Events { get; set; }
     }

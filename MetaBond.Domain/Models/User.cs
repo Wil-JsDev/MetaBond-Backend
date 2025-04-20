@@ -1,0 +1,35 @@
+namespace MetaBond.Domain.Models;
+
+public sealed class User
+{
+    public Guid Id { get; set; }
+    
+    public string? FirstName { get; set; }
+    
+    public string? LastName {get; set;}
+    
+    public string? Username { get; set; }
+    
+    public string? Email { get; set; }
+    
+    public string? Password { get; set; }
+    
+    // Relationships
+    public ICollection<Admin>? AdminRoles { get; set; }
+    
+    public ICollection<Moderator>? ModeratorRoles { get; set; }
+    
+    public ICollection<CommunityManager>? CommunityManagerRoles { get; set; }
+    
+    public ICollection<CommunityUser>? CommunityMemberships { get; set; }
+    
+    public ICollection<EmailConfirmationToken>? EmailConfirmationTokens { get; set; }
+    
+    // Interest
+    public ICollection<UserInterest>? Interests { get; set; }
+    
+    // Friendships
+    public ICollection<Friendship>? SentFriendRequests { get; set; }      // Como Requester
+    
+    public ICollection<Friendship>? ReceivedFriendRequests { get; set; }  // Como Addressee
+}
