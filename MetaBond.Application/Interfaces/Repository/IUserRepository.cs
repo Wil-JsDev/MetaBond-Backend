@@ -11,4 +11,6 @@ public interface IUserRepository : IGenericRepository<User>
    
    Task<PagedResult<User>> GetPagedUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
    Task<IEnumerable<User>> SearchUsernameAsync(string keyword, CancellationToken cancellationToken);
+
+   Task<PagedResult<User>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
 }
