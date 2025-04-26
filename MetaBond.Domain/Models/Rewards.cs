@@ -15,5 +15,9 @@ namespace MetaBond.Domain.Models;
         public int? PointAwarded { get; set; }
         
         public DateTime? DateAwarded { get; set; }
+        
+        public Guid UserId { get; set; }
+        
+        public User? User { get; set; }
     }
 
