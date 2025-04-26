@@ -314,6 +314,34 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .HasConstraintName("FkEmailConfirmationTokensUserId")
                 .IsRequired();
             
+            modelBuilder.Entity<Posts>()
+                .HasOne(po => po.CreatedBy)
+                .WithMany(us => us.Posts)
+                .HasForeignKey(po => po.CreatedById)
+                .HasConstraintName("FkPostsCreatedById")
+                .IsRequired();
+            
+            modelBuilder.Entity<ProgressEntry>()
+                .HasOne(pe => pe.User)
+                .WithMany(us => us.ProgressEntries)
+                .HasForeignKey(pe => pe.UserId)
+                .HasConstraintName("FkProgressEntriesUserId")
+                .IsRequired();
+
+            modelBuilder.Entity<ProgressBoard>()
+                .HasOne(pb => pb.User)
+                .WithMany(us => us.ProgressBoards)
+                .HasForeignKey(pb => pb.UserId)
+                .HasConstraintName("FkProgressBoardsUserId")
+                .IsRequired();
+            
+            modelBuilder.Entity<Rewards>()
+                .HasOne(ep => ep.User)
+                .WithMany(rs => rs.Rewards)
+                .HasForeignKey(ep => ep.UserId)
+                .HasConstraintName("FkRewardsUserId")
+                .IsRequired();
+            
             #endregion
 
             #region Communities

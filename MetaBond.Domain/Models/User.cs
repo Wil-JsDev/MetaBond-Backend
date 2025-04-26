@@ -32,4 +32,12 @@ public sealed class User
     public ICollection<Friendship>? SentFriendRequests { get; set; }      // Como Requester
     
     public ICollection<Friendship>? ReceivedFriendRequests { get; set; }  // Como Addressee
+    
+    public ICollection<Posts>? Posts { get; set; }
+    
+    public ICollection<ProgressEntry>? ProgressEntries { get; set; }
+    
+    public ICollection<Rewards>? Rewards { get; set; }
+    
+    public ICollection<ProgressBoard>? ProgressBoards { get; set; }
 }
