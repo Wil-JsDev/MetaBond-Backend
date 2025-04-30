@@ -44,6 +44,8 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<IProgressBoardRepository, ProgressBoardRepository>();
             services.AddTransient<IEventParticipationRepository, EventParticipationRepository>();
             services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IAdminRepository, AdminRepository>();
+            services.AddTransient<ICommunityManagerRepository, CommunityManagerRepositoryRepository>();
             #endregion
 
         }
