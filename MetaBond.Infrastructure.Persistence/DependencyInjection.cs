@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MetaBond.Infrastructure.Persistence
 {
-    public static class DependecyInjection
+    public static class DependencyInjection
     {
 
         public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
@@ -45,7 +45,8 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<IEventParticipationRepository, EventParticipationRepository>();
             services.AddTransient<IUserRepository, UserRepository>();
             services.AddTransient<IAdminRepository, AdminRepository>();
-            services.AddTransient<ICommunityManagerRepository, CommunityManagerRepositoryRepository>();
+            services.AddTransient<ICommunityManagerRepository, CommunityManagerRepository>();
+            services.AddTransient<ICommunityUserRepository, CommunityUserRepository>();
             #endregion
 
         }

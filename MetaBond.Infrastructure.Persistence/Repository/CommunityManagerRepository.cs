@@ -7,15 +7,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaBond.Infrastructure.Persistence.Repository;
 
-public class CommunityManagerRepositoryRepository(MetaBondContext metaBondContext)
+public class CommunityManagerRepository(MetaBondContext metaBondContext)
     : GenericRepository<CommunityManager>(metaBondContext), ICommunityManagerRepository
 {
-    public async Task CreateCommunityManagerAsync(CommunityManager communityManager, CancellationToken cancellationToken)
-    {
-        await _metaBondContext.Set<CommunityManager>().AddAsync(communityManager, cancellationToken);
-    }
-
-    public async Task<PagedResult<Domain.Models.CommunityManager>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken)
+    
+    public async Task<PagedResult<CommunityManager>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         var totalRecord = await _metaBondContext.Set<CommunityManager>()
             .AsNoTracking()
@@ -28,9 +24,7 @@ public class CommunityManagerRepositoryRepository(MetaBondContext metaBondContex
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         
-        var pagedResult = new PagedResult<CommunityManager>(pagedCommunityManager, page, pageSize, totalRecord);
-        
-        return pagedResult;
+        return new PagedResult<CommunityManager>(pagedCommunityManager, page, pageSize, totalRecord);
     }
 
     public async Task<bool> ExistsAsync(Expression<Func<CommunityManager,bool>> predicate, CancellationToken cancellationToken)

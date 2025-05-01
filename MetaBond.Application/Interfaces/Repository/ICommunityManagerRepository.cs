@@ -6,7 +6,6 @@ namespace MetaBond.Application.Interfaces.Repository;
 
 public interface ICommunityManagerRepository : IGenericRepository<CommunityManager>
 {
-    Task CreateCommunityManagerAsync(CommunityManager communityManager, CancellationToken cancellationToken);
     
     Task<PagedResult<CommunityManager>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
