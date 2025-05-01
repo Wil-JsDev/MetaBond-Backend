@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MetaBond.Infrastructure.Persistence
 {
-    public static class DependecyInjection
+    public static class DependencyInjection
     {
 
         public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
