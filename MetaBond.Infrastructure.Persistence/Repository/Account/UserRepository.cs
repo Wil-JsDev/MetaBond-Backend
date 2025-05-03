@@ -1,10 +1,10 @@
-using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace MetaBond.Infrastructure.Persistence.Repository;
+namespace MetaBond.Infrastructure.Persistence.Repository.Account;
 
 public class UserRepository(MetaBondContext metaBondContext) : GenericRepository<User>(metaBondContext), IUserRepository
 {
@@ -25,14 +25,23 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
 
         return new PagedResult<User>(pagedUser,pageNumber, pageSize, totalRecord);
     }
+
+    public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(us =>  us.Email == email, cancellationToken);
+    }
+
+    public  async Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(us => us.Username == username, cancellationToken);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
-        var user =  await  _metaBondContext.Set<User>()
+        return  await  _metaBondContext.Set<User>()
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Email == email, 
                 cancellationToken);
-        
-        return user;
     }
 
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken)
@@ -54,8 +63,7 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
            .Take(pageSize)
            .ToListAsync(cancellationToken);
 
-       var pagedResponse = new PagedResult<User>(pagedUsers, pageNumber, pageSize, totalRecord);
-       return pagedResponse;
+       return new PagedResult<User>(pagedUsers, pageNumber, pageSize, totalRecord);
     }
     
     public async Task<IEnumerable<User>> SearchUsernameAsync(string keyword, CancellationToken cancellationToken)

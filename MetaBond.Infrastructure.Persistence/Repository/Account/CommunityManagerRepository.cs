@@ -1,11 +1,10 @@
-using System.Linq.Expressions;
-using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace MetaBond.Infrastructure.Persistence.Repository;
+namespace MetaBond.Infrastructure.Persistence.Repository.Account;
 
 public class CommunityManagerRepository(MetaBondContext metaBondContext)
     : GenericRepository<CommunityManager>(metaBondContext), ICommunityManagerRepository
@@ -27,18 +26,9 @@ public class CommunityManagerRepository(MetaBondContext metaBondContext)
         return new PagedResult<CommunityManager>(pagedCommunityManager, page, pageSize, totalRecord);
     }
 
-    public async Task<bool> ExistsAsync(Expression<Func<CommunityManager,bool>> predicate, CancellationToken cancellationToken)
-    {
-        return await _metaBondContext.Set<CommunityManager>()
-            .AsNoTracking()
-            .AnyAsync(predicate, cancellationToken);
-    }
-
     public async Task<bool> IsUserCommunityManagerAsync(Guid userId, Guid communityId, CancellationToken cancellationToken)
     {
-        return await _metaBondContext.Set<CommunityManager>()
-            .AsNoTracking()
-            .AnyAsync(cm => cm.CommunityId == communityId && cm.UserId == userId, cancellationToken);
+        return await ValidateAsync(cm => cm.CommunityId == communityId && cm.UserId == userId, cancellationToken);
     }
 
     public async Task<List<CommunityManager>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
@@ -58,6 +48,24 @@ public class CommunityManagerRepository(MetaBondContext metaBondContext)
             .Where(cm => cm.CommunityId == communityId)
             .Include(cm => cm.User)
             .Include(cm => cm.Community)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountCommunityManagersAsync(Guid communityId, CancellationToken cancellationToken)
+    {
+        return await _metaBondContext.Set<CommunityManager>()
+            .AsNoTracking()
+            .CountAsync(cm => cm.CommunityId == communityId ,cancellationToken);
+    }
+
+    public async Task<bool> IsManagerAssignedToCommunityAsync(Guid communityId, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(cm => cm.CommunityId == communityId, cancellationToken);
+    }
+
+    public async Task<bool> DoesManagerExistAsync(Guid managerId, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(cm => cm.UserId == managerId, cancellationToken);
     }
 }
