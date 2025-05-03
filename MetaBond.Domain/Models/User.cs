@@ -14,6 +14,8 @@ public sealed class User
     
     public string? Password { get; set; }
     
+    public bool IsEmailConfirmed {get; set;}
+    
     // Relationships
     public ICollection<Admin>? AdminRoles { get; set; }
     
