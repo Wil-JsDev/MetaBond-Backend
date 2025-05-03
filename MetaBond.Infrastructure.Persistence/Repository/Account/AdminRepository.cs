@@ -1,10 +1,10 @@
-using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace MetaBond.Infrastructure.Persistence.Repository;
+namespace MetaBond.Infrastructure.Persistence.Repository.Account;
 
 public class AdminRepository(MetaBondContext metaBondContext) : GenericRepository<Admin>(metaBondContext), IAdminRepository
 {

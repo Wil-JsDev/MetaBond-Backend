@@ -1,10 +1,10 @@
-using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace MetaBond.Infrastructure.Persistence.Repository;
+namespace MetaBond.Infrastructure.Persistence.Repository.Account;
 
 public class CommunityUserRepository(MetaBondContext metaBondContext)
     : GenericRepository<CommunityUser>(metaBondContext), ICommunityUserRepository
@@ -29,6 +29,7 @@ public class CommunityUserRepository(MetaBondContext metaBondContext)
             .AsNoTracking()
             .Where(x => x.UserId == userId)
             .Include(us => us.Community)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
     }
 
@@ -38,6 +39,7 @@ public class CommunityUserRepository(MetaBondContext metaBondContext)
             .AsNoTracking()
             .Where(x => x.CommunityId == communityId)
             .Include(us => us.User)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
     }
 
@@ -47,14 +49,8 @@ public class CommunityUserRepository(MetaBondContext metaBondContext)
             .AsNoTracking()
             .Where(x => x.UserId == userId)
             .Include(x => x.Community)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
-    }
-
-    public async Task<bool> ExistsAsync(Guid userId, Guid communityId, CancellationToken cancellationToken)
-    {
-        return await _metaBondContext.Set<CommunityUser>()
-            .AsNoTracking()
-            .AnyAsync(x => x.UserId == userId && x.CommunityId == communityId, cancellationToken);
     }
 
     public async Task<int> CountMembersByCommunityIdAsync(Guid communityId, CancellationToken cancellationToken)
@@ -71,7 +67,7 @@ public class CommunityUserRepository(MetaBondContext metaBondContext)
 
         if (entity != null)
         {
-            _metaBondContext.Set<CommunityUser>().Remove(entity);
+            await DeleteAsync(entity, cancellationToken);
             await SaveAsync(cancellationToken);
         }
         
