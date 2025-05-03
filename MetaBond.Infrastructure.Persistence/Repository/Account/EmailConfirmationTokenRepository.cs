@@ -39,4 +39,25 @@ public class EmailConfirmationTokenRepository(MetaBondContext metaBondContext) :
             .AsNoTracking()
             .AnyAsync(e => e.Code == token, cancellationToken);
     }
+    public async Task<bool> IsValidTokenAsync(string tokenCode, CancellationToken cancellationToken)
+    {
+        return await metaBondContext.Set<EmailConfirmationToken>()
+            .AsNoTracking()
+            .AnyAsync(e =>
+                    e.Code == tokenCode &&
+                    e.ExpiresAt > DateTime.UtcNow &&
+                    !e.IsUsed,
+                cancellationToken);
+    }
+    public async Task MarkTokenAsUsedAsync(string tokenCode, CancellationToken cancellationToken)
+    {
+        var token = await metaBondContext.Set<EmailConfirmationToken>()
+            .FirstOrDefaultAsync(e => e.Code == tokenCode, cancellationToken);
+
+        if (token != null)
+        {
+            token.IsUsed = true;
+            await metaBondContext.SaveChangesAsync(cancellationToken);
+        }
+    }
 }

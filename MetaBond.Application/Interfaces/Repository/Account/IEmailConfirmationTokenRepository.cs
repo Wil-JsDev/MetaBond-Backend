@@ -2,6 +2,9 @@ using MetaBond.Domain.Models;
 
 namespace MetaBond.Application.Interfaces.Repository.Account;
 
+/// <summary>
+/// Provides methods for managing email confirmation tokens.
+/// </summary>
 public interface IEmailConfirmationTokenRepository
 {
     /// <summary>
@@ -19,7 +22,6 @@ public interface IEmailConfirmationTokenRepository
     /// <returns>The <see cref="EmailConfirmationToken"/> corresponding to the specified ID.</returns>
     Task<EmailConfirmationToken?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-
     /// <summary>
     /// Finds an email confirmation token by its token string.
     /// </summary>
@@ -31,7 +33,7 @@ public interface IEmailConfirmationTokenRepository
     /// <summary>
     /// Deletes an email confirmation token using its unique identifier.
     /// </summary>
-    /// <param name="token">The unique identifier of the token.</param>
+    /// <param name="token">The email confirmation token entity to be deleted.</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     Task DeleteToken(EmailConfirmationToken token, CancellationToken cancellationToken);
 
@@ -43,4 +45,18 @@ public interface IEmailConfirmationTokenRepository
     /// <returns>True if the token exists; otherwise, false.</returns>
     Task<bool> ExistsToken(string token, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Validates whether a token exists, is not expired, and has not been used.
+    /// </summary>
+    /// <param name="tokenCode">The token string to validate.</param>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>True if the token is valid; otherwise, false.</returns>
+    Task<bool> IsValidTokenAsync(string tokenCode, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Marks a specific email confirmation token as used.
+    /// </summary>
+    /// <param name="tokenCode">The token string to mark as used.</param>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    Task MarkTokenAsUsedAsync(string tokenCode, CancellationToken cancellationToken);
 }
