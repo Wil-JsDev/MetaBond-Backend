@@ -51,6 +51,7 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<ICommunityUserRepository, CommunityUserRepository>();
             services.AddTransient<IModeratorRepository, ModeratorRepository>();
             services.AddTransient<IModeratorCommunityRepository, ModeratorCommunityRepository>();
+            services.AddTransient<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
             #endregion
 
         }
