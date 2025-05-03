@@ -1,6 +1,8 @@
 ﻿using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Infrastructure.Persistence.Context;
 using MetaBond.Infrastructure.Persistence.Repository;
+using MetaBond.Infrastructure.Persistence.Repository.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +49,8 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<IAdminRepository, AdminRepository>();
             services.AddTransient<ICommunityManagerRepository, CommunityManagerRepository>();
             services.AddTransient<ICommunityUserRepository, CommunityUserRepository>();
+            services.AddTransient<IModeratorRepository, ModeratorRepository>();
+            services.AddTransient<IModeratorCommunityRepository, ModeratorCommunityRepository>();
             #endregion
 
         }
