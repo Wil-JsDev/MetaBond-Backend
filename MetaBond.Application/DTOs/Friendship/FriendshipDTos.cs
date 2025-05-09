@@ -6,6 +6,8 @@ namespace MetaBond.Application.DTOs.Friendship
     (
         Guid FriendshipId,
         Status Status,
+        Guid? RequesterId,
+        Guid? AddresseeId,
         DateTime? CreatedAt
     );
 }
