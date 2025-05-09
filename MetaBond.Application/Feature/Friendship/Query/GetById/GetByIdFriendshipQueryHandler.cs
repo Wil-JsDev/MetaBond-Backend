@@ -28,6 +28,8 @@ internal sealed class GetByIdFriendshipQueryHandler(
             ( 
                 FriendshipId: friendship.Id,
                 Status: friendship.Status,
+                RequesterId: friendship.RequesterId,
+                AddresseeId: friendship.AddresseeId,
                 CreatedAt: friendship.CreateAdt
             );
 
@@ -35,7 +37,6 @@ internal sealed class GetByIdFriendshipQueryHandler(
                 friendship.Id, friendship.Status);
 
             return ResultT<FriendshipDTos>.Success(friendshipDTos);
-
         }
         logger.LogError("Failed to retrieve friendship: ID {FriendshipId} not found.", request.Id);
 

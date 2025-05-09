@@ -21,20 +21,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/{version:ApiVersion}/friendship")]
-    public class FriendshipController : ControllerBase
+    public class FriendshipController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public FriendshipController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> CreateAsync([FromBody] CreateFriendshipCommand friendshipCommand,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(friendshipCommand,cancellationToken);
+            var result = await mediator.Send(friendshipCommand,cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -47,7 +40,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetByIdFriendshipQuery { Id = id };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -60,7 +53,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new DeleteFriendshipCommand {Id = id};
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -73,7 +66,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             updateFriendshipCommand.Id = id;
 
-            var result = await _mediator.Send(updateFriendshipCommand,cancellationToken);
+            var result = await mediator.Send(updateFriendshipCommand,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -86,7 +79,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetCountByStatusFriendshipQuery {Status = status};
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -100,7 +93,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetCreatedAfterFriendshipQuery {DateRange = dateRange};
             
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess) 
                 return NotFound(result.Error);
 
@@ -113,7 +106,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetCreatedBeforeFriendshipQuery { PastDateRangeType = pastDateRange};
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if(!result.IsSuccess) 
                 return NotFound(result.Error);
 
@@ -126,7 +119,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new FilterByStatusFriendshipQuery { Status = status};
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess) 
                 return NotFound(result.Error);
 
@@ -139,7 +132,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetOrderByIdFriendshipQuery { Sort = sort };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -152,7 +145,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetRecentlyCreatedFriendshipQuery { Limit = limit };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -169,7 +162,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
                 PageSize = pageSize
             };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess) 
                 return BadRequest(result.Error);
 

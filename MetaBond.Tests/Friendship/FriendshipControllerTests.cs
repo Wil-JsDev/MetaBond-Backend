@@ -30,6 +30,8 @@ public class FriendshipControllerTests
         (
             FriendshipId: Guid.NewGuid(),
             Status: createFriendshipCommand.Status,
+            RequesterId: createFriendshipCommand.RequesterId,
+            AddresseeId: createFriendshipCommand.RequesterId,
             CreatedAt: DateTime.UtcNow
         );
         
@@ -59,14 +61,12 @@ public class FriendshipControllerTests
             Status = Status.Accepted
         };
         
-        FriendshipDTos friendshipDTos = new
+        UpdateFriendshipDTos friendshipDTos = new
         (
-            FriendshipId: updateFriendshipCommand.Id,
-            Status: updateFriendshipCommand.Status,
-            CreatedAt: DateTime.UtcNow
+           StatusFriendship:  updateFriendshipCommand.Status
         );
 
-        var expectedResult = ResultT<FriendshipDTos>.Success(friendshipDTos);
+        var expectedResult = ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);
         
         _mediator.Setup(m => m.Send(updateFriendshipCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -122,6 +122,8 @@ public class FriendshipControllerTests
             (
                 FriendshipId: Guid.NewGuid(),
                 Status: Status.Accepted,
+                RequesterId: Guid.NewGuid(),
+                AddresseeId: Guid.NewGuid(),
                 CreatedAt: DateTime.UtcNow
             )
         };
@@ -159,6 +161,8 @@ public class FriendshipControllerTests
             (
                 FriendshipId: Guid.NewGuid(),
                 Status: Status.Accepted,
+                RequesterId: Guid.NewGuid(),
+                AddresseeId: Guid.NewGuid(),
                 CreatedAt: DateTime.UtcNow
             )
         };

@@ -4,7 +4,7 @@ using MetaBond.Domain;
 
 namespace MetaBond.Application.Feature.Friendship.Commands.Update;
 
-public sealed class UpdateFriendshipCommand : ICommand<FriendshipDTos>
+public sealed class UpdateFriendshipCommand : ICommand<UpdateFriendshipDTos>
 {
     public Guid Id { get; set; } 
 

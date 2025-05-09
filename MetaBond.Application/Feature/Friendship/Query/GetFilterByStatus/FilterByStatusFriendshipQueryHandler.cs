@@ -42,10 +42,12 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
                 return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "No friendships found with the given status"));
             }
 
-            IEnumerable<FriendshipDTos> friendshipDTos = friendships.Select(x => new FriendshipDTos
+            var friendshipDTos = friendships.Select(x => new FriendshipDTos
             (
                 FriendshipId: x.Id,
                 Status: x.Status,
+                RequesterId: x.RequesterId,
+                AddresseeId: x.AddresseeId,
                 CreatedAt: x.CreateAdt
             ));
 

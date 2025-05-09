@@ -41,6 +41,8 @@ internal sealed class GetCreatedBeforeFriendshipQueryHandler(
             (
                 FriendshipId: x.Id,
                 Status: x.Status,
+                RequesterId: x.RequesterId,
+                AddresseeId: x.AddresseeId,
                 CreatedAt: x.CreateAdt
             ));
 

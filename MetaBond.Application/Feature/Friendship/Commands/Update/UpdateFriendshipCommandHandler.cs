@@ -9,9 +9,9 @@ namespace MetaBond.Application.Feature.Friendship.Commands.Update;
 internal sealed class UpdateFriendshipCommandHandler(
     IFriendshipRepository friendshipRepository,
     ILogger<UpdateFriendshipCommandHandler> logger)
-    : ICommandHandler<UpdateFriendshipCommand, FriendshipDTos>
+    : ICommandHandler<UpdateFriendshipCommand, UpdateFriendshipDTos>
 {
-    public async Task<ResultT<FriendshipDTos>> Handle(
+    public async Task<ResultT<UpdateFriendshipDTos>> Handle(
         UpdateFriendshipCommand request, 
         CancellationToken cancellationToken)
     {
@@ -25,20 +25,18 @@ internal sealed class UpdateFriendshipCommandHandler(
             logger.LogInformation("Friendship with ID: {FriendshipId} updated successfully. New Status: {Status}",
                 friendship.Id, friendship.Status);
 
-            FriendshipDTos friendshipDTos = new
+            UpdateFriendshipDTos friendshipDTos = new
             (
-                FriendshipId: friendship.Id,
-                Status: friendship.Status,
-                CreatedAt: friendship.CreateAdt
+               StatusFriendship:  friendship.Status
             );
 
-            return ResultT<FriendshipDTos>.Success(friendshipDTos);
+            return ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);
 
         }
 
         logger.LogError("Failed to update friendship: ID {FriendshipId} not found.", request.Id);
 
-        return ResultT<FriendshipDTos>.Failure(Error.NotFound("404",$"{request.Id} not found")); 
+        return ResultT<UpdateFriendshipDTos>.Failure(Error.NotFound("404",$"{request.Id} not found")); 
             
     }
 }

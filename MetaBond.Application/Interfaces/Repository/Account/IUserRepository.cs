@@ -39,15 +39,6 @@ public interface IUserRepository : IGenericRepository<User>
     Task<IEnumerable<User>> SearchUsernameAsync(string keyword, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Retrieves a paginated list of users.
-    /// </summary>
-    /// <param name="pageNumber">The page number to retrieve.</param>
-    /// <param name="pageSize">The number of users per page.</param>
-    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
-    /// <returns>A <see cref="PagedResult{User}"/> containing the users for the specified page.</returns>
-    Task<PagedResult<User>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
-
-    /// <summary>
     /// Checks whether a user with the specified email exists.
     /// </summary>
     /// <param name="email">The email to check.</param>
@@ -77,4 +68,14 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="userId">The ID of the user to confirm.</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     Task ConfirmAccountAsync(Guid userId, CancellationToken cancellationToken);
+
+
+    /// <summary>
+    /// Retrieves a user along with their sent and received friendship requests,
+    /// including the details of the other users involved in each friendship.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation if needed.</param>
+    /// <returns>A <see cref="User"/> object with <c>SentRequests</c> and <c>ReceivedRequests</c> included, or <c>null</c> if the user is not found.</returns>
+    Task<User?> GetUserWithFriendshipsAsync(Guid userId, CancellationToken cancellationToken);
 }
