@@ -42,6 +42,7 @@ internal sealed class GetFilterRecentPostsQueryHandler(
                 Title: x.Title,
                 Content: x.Content,
                 ImageUrl: x.Image,
+                CreatedById: x.CreatedById,
                 CommunitiesId: x.CommunitiesId,
                 CreatedAt: x.CreatedAt
             ));
