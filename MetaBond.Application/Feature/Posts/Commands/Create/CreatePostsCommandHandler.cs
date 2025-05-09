@@ -36,6 +36,7 @@ internal sealed class CreatePostsCommandHandler(
                 Title = request.Title,
                 Content = request.Content,
                 Image =  imageUrl,
+                CreatedById = request.CreatedById ?? Guid.Empty,
                 CommunitiesId = request.CommunitiesId
             };
 
@@ -49,6 +50,7 @@ internal sealed class CreatePostsCommandHandler(
                 Title: postsModel.Title,
                 Content: postsModel.Content,
                 ImageUrl: postsModel.Image,
+                CreatedById: postsModel.CreatedById,
                 CommunitiesId: postsModel.CommunitiesId,
                 CreatedAt: postsModel.CreatedAt
             );

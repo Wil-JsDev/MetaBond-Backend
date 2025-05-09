@@ -47,6 +47,7 @@ public class PostsControllerTests
             Title: command.Title,
             Content: command.Content,
             ImageUrl: imageUrl,
+            CreatedById: command.CreatedById,
             CommunitiesId: command.CommunitiesId,
             CreatedAt: DateTime.UtcNow
         );
@@ -152,6 +153,7 @@ public class PostsControllerTests
                     Title: "Tests Title",
                     Content: "Tests Content",
                     ImageUrl: "Url",
+                    CreatedById:  Guid.NewGuid(),
                     CommunitiesId: Guid.NewGuid(),
                     CreatedAt: DateTime.UtcNow
             )

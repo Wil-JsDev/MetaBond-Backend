@@ -13,4 +13,6 @@ public sealed class CreatePostsCommand : ICommand<PostsDTos>
     public Guid? CommunitiesId { get; set; }
 
     public IFormFile? ImageFile { get; init; }
+    
+    public Guid? CreatedById { get; set; }
 }

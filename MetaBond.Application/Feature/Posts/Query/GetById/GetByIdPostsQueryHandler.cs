@@ -29,6 +29,7 @@ internal sealed class GetByIdPostsQueryHandler(
                 Title: posts.Title,
                 Content: posts.Content,
                 ImageUrl: posts.Image,
+                CreatedById: posts.CreatedById,
                 CommunitiesId: posts.CommunitiesId,
                 CreatedAt: posts.CreatedAt
             );

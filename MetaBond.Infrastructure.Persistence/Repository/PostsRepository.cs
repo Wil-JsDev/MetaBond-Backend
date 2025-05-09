@@ -6,12 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaBond.Infrastructure.Persistence.Repository
 {
-    public class PostsRepository : GenericRepository<Posts>, IPostsRepository
+    public class PostsRepository(MetaBondContext metaBondContext)
+        : GenericRepository<Posts>(metaBondContext), IPostsRepository
     {
-        public PostsRepository(MetaBondContext metaBondContext) : base(metaBondContext)
-        {
-        }
-
         public async Task<PagedResult<Posts>> GetPagedPostsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
             var totalRecord = await _metaBondContext.Set<Posts>().AsNoTracking().CountAsync(cancellationToken);    
@@ -39,6 +36,15 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                               .ToListAsync(cancellationToken);
 
             return query;
+        }
+
+        public async Task<IEnumerable<Posts>> GetPostWithAuthorAsync(Guid postsId, CancellationToken cancellationToken)
+        {
+            return await _metaBondContext.Set<Posts>()
+                .AsNoTracking()
+                .Where(x => x.Id == postsId)
+                .Include(posts => posts.CreatedBy)
+                .ToListAsync(cancellationToken);;
         }
 
         public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,CancellationToken cancellationToken)

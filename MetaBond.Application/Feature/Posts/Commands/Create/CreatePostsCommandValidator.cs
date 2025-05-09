@@ -1,3 +1,4 @@
+using System.Data;
 using FluentValidation;
 
 namespace MetaBond.Application.Feature.Posts.Commands.Create;
@@ -18,6 +19,8 @@ public class CreatePostsCommandValidator : AbstractValidator<CreatePostsCommand>
         RuleFor(x => x.CommunitiesId)
             .NotEmpty().WithMessage("The communities id is required and cannot be empty or null.")
             .NotEqual(Guid.Empty).WithMessage("The communities ID must be a valid GUID.");
-        
+
+        RuleFor(x => x.CreatedById)
+            .NotEmpty().WithMessage("The communities id is required and cannot be empty or null.");
     }
 }

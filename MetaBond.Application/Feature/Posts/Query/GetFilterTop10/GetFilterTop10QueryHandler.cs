@@ -40,6 +40,7 @@ internal sealed class GetFilterTop10QueryHandler(
                 Title: x.Title,
                 Content: x.Content,
                 ImageUrl: x.Image,
+                CreatedById: x.CreatedById,
                 CommunitiesId: x.CommunitiesId,
                 CreatedAt: x.CreatedAt
             ));
