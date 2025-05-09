@@ -445,6 +445,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 us.Property(u => u.Password)
                     .HasMaxLength(60)
                     .IsRequired();
+                
+                us.Property(u => u.Photo)
+                    .HasMaxLength(100)  
+                    .IsRequired();
             });
 
             #endregion
