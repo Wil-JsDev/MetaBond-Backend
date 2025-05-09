@@ -41,6 +41,16 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
+        public async Task<IEnumerable<Friendship>> GetFriendshipWithUsersAsync(Guid friendshipId,CancellationToken cancellationToken)
+        {
+            return await _metaBondContext.Set<Friendship>()
+                .AsNoTracking()
+                .Where(us => us.Id == friendshipId)
+                .Include(ad => ad.Addressee)
+                .Include(re => re.Requester)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<Friendship>> OrderByIdAscAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Friendship>()

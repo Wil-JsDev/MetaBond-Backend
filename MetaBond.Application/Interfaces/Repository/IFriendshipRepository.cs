@@ -21,5 +21,7 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<IEnumerable<Friendship>> GetRecentlyCreatedAsync(int limit, CancellationToken cancellationToken);
 
         Task<IEnumerable<Friendship>> GetFilterByStatusAsync(Status status, CancellationToken cancellationToken);
+
+        Task<IEnumerable<Friendship>> GetFriendshipWithUsersAsync(Guid friendshipId, CancellationToken cancellationToken);
     }
 }
