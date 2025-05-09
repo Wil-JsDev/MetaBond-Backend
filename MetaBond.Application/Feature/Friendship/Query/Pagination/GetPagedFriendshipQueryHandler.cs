@@ -15,7 +15,7 @@ internal sealed class GetPagedFriendshipQueryHandler(
     : IQueryHandler<GetPagedFriendshipQuery, PagedResult<FriendshipDTos>>
 {
     public async Task<ResultT<PagedResult<FriendshipDTos>>> Handle(
-        GetPagedFriendshipQuery request, 
+        GetPagedFriendshipQuery? request, 
         CancellationToken cancellationToken)
     {
         if (request != null)
@@ -27,11 +27,13 @@ internal sealed class GetPagedFriendshipQueryHandler(
                     cancellationToken), 
                 cancellationToken: cancellationToken);
 
-            var friendshipDto = pagedFriendship.Items!.Select(c => new FriendshipDTos
+            var friendshipDto = pagedFriendship.Items!.Select(x => new FriendshipDTos
             (
-                FriendshipId: c.Id,
-                Status: c.Status,
-                CreatedAt: c.CreateAdt
+                FriendshipId: x.Id,
+                Status: x.Status,
+                RequesterId: x.RequesterId,
+                AddresseeId: x.AddresseeId,
+                CreatedAt: x.CreateAdt
             ));
 
             IEnumerable<FriendshipDTos> friendshipDTosEnumerable = friendshipDto.ToList();
