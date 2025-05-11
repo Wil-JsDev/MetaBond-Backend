@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Communties;
+using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -20,7 +20,7 @@ namespace MetaBond.Application.Feature.Communities.Query.GetById;
             {
                 CommunitiesDTos dTos = new
                 (
-                    CommunitieId: communities.Id,
+                    CommunitiesId: communities.Id,
                     Name: communities.Name,
                     Category: communities.Category,
                     CreatedAt: communities.CreateAt

@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Communties;
+using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
@@ -24,7 +24,7 @@ namespace MetaBond.Application.Feature.Communities.Query.Pagination;
                         request.PageSize, cancellationToken), cancellationToken: cancellationToken);                
                 
                 var dtoItems = communitiesPaged.Items!.Select(c => new CommunitiesDTos(
-                    CommunitieId: c.Id,
+                    CommunitiesId: c.Id,
                     Name: c.Name,
                     Category: c.Category,
                     CreatedAt: c.CreateAt

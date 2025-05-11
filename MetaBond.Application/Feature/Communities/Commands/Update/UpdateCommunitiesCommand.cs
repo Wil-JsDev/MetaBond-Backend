@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Communties;
+using MetaBond.Application.DTOs.Communities;
 
 namespace MetaBond.Application.Feature.Communities.Commands.Update;
 
