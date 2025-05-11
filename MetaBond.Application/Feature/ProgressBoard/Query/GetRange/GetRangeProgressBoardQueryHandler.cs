@@ -54,20 +54,24 @@ internal sealed class GetRangeProgressBoardQueryHandler(
                 async () => await progressEntryRepository.GetPagedProgressEntryAsync(
                     request.PageSize,
                     request.Page,
-                    cancellationToken));
+                    cancellationToken), 
+                cancellationToken: cancellationToken);
                 
             var progressEntryList = progressEntryPaged.Items!.Select(x => new ProgressEntrySummaryDTos
             (
                 ProgressEntryId: x.Id,
                 Description: x.Description,
+                UserId: x.UserId,
                 CreatedAt: x.CreatedAt,
                 ModifiedAt: x.UpdateAt
             )).ToList();
                 
-            IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTos = progressBoards.Select(x => new ProgressBoardWithProgressEntryDTos
+            IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTos = 
+                progressBoards.Select(x => new ProgressBoardWithProgressEntryDTos
             (
                 ProgressBoardId: x.Id,
                 CommunitiesId: x.CommunitiesId,
+                UserId: x.UserId,
                 ProgressEntries: progressEntryList ,
                 CreatedAt: x.CreatedAt,
                 UpdatedAt: x.UpdatedAt

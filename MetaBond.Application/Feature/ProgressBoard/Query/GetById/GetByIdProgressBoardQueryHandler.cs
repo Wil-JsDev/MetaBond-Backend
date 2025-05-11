@@ -28,6 +28,7 @@ internal sealed class GetByIdProgressBoardQueryHandler(
             (
                 ProgressBoardId: progressBoard.Id,
                 CommunitiesId: progressBoard.CommunitiesId,
+                UserId: progressBoard.UserId,
                 CreatedAt: progressBoard.CreatedAt,
                 UpdatedAt: progressBoard.UpdatedAt
             );
