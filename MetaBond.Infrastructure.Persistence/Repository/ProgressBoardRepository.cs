@@ -7,12 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaBond.Infrastructure.Persistence.Repository
 {
-    public class ProgressBoardRepository : GenericRepository<ProgressBoard>, IProgressBoardRepository
+    public class ProgressBoardRepository(MetaBondContext metaBondContext)
+        : GenericRepository<ProgressBoard>(metaBondContext), IProgressBoardRepository
     {
-        public ProgressBoardRepository(MetaBondContext metaBondContext) : base(metaBondContext)
-        {
-        }
-
         public async Task<int> CountBoardsAsync(CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<ProgressBoard>()
@@ -41,6 +38,18 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                               .ToListAsync (cancellationToken);
 
             return query;
+        }
+
+        public async Task<IEnumerable<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId, CancellationToken cancellationToken)
+        {
+           return await _metaBondContext.Set<ProgressBoard>()
+               .AsNoTracking()
+               .Where(x => x.Id == progressBoardId)
+               .Include(x => x.User)
+               .Include(x => x.ProgressEntries)
+               .Include(x => x.Communities)
+               .AsSplitQuery()
+               .ToListAsync(cancellationToken);
         }
 
         public async Task<PagedResult<ProgressBoard>> GetPagedBoardsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
