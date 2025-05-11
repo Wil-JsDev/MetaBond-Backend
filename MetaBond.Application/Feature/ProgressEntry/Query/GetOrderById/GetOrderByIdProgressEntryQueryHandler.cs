@@ -35,10 +35,12 @@ internal sealed class GetOrderByIdProgressEntryQueryHandler(
         (
             ProgressEntryId: x.Id,
             Description: x.Description,
-            ProgressBoardId: x.ProgressBoardId
+            ProgressBoardId: x.ProgressBoardId,
+            UserId: x.UserId
         ));
 
         var progressEntryBasicDTosEnumerable = entryBasicDTos.ToList();
+        
         logger.LogInformation("Successfully retrieved {Count} progress entries ordered by ID.", progressEntryBasicDTosEnumerable.Count());
 
         return ResultT<IEnumerable<ProgressEntryBasicDTos>>.Success(progressEntryBasicDTosEnumerable);

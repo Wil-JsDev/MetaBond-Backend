@@ -16,7 +16,7 @@ internal sealed class GetByIdProgressEntryQueryHandler(
     public async Task<ResultT<ProgressEntryDTos>> Handle(GetByIdProgressEntryQuery request, CancellationToken cancellationToken)
     {
         var progressEntry = await decoratedCache.GetOrCreateAsync(
-            $"progress-entry-{request.ProgressEntryId}",
+            $"progress-entry-get-by-id-{request.ProgressEntryId}",
             async () => await progressEntryRepository.GetByIdAsync(request.ProgressEntryId), 
             cancellationToken: cancellationToken);
         
@@ -26,6 +26,7 @@ internal sealed class GetByIdProgressEntryQueryHandler(
             (
                 ProgressEntryId: progressEntry.Id,
                 ProgressBoardId: progressEntry.ProgressBoardId,
+                UserId:  progressEntry.UserId,
                 Description: progressEntry.Description,
                 CreatedAt: progressEntry.CreatedAt,
                 UpdateAt: progressEntry.UpdateAt

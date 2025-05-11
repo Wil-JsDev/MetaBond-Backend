@@ -2,12 +2,13 @@ using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.ProgressEntry.Query.GetByIdProgressEntryWithProgressBoard;
 
-public class GetProgressEntryWithBoardByIdQueryHandler(
+internal sealed class GetProgressEntryWithBoardByIdQueryHandler(
     IProgressEntryRepository repository,
     IDistributedCache decoratedCache,
     ILogger<GetProgressEntryWithBoardByIdQueryHandler> logger)
@@ -30,15 +31,18 @@ public class GetProgressEntryWithBoardByIdQueryHandler(
           if (!entryWithProgressBoard.Any())
           {
               logger.LogError("No progress board entries found for ProgressEntry ID {ProgressEntryId}", request.ProgressEntryId);
+              
               return ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>.Failure(Error.Failure("400", "No related progress board entries found."));
           }
 
           IEnumerable<ProgressEntryWithProgressBoardDTos> progressEntryWithBoardDTos = entryWithProgressBoard.Select(x => new ProgressEntryWithProgressBoardDTos
           (
               ProgressEntryId: x.Id,
+              UserId: x.UserId,
               ProgressBoard: new ProgressBoardSummaryDTos
               (
                   ProgressBoardId: x.ProgressBoard!.Id,
+                  UserId: x.UserId,
                   CommunitiesId: x.ProgressBoard.CommunitiesId, 
                   CreatedAt: x.ProgressBoard.CreatedAt,
                   ModifiedAt: x.ProgressBoard.UpdatedAt
