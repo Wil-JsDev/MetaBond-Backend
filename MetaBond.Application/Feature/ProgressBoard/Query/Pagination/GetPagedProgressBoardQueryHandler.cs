@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
@@ -34,6 +35,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.Pagination
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
+                    UserId:  x.UserId,
                     CreatedAt: x.CreatedAt,
                     UpdatedAt: x.UpdatedAt
                 ));

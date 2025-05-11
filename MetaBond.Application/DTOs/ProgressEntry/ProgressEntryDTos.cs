@@ -5,6 +5,7 @@ namespace MetaBond.Application.DTOs.ProgressEntry
     (
         Guid ProgressEntryId,
         Guid ProgressBoardId,
+        Guid UserId,
         string? Description,
         DateTime CreatedAt,
         DateTime UpdateAt

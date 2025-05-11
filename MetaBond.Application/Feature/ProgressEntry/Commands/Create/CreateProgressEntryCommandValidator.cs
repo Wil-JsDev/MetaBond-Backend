@@ -14,5 +14,7 @@ public class CreateProgressEntryCommandValidator : AbstractValidator<CreateProgr
             .NotEmpty().WithMessage("The description is required and cannot be empty or null.")
             .MaximumLength(250).WithMessage("The description must not exceed 250 characters.");
 
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("The user ID is required and cannot be empty or null.");
     }
 }

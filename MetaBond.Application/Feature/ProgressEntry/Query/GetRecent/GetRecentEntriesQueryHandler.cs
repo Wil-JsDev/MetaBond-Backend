@@ -28,8 +28,7 @@ internal sealed class GetRecentEntriesQueryHandler(
 
             var progressEntries = await decoratedCache.GetOrCreateAsync(
                 $"progress-entry-get-recent-{request.ProgressBoardId}",
-                async () => await repository.GetRecentEntriesAsync(request.ProgressBoardId, request.TopCount,
-                    cancellationToken), 
+                async () => await repository.GetRecentEntriesAsync(request.ProgressBoardId, request.TopCount, cancellationToken), 
                 cancellationToken: cancellationToken);
             
             var enumerable = progressEntries.ToList();
@@ -44,12 +43,14 @@ internal sealed class GetRecentEntriesQueryHandler(
             (
                 ProgressEntryId: x.Id,
                 ProgressBoardId: x.ProgressBoardId,
+                UserId: x.UserId,
                 Description: x.Description,
                 CreatedAt: x.CreatedAt,
                 UpdateAt: x.UpdateAt
             ));
 
             var progressEntryDTosEnumerable = entryDTos.ToList();
+            
             logger.LogInformation("Successfully retrieved {Count} recent progress entries.", progressEntryDTosEnumerable.Count());
 
             return ResultT<IEnumerable<ProgressEntryDTos>>.Success(progressEntryDTosEnumerable);

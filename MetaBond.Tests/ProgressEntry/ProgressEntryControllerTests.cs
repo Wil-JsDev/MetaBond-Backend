@@ -8,6 +8,7 @@ using MetaBond.Application.Feature.ProgressEntry.Query.GetDateRange;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetRecent;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Models;
 using MetaBond.Presentation.Api.Controllers.V1;
 using Moq;
 
@@ -33,6 +34,7 @@ public class ProgressEntryControllerTests
         (
             ProgressEntryId: Guid.NewGuid(),
             ProgressBoardId: command.ProgressBoardId,
+            UserId: command.UserId,
             Description: command.Description,
             CreatedAt: DateTime.UtcNow,
             UpdateAt: DateTime.UtcNow
@@ -100,6 +102,7 @@ public class ProgressEntryControllerTests
         (
             ProgressEntryId: command.ProgressEntryId,
             ProgressBoardId: Guid.NewGuid(),
+            UserId: Guid.NewGuid(), 
             Description: command.Description,
             CreatedAt: DateTime.UtcNow,
             UpdateAt: DateTime.UtcNow
@@ -139,9 +142,11 @@ public class ProgressEntryControllerTests
                 new ProgressEntryWithProgressBoardDTos
                 (
                     ProgressEntryId: query.ProgressEntryId,
+                    UserId: Guid.NewGuid(), 
                     ProgressBoard: new ProgressBoardSummaryDTos
                     (
                         ProgressBoardId: Guid.NewGuid(),
+                        UserId:  Guid.NewGuid(),
                         CommunitiesId: Guid.NewGuid(),
                         CreatedAt: DateTime.UtcNow,
                         ModifiedAt: DateTime.UtcNow
@@ -186,6 +191,7 @@ public class ProgressEntryControllerTests
             (
                 ProgressEntryId: Guid.NewGuid(),
                 ProgressBoardId: query.ProgressBoardId,
+                UserId: Guid.NewGuid(), 
                 Description: "new description",
                 CreatedAt: DateTime.UtcNow,
                 UpdateAt: DateTime.UtcNow
@@ -227,6 +233,7 @@ public class ProgressEntryControllerTests
             (
                 ProgressEntryId: Guid.NewGuid(),
                 ProgressBoardId: query.ProgressBoardId,
+                UserId: Guid.NewGuid(),
                 Description: "new description",
                 CreatedAt: DateTime.UtcNow,
                 UpdateAt: DateTime.UtcNow

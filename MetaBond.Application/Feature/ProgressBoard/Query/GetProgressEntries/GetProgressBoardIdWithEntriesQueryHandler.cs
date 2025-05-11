@@ -57,6 +57,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
                 (
                     ProgressEntryId: x.Id,
                     Description: x.Description,
+                    UserId: x.UserId,
                     CreatedAt: x.CreatedAt,
                     ModifiedAt: x.UpdateAt
                 )).ToList();
@@ -65,12 +66,14 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
+                    UserId: x.UserId,
                     ProgressEntries:progressEntry,
                     CreatedAt: x.CreatedAt,
                     UpdatedAt: x.UpdatedAt
                 ));
 
-                IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTosEnumerable = progressBoardWithProgressEntryDs as ProgressBoardWithProgressEntryDTos[] ?? progressBoardWithProgressEntryDs.ToArray();
+                IEnumerable<ProgressBoardWithProgressEntryDTos> progressBoardWithProgressEntryDTosEnumerable =
+                    progressBoardWithProgressEntryDs.ToList();
                 logger.LogInformation("Successfully retrieved {Count} progress entries for ProgressBoardId: {ProgressBoardId}",
                  progressBoardWithProgressEntryDTosEnumerable.Count(), request.ProgressBoardId);
 

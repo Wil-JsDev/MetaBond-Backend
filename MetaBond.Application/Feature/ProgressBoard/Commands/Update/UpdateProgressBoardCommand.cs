@@ -8,4 +8,6 @@ public sealed class UpdateProgressBoardCommand : ICommand<ProgressBoardDTos>
     public Guid ProgressBoardId { get; set; }
 
     public Guid CommunitiesId { get; set; }
+    
+    public Guid UserId { get; set; }
 }

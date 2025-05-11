@@ -18,5 +18,7 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<IEnumerable<ProgressEntry>> GetOrderByDescriptionAsync(Guid progressBoardId,CancellationToken cancellationToken);
 
         Task<IEnumerable<ProgressEntry>> GetByIdProgressEntryWithProgressBoard(Guid progressEntry, CancellationToken cancellationToken);
+        
+        Task<IEnumerable<ProgressEntry>> GetProgressEntriesWithAuthorsAsync (Guid progressBoardId, CancellationToken cancellationToken);
     }
 }

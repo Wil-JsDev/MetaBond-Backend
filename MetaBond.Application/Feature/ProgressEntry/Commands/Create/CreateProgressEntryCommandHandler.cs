@@ -22,30 +22,30 @@ internal sealed class CreateProgressEntryCommandHandler(
             {
                 Id = Guid.NewGuid(),
                 ProgressBoardId = request.ProgressBoardId,
+                UserId = request.UserId,
                 Description = request.Description
             };
 
-            await progressEntryRepository.CreateAsync(progressEntry,cancellationToken);
+            await progressEntryRepository.CreateAsync(progressEntry, cancellationToken);
 
-            logger.LogInformation("");
+            logger.LogInformation("Progress entry created successfully with ID: {ProgressEntryId}", progressEntry.Id);
 
             ProgressEntryDTos dTos = new
             (
                 ProgressEntryId: progressEntry.Id,
                 ProgressBoardId: progressEntry.ProgressBoardId,
+                UserId: progressEntry.UserId,
                 Description: progressEntry.Description,
                 CreatedAt: progressEntry.CreatedAt,
                 UpdateAt: progressEntry.UpdateAt
             );
 
-            logger.LogInformation("");
+            logger.LogInformation("Mapped ProgressEntry to DTO and returning success result.");
 
             return ResultT<ProgressEntryDTos>.Success(dTos);
-
         }
-
-        logger.LogError("");
-
+        logger.LogError("Progress entry creation failed: request was null.");
+        
         return ResultT<ProgressEntryDTos>.Failure(Error.Failure("400","Invalid request"));
     }
 }

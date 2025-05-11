@@ -1,6 +1,4 @@
-﻿using MetaBond.Domain.Models;
-
-namespace MetaBond.Application.DTOs.Communties
+﻿namespace MetaBond.Application.DTOs.Communities
 {
     public sealed record PostsAndEventsDTos
     (
