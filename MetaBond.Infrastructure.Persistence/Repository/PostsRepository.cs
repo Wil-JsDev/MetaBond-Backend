@@ -44,6 +44,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                 .AsNoTracking()
                 .Where(x => x.Id == postsId)
                 .Include(posts => posts.CreatedBy)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);;
         }
 
