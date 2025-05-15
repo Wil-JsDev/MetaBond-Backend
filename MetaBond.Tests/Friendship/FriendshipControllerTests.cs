@@ -75,7 +75,7 @@ public class FriendshipControllerTests
 
         // Act
 
-        var resultController = friendshipController.UpdateAsync(updateFriendshipCommand.Id,updateFriendshipCommand, CancellationToken.None);
+        var resultController = friendshipController.UpdateAsync(updateFriendshipCommand, CancellationToken.None);
 
         // Assert
         Assert.NotSame(expectedResult, resultController);

@@ -117,7 +117,7 @@ public class ProgressEntryControllerTests
         
         // Act
 
-        var resultController = progressBoardController.UpdateAsync(command.ProgressEntryId,command, CancellationToken.None);
+        var resultController = progressBoardController.UpdateAsync(command, CancellationToken.None);
 
         // Assert
         

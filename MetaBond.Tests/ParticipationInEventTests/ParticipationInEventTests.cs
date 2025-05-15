@@ -74,7 +74,7 @@ public class ParticipationInEventTests
         
         //Act
 
-        var resultController = participationInEventController.UpdateAsync(updateParticipationInEventCommand.Id, updateParticipationInEventCommand, CancellationToken.None);
+        var resultController = participationInEventController.UpdateAsync(updateParticipationInEventCommand, CancellationToken.None);
 
         // Assert
         

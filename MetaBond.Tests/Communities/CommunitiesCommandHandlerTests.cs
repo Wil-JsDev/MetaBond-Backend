@@ -105,7 +105,7 @@ public class CommunitiesCommandHandlerTests
         var communitiesController = new CommunitiesController(_mediatorMock.Object);
         
         //Act
-        var result = communitiesController.UpdateAsync(Guid.NewGuid(), communitiesCommand,CancellationToken.None);
+        var result = communitiesController.UpdateAsync(communitiesCommand, CancellationToken.None);
         
         //Assert
         Assert.NotNull(result);

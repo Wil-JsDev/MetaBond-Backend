@@ -116,7 +116,7 @@ public class RewardsControllerTests
         
         // Act
     
-        var resultController = rewardsController.UpdateAsync(command.RewardsId, command, CancellationToken.None);
+        var resultController = rewardsController.UpdateAsync(command, CancellationToken.None);
 
         // Assert
         
