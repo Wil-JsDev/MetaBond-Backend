@@ -19,5 +19,7 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<int> CountRewardsAsync(CancellationToken cancellationToken);
 
         Task<IEnumerable<Rewards>> GetTopRewardsByPointsAsync(int topCount, CancellationToken cancellationToken);
+
+        Task<IEnumerable<Rewards>> GetUsersByRewardIdAsync(Guid  rewardId, CancellationToken cancellationToken);
     }
 }

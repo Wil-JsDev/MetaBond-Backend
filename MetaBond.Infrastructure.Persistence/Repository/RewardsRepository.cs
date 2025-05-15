@@ -6,12 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaBond.Infrastructure.Persistence.Repository
 {
-    public class RewardsRepository : GenericRepository<Rewards>, IRewardsRepository
+    public class RewardsRepository(MetaBondContext metaBondContext)
+        : GenericRepository<Rewards>(metaBondContext), IRewardsRepository
     {
-        public RewardsRepository(MetaBondContext metaBondContext) : base(metaBondContext)
-        {
-        }
-
         public async Task<PagedResult<Rewards>> GetPagedRewardsAsync(
             int pageNumber, 
             int pageZize, 
@@ -71,6 +68,15 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                                               .ToListAsync(cancellationToken);
 
             return query;
+        }
+        public async Task<IEnumerable<Rewards>> GetUsersByRewardIdAsync(Guid rewardId, CancellationToken cancellationToken)
+        {
+            return await _metaBondContext.Set<Rewards>()
+                .AsNoTracking()
+                .Where(x => x.Id == rewardId)
+                .Include(x => x.User)
+                .AsSplitQuery()
+                .ToListAsync(cancellationToken);
         }
     }
 }
