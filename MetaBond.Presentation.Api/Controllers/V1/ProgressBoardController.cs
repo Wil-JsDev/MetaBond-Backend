@@ -22,20 +22,18 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     {
         [HttpPost]
         [DisableRateLimiting]
-        public async Task<IActionResult> CreateAsync([FromBody] Guid communitiesId,CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateAsync([FromBody] CreateProgressBoardCommand command,CancellationToken cancellationToken)
         {
-            var query = new CreateProgressBoardCommand { CommunitiesId = communitiesId };
-
-            var result = await mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(command,cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
             return Ok(result.Value);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         [DisableRateLimiting]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id,[FromBody] UpdateProgressBoardCommand updateProgressBoardCommand,CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromBody] UpdateProgressBoardCommand updateProgressBoardCommand,CancellationToken cancellationToken)
         {
             var result = await mediator.Send(updateProgressBoardCommand,cancellationToken);
             if(!result.IsSuccess)

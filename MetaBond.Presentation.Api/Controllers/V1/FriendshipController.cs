@@ -60,12 +60,10 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         [DisableRateLimiting]
-        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateFriendshipCommand updateFriendshipCommand,CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateAsync([FromBody] UpdateFriendshipCommand updateFriendshipCommand,CancellationToken cancellationToken)
         {
-            updateFriendshipCommand.Id = id;
-
             var result = await mediator.Send(updateFriendshipCommand,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);

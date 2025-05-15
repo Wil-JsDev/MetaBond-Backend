@@ -49,7 +49,7 @@ public class ProgressBoardControllerTests
 
         // Act
 
-        var resultController = progressBoardController.CreateAsync(createProgressBoardCommand.CommunitiesId, CancellationToken.None);
+        var resultController = progressBoardController.CreateAsync(createProgressBoardCommand, CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
@@ -85,7 +85,7 @@ public class ProgressBoardControllerTests
         
         // Act
 
-        var resultController =progressBoardController.UpdateAsync(command.ProgressBoardId,command, CancellationToken.None);
+        var resultController =progressBoardController.UpdateAsync(command, CancellationToken.None);
 
         // Assert
 
