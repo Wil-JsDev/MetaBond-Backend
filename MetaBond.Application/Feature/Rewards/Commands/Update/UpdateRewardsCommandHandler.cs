@@ -29,6 +29,7 @@ internal sealed class UpdateRewardsCommandHandler(
             RewardsDTos rewardsDTos = new
             (
                 RewardsId: reward.Id,
+                UserId:  reward.UserId,
                 Description: reward.Description,
                 PointAwarded: reward.PointAwarded,
                 DateAwarded: reward.DateAwarded

@@ -41,6 +41,7 @@ internal sealed class GetPagedRewardsQueryHandler(
             var rewardsDto = pagedRewards.Items!.Select(x => new RewardsDTos
             (
                 RewardsId: x.Id,
+                UserId: x.UserId,
                 Description: x.Description,
                 PointAwarded: x.PointAwarded,
                 DateAwarded: x.DateAwarded

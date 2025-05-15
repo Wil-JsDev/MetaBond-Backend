@@ -33,6 +33,7 @@ internal sealed class CreateRewardsCommandHandler(
             RewardsDTos rewardsDTos = new
             (
                 RewardsId: rewardsModel.Id,
+                UserId: rewardsModel.UserId,
                 Description: rewardsModel.Description,
                 PointAwarded: rewardsModel.PointAwarded,
                 DateAwarded: rewardsModel.DateAwarded

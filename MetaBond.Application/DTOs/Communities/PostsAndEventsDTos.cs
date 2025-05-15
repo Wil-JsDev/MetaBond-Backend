@@ -6,7 +6,7 @@
         string? Name,
         string? Category,
         DateTime CreatedAt,
-        ICollection<Domain.Models.Posts> Posts,
-        ICollection<Domain.Models.Events> Events
+        IEnumerable<Domain.Models.Posts> Posts,
+        IEnumerable<Domain.Models.Events> Events
     );
 }

@@ -37,6 +37,7 @@ internal sealed class GetTopRewardsQueryHandler(
             IEnumerable<RewardsDTos> rewardsDTos = rewardsEnumerable.Select(x => new RewardsDTos
             (
                 RewardsId: x.Id,
+                UserId: x.UserId,
                 Description: x.Description,
                 PointAwarded: x.PointAwarded,
                 DateAwarded:  x.DateAwarded

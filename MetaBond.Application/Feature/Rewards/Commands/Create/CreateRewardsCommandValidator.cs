@@ -13,5 +13,8 @@ public class CreateRewardsCommandValidator : AbstractValidator<CreateRewardsComm
         RuleFor(x => x.PointAwarded)
             .NotEmpty().WithMessage("The awarded points are required and cannot be empty or null.")
             .GreaterThan(0).WithMessage("The awarded points must be greater than zero.");
+        
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("The user id is required.");
     }
 }
