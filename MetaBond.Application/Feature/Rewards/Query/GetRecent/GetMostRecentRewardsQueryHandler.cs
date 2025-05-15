@@ -29,6 +29,7 @@ internal sealed class GetMostRecentRewardsQueryHandler(
             RewardsDTos rewardsDTos = new
             (
                 RewardsId: rewardRecent.Id,
+                UserId: rewardRecent.UserId,
                 Description: rewardRecent.Description,
                 PointAwarded: rewardRecent.PointAwarded,
                 DateAwarded: rewardRecent.DateAwarded
