@@ -1,7 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Communities;
-using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
@@ -47,26 +47,10 @@ namespace MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
             }
             
             var postsPaged = await postsRepository.GetPagedPostsAsync(request.PageNumber, request.PageSize,cancellationToken);
-            var postsModel = postsPaged.Items!.Select(x => new Domain.Models.Posts
-            {
-                Id = x.Id,
-                Title = x.Title,
-                Content = x.Content,
-                Image = x.Image,
-                CommunitiesId = x.CommunitiesId,
-                CreatedAt = x.CreatedAt
-            }).ToList();
+            var postsModel = postsPaged.Items!.Select(PostsMapper.ToDTos);
             
             var eventsPaged = await eventsRepository.GetPagedEventsAsync(request.PageNumber, request.PageSize,cancellationToken);
-            var eventsModel = eventsPaged.Items!.Select(x => new Domain.Models.Events
-            {
-                Id = x.Id,
-                Description = x.Description,
-                Title = x.Title,
-                DateAndTime = x.DateAndTime,
-                CreateAt = x.CreateAt,
-                CommunitiesId = x.CommunitiesId
-            }).ToList();
+            var eventsModel = eventsPaged.Items!.Select(EventsMapper.ToDTo);
             
             var dTos = withEventsAndPosts.Select(c => new PostsAndEventsDTos
             (
