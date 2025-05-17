@@ -2,7 +2,7 @@ using MetaBond.Application.DTOs.Account.User;
 
 namespace MetaBond.Application.DTOs.Posts;
 
-public record PostsWithUserDTos
+public sealed record PostsWithUserDTos
 (
     Guid PostsId,
     string? Title,

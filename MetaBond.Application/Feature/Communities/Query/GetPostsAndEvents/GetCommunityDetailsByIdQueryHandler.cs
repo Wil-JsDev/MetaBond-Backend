@@ -54,7 +54,7 @@ namespace MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
             
             var dTos = withEventsAndPosts.Select(c => new PostsAndEventsDTos
             (
-                CommunitieId: c.Id,
+                CommunitiesId: c.Id,
                 Name: c.Name,
                 Category: c.Category,
                 CreatedAt: c.CreateAt,

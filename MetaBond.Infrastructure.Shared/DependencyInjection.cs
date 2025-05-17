@@ -12,10 +12,12 @@ namespace MetaBond.Infrastructure.Shared
         {
             #region Configuration
             services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+            services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
             #endregion
 
             #region Service
             services.AddScoped<ICloudinaryService, CloudinaryService>();
+            services.AddScoped<IEmailService, EmailService>();
             #endregion
         }
     }

@@ -210,7 +210,7 @@ public class CommunitiesCommandHandlerTests
         IEnumerable<PostsAndEventsDTos> postsAndEventsDTos = new List<PostsAndEventsDTos>
         {
             new PostsAndEventsDTos(
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name: "New Name",
                 Category: "New Category",
                 CreatedAt: DateTime.UtcNow,
@@ -218,7 +218,7 @@ public class CommunitiesCommandHandlerTests
                 Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name: "Tech Talk",
                 Category: "Technology",
                 CreatedAt: DateTime.UtcNow,
@@ -226,7 +226,7 @@ public class CommunitiesCommandHandlerTests
                 Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name: "Cooking 101",
                 Category: "Cooking",
                 CreatedAt: DateTime.UtcNow,

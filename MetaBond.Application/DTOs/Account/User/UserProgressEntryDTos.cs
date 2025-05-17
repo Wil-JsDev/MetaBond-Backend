@@ -1,6 +1,6 @@
 namespace MetaBond.Application.DTOs.Account.User;
 
-public record UserProgressEntryDTos
+public sealed record UserProgressEntryDTos
 (
     Guid UserId,
     string? Username,

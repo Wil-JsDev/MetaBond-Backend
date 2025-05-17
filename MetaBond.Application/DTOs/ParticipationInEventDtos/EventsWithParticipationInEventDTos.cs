@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using MetaBond.Application.DTOs.Events;
-using MetaBond.Domain.Models;
+﻿using MetaBond.Application.DTOs.Events;
 
-namespace MetaBond.Application.DTOs.ParticipationInEventDtos
-{
-    public sealed record EventsWithParticipationInEventDTos
-    (
-        Guid? ParticipationInEventId,
-        IEnumerable<EventsDto> Events
-    );
-}
+namespace MetaBond.Application.DTOs.ParticipationInEventDtos;
+
+public sealed record EventsWithParticipationInEventDTos
+(
+    Guid? ParticipationInEventId,
+    IEnumerable<EventsDto> Events
+);

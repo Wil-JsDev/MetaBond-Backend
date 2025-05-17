@@ -1,6 +1,6 @@
 namespace MetaBond.Application.DTOs.ProgressBoard;
 
-public record ProgressEntrySummaryDTos
+public sealed record ProgressEntrySummaryDTos
 (
     Guid? ProgressEntryId,
     Guid UserId,
