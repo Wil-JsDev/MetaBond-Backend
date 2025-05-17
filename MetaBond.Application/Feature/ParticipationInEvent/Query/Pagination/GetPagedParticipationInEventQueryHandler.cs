@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.ParticipationInEvent;
+using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
