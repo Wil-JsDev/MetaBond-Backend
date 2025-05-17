@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+namespace MetaBond.Domain.Settings;
 
-namespace MetaBond.Domain.Settings
+public sealed class CloudinarySettings
 {
-    public class CloudinarySettings
-    {
-        public string? CloudinaryUrl { get; set; }
-    }
+    public string? CloudinaryUrl { get; set; }
 }
