@@ -21,6 +21,7 @@ internal sealed class CreateProgressBoardCommandHandler(
             Domain.Models.ProgressBoard progressBoard = new()
             {
                 Id = Guid.NewGuid(),
+                UserId = request.UserId,
                 CommunitiesId = request.CommunitiesId
             };
 
@@ -32,6 +33,7 @@ internal sealed class CreateProgressBoardCommandHandler(
             (
                 ProgressBoardId: progressBoard.Id,
                 CommunitiesId: progressBoard.CommunitiesId,
+                UserId: progressBoard.UserId,
                 CreatedAt: progressBoard.CreatedAt,
                 UpdatedAt: progressBoard.UpdatedAt
             );

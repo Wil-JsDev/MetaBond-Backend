@@ -1,6 +1,5 @@
 using MediatR;
 using MetaBond.Application.DTOs.Events;
-using MetaBond.Application.DTOs.ParticipationInEvent;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Feature.ParticipationInEvent.Commands.Create;
 using MetaBond.Application.Feature.ParticipationInEvent.Commands.Update;
@@ -74,7 +73,7 @@ public class ParticipationInEventTests
         
         //Act
 
-        var resultController = participationInEventController.UpdateAsync(updateParticipationInEventCommand.Id, updateParticipationInEventCommand, CancellationToken.None);
+        var resultController = participationInEventController.UpdateAsync(updateParticipationInEventCommand, CancellationToken.None);
 
         // Assert
         

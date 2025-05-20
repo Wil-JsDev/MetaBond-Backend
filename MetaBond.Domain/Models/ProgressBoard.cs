@@ -19,5 +19,9 @@ namespace MetaBond.Domain.Models
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }
+        
+        public Guid UserId { get; set; }
+        
+        public User? User { get; set; }
     }
 }

@@ -1,19 +1,21 @@
 ﻿using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Infrastructure.Persistence.Context;
 using MetaBond.Infrastructure.Persistence.Repository;
+using MetaBond.Infrastructure.Persistence.Repository.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MetaBond.Infrastructure.Persistence
 {
-    public static class DependecyInjection
+    public static class DependencyInjection
     {
 
         public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
         {
             
-           #region Redis
+            #region Redis
             string connectionString = configuration.GetConnectionString("Redis")!;
             services.AddStackExchangeRedisCache(options =>
             {
@@ -43,6 +45,15 @@ namespace MetaBond.Infrastructure.Persistence
             services.AddTransient<IProgressEntryRepository, ProgressEntryRepository>();
             services.AddTransient<IProgressBoardRepository, ProgressBoardRepository>();
             services.AddTransient<IEventParticipationRepository, EventParticipationRepository>();
+            services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IAdminRepository, AdminRepository>();
+            services.AddTransient<ICommunityManagerRepository, CommunityManagerRepository>();
+            services.AddTransient<ICommunityUserRepository, CommunityUserRepository>();
+            services.AddTransient<IModeratorRepository, ModeratorRepository>();
+            services.AddTransient<IModeratorCommunityRepository, ModeratorCommunityRepository>();
+            services.AddTransient<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
+            services.AddTransient<IInterestRepository, InterestRepository>();
+            services.AddTransient<IUserInterestRepository, UserInterestRepository>();
             #endregion
 
         }

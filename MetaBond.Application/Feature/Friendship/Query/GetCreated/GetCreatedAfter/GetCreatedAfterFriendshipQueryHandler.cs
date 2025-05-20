@@ -35,10 +35,12 @@ internal sealed class GetCreatedAfterFriendshipQueryHandler(
                 return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "The list is empty"));
             }
 
-            IEnumerable<FriendshipDTos> friendshipDTos = friendships.Select(x => new FriendshipDTos
+            var friendshipDTos = friendships.Select(x => new FriendshipDTos
             (
                 FriendshipId: x.Id,
                 Status: x.Status,
+                RequesterId: x.RequesterId,
+                AddresseeId: x.AddresseeId,
                 CreatedAt: x.CreateAdt
             ));
 

@@ -9,6 +9,7 @@ using MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Models;
 using MetaBond.Presentation.Api.Controllers.V1;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -34,6 +35,7 @@ public class ProgressBoardControllerTests
         (
             ProgressBoardId: Guid.NewGuid(),
             CommunitiesId: createProgressBoardCommand.CommunitiesId,
+            UserId: createProgressBoardCommand.UserId,
             CreatedAt: DateTime.UtcNow,
             UpdatedAt: DateTime.UtcNow
         );
@@ -47,7 +49,7 @@ public class ProgressBoardControllerTests
 
         // Act
 
-        var resultController = progressBoardController.CreateAsync(createProgressBoardCommand.CommunitiesId, CancellationToken.None);
+        var resultController = progressBoardController.CreateAsync(createProgressBoardCommand, CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
@@ -69,6 +71,7 @@ public class ProgressBoardControllerTests
         (
             ProgressBoardId: command.ProgressBoardId,
             CommunitiesId: command.CommunitiesId,
+            UserId: command.UserId,
             CreatedAt: DateTime.UtcNow,
             UpdatedAt: DateTime.UtcNow
         );
@@ -82,7 +85,7 @@ public class ProgressBoardControllerTests
         
         // Act
 
-        var resultController =progressBoardController.UpdateAsync(command.ProgressBoardId,command, CancellationToken.None);
+        var resultController =progressBoardController.UpdateAsync(command, CancellationToken.None);
 
         // Assert
 
@@ -137,6 +140,7 @@ public class ProgressBoardControllerTests
                     (   
                         ProgressBoardId: query.ProgressBoardId,
                         CommunitiesId: Guid.NewGuid(),
+                        UserId: Guid.NewGuid(), 
                         ProgressEntries: new List<ProgressEntrySummaryDTos>(),
                         CreatedAt: DateTime.UtcNow,
                         UpdatedAt: DateTime.UtcNow
@@ -147,6 +151,7 @@ public class ProgressBoardControllerTests
             (
                 ProgressBoardId: x.ProgressBoardId,
                 CommunitiesId: x.CommunitiesId,
+                UserId: x.UserId,
                 ProgressEntries: x.ProgressEntries,
                 CreatedAt: x.CreatedAt,
                 UpdatedAt: x.UpdatedAt
@@ -189,6 +194,7 @@ public class ProgressBoardControllerTests
                 (   
                     ProgressBoardId: Guid.NewGuid(),
                     CommunitiesId: Guid.NewGuid(),
+                    UserId: Guid.NewGuid(),
                     ProgressEntries: new List<ProgressEntrySummaryDTos>(),
                     CreatedAt: DateTime.UtcNow,
                     UpdatedAt: DateTime.UtcNow
@@ -199,6 +205,7 @@ public class ProgressBoardControllerTests
         (
             ProgressBoardId: x.ProgressBoardId,
             CommunitiesId: x.CommunitiesId,
+            UserId: x.UserId,
             ProgressEntries: x.ProgressEntries,
             CreatedAt: x.CreatedAt,
             UpdatedAt: x.UpdatedAt
@@ -244,6 +251,7 @@ public class ProgressBoardControllerTests
                 (   
                     ProgressBoardId: Guid.NewGuid(),
                     CommunitiesId: Guid.NewGuid(),
+                    UserId: Guid.NewGuid(),
                     CreatedAt: DateTime.UtcNow,
                     UpdatedAt: DateTime.UtcNow
                 )

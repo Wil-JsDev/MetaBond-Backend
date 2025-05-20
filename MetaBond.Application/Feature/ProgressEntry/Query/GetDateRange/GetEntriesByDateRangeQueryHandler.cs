@@ -37,6 +37,7 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
             (
                 ProgressEntryId: x.Id,
                 ProgressBoardId: x.ProgressBoardId,
+                UserId: x.UserId,
                 Description: x.Description,
                 CreatedAt: x.CreatedAt,
                 UpdateAt: x.UpdateAt

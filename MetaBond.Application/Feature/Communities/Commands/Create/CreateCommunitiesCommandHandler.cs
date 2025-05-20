@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Communties;
+using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -38,7 +38,7 @@ namespace MetaBond.Application.Feature.Communities.Commands.Create;
                 logger.LogInformation("Community {CommunityId} created successfully.", communities.Id);
 
                 CommunitiesDTos communitiesDTos = new(
-                    CommunitieId: communities.Id,
+                    CommunitiesId: communities.Id,
                     Name: communities.Name,
                     Category: communities.Category,
                     CreatedAt: communities.CreateAt

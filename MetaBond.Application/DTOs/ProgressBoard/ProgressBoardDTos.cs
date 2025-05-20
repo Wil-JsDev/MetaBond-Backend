@@ -4,6 +4,7 @@
     (
         Guid ProgressBoardId,
         Guid CommunitiesId,
+        Guid UserId,
         DateTime? CreatedAt,
         DateTime? UpdatedAt
     );

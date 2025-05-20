@@ -18,7 +18,7 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
         FilterByStatusFriendshipQuery request, 
         CancellationToken cancellationToken)
     {
-        var exists = await friendshipRepository.ValidateAsync(x => x.Status == request.Status);
+        var exists = await friendshipRepository.ValidateAsync(x => x.Status == request.Status, cancellationToken);
         if (!exists)
         {
             logger.LogError("No active friendship found with status '{Status}'.", request.Status);
@@ -42,10 +42,12 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
                 return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "No friendships found with the given status"));
             }
 
-            IEnumerable<FriendshipDTos> friendshipDTos = friendships.Select(x => new FriendshipDTos
+            var friendshipDTos = friendships.Select(x => new FriendshipDTos
             (
                 FriendshipId: x.Id,
                 Status: x.Status,
+                RequesterId: x.RequesterId,
+                AddresseeId: x.AddresseeId,
                 CreatedAt: x.CreateAdt
             ));
 

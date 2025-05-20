@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.Communties;
+using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -39,7 +39,7 @@ namespace MetaBond.Application.Feature.Communities.Query.Filter;
 
                 var dTos = communitiesEnumerable.Select(c => new CommunitiesDTos
                 (
-                   CommunitieId: c.Id,
+                    CommunitiesId: c.Id,
                    Name: c.Name,
                    Category: c.Category,
                    CreatedAt: c.CreateAt

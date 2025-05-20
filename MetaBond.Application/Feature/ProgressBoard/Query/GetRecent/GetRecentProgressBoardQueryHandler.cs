@@ -38,6 +38,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
                 (
                     ProgressBoardId: x.Id,
                     CommunitiesId: x.CommunitiesId,
+                    UserId: x.UserId,
                     CreatedAt: x.CreatedAt,
                     UpdatedAt: x.UpdatedAt
                 ));

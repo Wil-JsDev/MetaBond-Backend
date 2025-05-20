@@ -49,9 +49,14 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         }
 
         public virtual async Task SaveAsync(CancellationToken cancellationToken) => 
-            await _metaBondContext.SaveChangesAsync(cancellationToken); 
-        
-        public async Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate) => 
-            await _metaBondContext.Set<TEntity>().AnyAsync(predicate);
+            await _metaBondContext.SaveChangesAsync(cancellationToken);
+
+        public async Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken)
+        {
+            return await _metaBondContext.Set<TEntity>()
+                .AsNoTracking()
+                .AnyAsync(predicate, cancellationToken);   
+        }
     }
 }

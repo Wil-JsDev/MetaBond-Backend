@@ -2,9 +2,10 @@ using MetaBond.Application.DTOs.ProgressBoard;
 
 namespace MetaBond.Application.DTOs.ProgressEntry;
 
-public record ProgressEntryWithProgressBoardDTos
+public sealed record ProgressEntryWithProgressBoardDTos
 (
     Guid ProgressEntryId,
+    Guid UserId,
     ProgressBoardSummaryDTos ProgressBoard,
     string? Description,
     DateTime CreatedAt,

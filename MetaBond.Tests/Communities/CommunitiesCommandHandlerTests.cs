@@ -1,5 +1,5 @@
 using MediatR;
-using MetaBond.Application.DTOs.Communties;
+using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Feature.Communities.Commands.Create;
 using MetaBond.Application.Feature.Communities.Commands.Delete;
 using MetaBond.Application.Feature.Communities.Commands.Update;
@@ -33,7 +33,7 @@ public class CommunitiesCommandHandlerTests
 
         CommunitiesDTos communitiesDTos = new
         (
-            CommunitieId: Guid.NewGuid(),
+            CommunitiesId: Guid.NewGuid(),
             Name: createCommunitiesCommand.Name,
             Category: createCommunitiesCommand.Category,
             CreatedAt: DateTime.UtcNow
@@ -91,7 +91,7 @@ public class CommunitiesCommandHandlerTests
         
         CommunitiesDTos communitiesDTos = new
         (
-            CommunitieId: Guid.NewGuid(),
+            CommunitiesId: Guid.NewGuid(),
             Name: communitiesCommand.Name,
             Category: communitiesCommand.Category,
             CreatedAt: DateTime.UtcNow
@@ -105,7 +105,7 @@ public class CommunitiesCommandHandlerTests
         var communitiesController = new CommunitiesController(_mediatorMock.Object);
         
         //Act
-        var result = communitiesController.UpdateAsync(Guid.NewGuid(), communitiesCommand,CancellationToken.None);
+        var result = communitiesController.UpdateAsync(communitiesCommand, CancellationToken.None);
         
         //Assert
         Assert.NotNull(result);
@@ -122,7 +122,7 @@ public class CommunitiesCommandHandlerTests
         
         CommunitiesDTos communitiesDTos = new
         (
-            CommunitieId: Guid.NewGuid(),
+            CommunitiesId: Guid.NewGuid(),
             Name: "New Name",
             Category: "New category",
             CreatedAt: DateTime.UtcNow
@@ -158,21 +158,21 @@ public class CommunitiesCommandHandlerTests
         {
             new CommunitiesDTos
             (
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name:"Another Community",
                 Category: filterCommunitiesQuery.Category,
                 CreatedAt:DateTime.UtcNow
             ),
             new CommunitiesDTos
             (
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name:"Another Community",
                 Category: filterCommunitiesQuery.Category,
                 CreatedAt:DateTime.UtcNow
             ),
             new CommunitiesDTos
             (
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name:"Another Community",
                 Category: filterCommunitiesQuery.Category,
                 CreatedAt:DateTime.UtcNow
@@ -210,7 +210,7 @@ public class CommunitiesCommandHandlerTests
         IEnumerable<PostsAndEventsDTos> postsAndEventsDTos = new List<PostsAndEventsDTos>
         {
             new PostsAndEventsDTos(
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name: "New Name",
                 Category: "New Category",
                 CreatedAt: DateTime.UtcNow,
@@ -218,7 +218,7 @@ public class CommunitiesCommandHandlerTests
                 Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name: "Tech Talk",
                 Category: "Technology",
                 CreatedAt: DateTime.UtcNow,
@@ -226,7 +226,7 @@ public class CommunitiesCommandHandlerTests
                 Events: new List<Domain.Models.Events>()
             ),
             new PostsAndEventsDTos(
-                CommunitieId: Guid.NewGuid(),
+                CommunitiesId: Guid.NewGuid(),
                 Name: "Cooking 101",
                 Category: "Cooking",
                 CreatedAt: DateTime.UtcNow,

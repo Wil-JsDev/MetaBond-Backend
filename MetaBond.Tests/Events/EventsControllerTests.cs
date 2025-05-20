@@ -118,7 +118,7 @@ public class EventsControllerTests
         
         //Act
 
-        var resultController = eventsController.UpdateAsync(Guid.NewGuid(), eventsCommand, CancellationToken.None);
+        var resultController = eventsController.UpdateAsync(eventsCommand, CancellationToken.None);
 
         //Assert
         

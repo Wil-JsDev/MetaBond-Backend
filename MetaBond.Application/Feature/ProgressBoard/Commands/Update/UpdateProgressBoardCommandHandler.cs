@@ -30,6 +30,7 @@ internal sealed class UpdateProgressBoardCommandHandler(
             (
                 ProgressBoardId: progressBoard.Id,
                 CommunitiesId: progressBoard.CommunitiesId,
+                UserId:  progressBoard.UserId,
                 CreatedAt: progressBoard.CreatedAt,
                 UpdatedAt: progressBoard.UpdatedAt
             );

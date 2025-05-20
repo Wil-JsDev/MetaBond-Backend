@@ -22,13 +22,14 @@ internal sealed class UpdateProgressEntryCommandHandler(
             progressEntry.UpdateAt = DateTime.UtcNow;
 
             await progressEntryRepository.UpdateAsync(progressEntry,cancellationToken);
+            
             logger.LogInformation("Progress entry with ID {Id} successfully updated.", request.ProgressEntryId);
-
-
+            
             ProgressEntryDTos entryDTos = new
             (
                 ProgressEntryId: progressEntry.Id,
                 ProgressBoardId: progressEntry.ProgressBoardId,
+                UserId: progressEntry.UserId,
                 Description: progressEntry.Description,
                 CreatedAt: progressEntry.CreatedAt,
                 UpdateAt: progressEntry.UpdateAt

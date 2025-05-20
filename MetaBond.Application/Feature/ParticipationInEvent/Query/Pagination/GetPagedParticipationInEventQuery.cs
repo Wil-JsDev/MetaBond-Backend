@@ -1,5 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
-using MetaBond.Application.DTOs.ParticipationInEvent;
+using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Pagination;
 
 namespace MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;

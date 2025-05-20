@@ -20,7 +20,6 @@ internal sealed class GetPagedProgressEntryQueryHandler(
     {
         if (request != null)
         {
-
             if (request.PageNumber <= 0 || request.PageSize <= 0)
             {
                 logger.LogError("Invalid pagination parameters: PageNumber={PageNumber}, PageSize={PageSize}", request.PageNumber, request.PageSize);
@@ -40,11 +39,13 @@ internal sealed class GetPagedProgressEntryQueryHandler(
             (
                 ProgressEntryId: x.Id,
                 ProgressBoardId: x.ProgressBoardId,
+                UserId: x.UserId,
                 Description: x.Description,
                 CreatedAt: x.CreatedAt,
                 UpdateAt: x.UpdateAt
             ));
             IEnumerable<ProgressEntryDTos> progressEntryDTosEnumerable = dtoItems.ToList();
+            
             if (!progressEntryDTosEnumerable.Any())
             {
                 logger.LogError("No progress entries found for the given page request. Page: {PageNumber}, Size: {PageSize}", 

@@ -37,6 +37,8 @@ internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
             (
                 FriendshipId: x.Id,
                 Status: x.Status,
+                RequesterId: x.RequesterId,
+                AddresseeId: x.AddresseeId,
                 CreatedAt: x.CreateAdt
             ));
 

@@ -3,7 +3,7 @@ using MetaBond.Application.Utils;
 
 namespace MetaBond.Application.Abstractions.Messaging
 {
-    public interface ICommnadHandler<in TCommand> : 
+    public interface ICommandHandler<in TCommand> : 
         IRequestHandler<TCommand, Result>
         where TCommand : ICommand;
 

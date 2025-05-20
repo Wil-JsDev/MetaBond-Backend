@@ -8,6 +8,7 @@ using MetaBond.Application.Feature.Rewards.Query.GetRange;
 using MetaBond.Application.Feature.Rewards.Query.GetTop;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Models;
 using MetaBond.Presentation.Api.Controllers.V1;
 using Moq;
 
@@ -32,6 +33,7 @@ public class RewardsControllerTests
         RewardsDTos rewardsDTos = new
         (
             RewardsId: Guid.NewGuid(),
+            UserId: Guid.NewGuid(), 
             Description: createRewardsCommand.Description,
             PointAwarded: createRewardsCommand.PointAwarded,
             DateAwarded: DateTime.Now
@@ -99,6 +101,7 @@ public class RewardsControllerTests
         RewardsDTos rewardsDTos = new
         (
             RewardsId: command.RewardsId,
+            UserId: Guid.NewGuid(),
             Description: command.Description,
             PointAwarded: command.PointAwarded,
             DateAwarded: DateTime.Now
@@ -113,7 +116,7 @@ public class RewardsControllerTests
         
         // Act
     
-        var resultController = rewardsController.UpdateAsync(command.RewardsId, command, CancellationToken.None);
+        var resultController = rewardsController.UpdateAsync(command, CancellationToken.None);
 
         // Assert
         
@@ -135,6 +138,7 @@ public class RewardsControllerTests
         RewardsDTos rewardsDTos = new
         (
             RewardsId: query.RewardsId,
+            UserId: Guid.NewGuid(),
             Description: "Description",
             PointAwarded: 12,
             DateAwarded: DateTime.Now
@@ -172,6 +176,7 @@ public class RewardsControllerTests
             new RewardsDTos
             (
                 RewardsId: Guid.NewGuid(),
+                UserId:  Guid.NewGuid(),
                 Description: "Description",
                 PointAwarded: 12,
                 DateAwarded: DateTime.Now
@@ -210,6 +215,7 @@ public class RewardsControllerTests
             new RewardsDTos
             (
                 RewardsId: Guid.NewGuid(),
+                UserId: Guid.NewGuid(),
                 Description: "Description",
                 PointAwarded: 12,
                 DateAwarded: DateTime.Now

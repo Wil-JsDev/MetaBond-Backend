@@ -17,7 +17,7 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByTitle
         {
             if (request.Title != null)
             {
-                var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title);
+                var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title, cancellationToken);
                 if (!exists)
                 {
                     logger.LogError("The specified event '{Title}' was not found.", request.Title);

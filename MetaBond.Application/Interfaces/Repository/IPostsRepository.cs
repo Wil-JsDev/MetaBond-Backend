@@ -15,5 +15,7 @@ namespace MetaBond.Application.Interfaces.Repository
         Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,CancellationToken cancellationToken);
 
         Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId,int topCount, CancellationToken cancellationToken);
+
+        Task<IEnumerable<Posts>> GetPostWithAuthorAsync(Guid postsId, CancellationToken cancellationToken);
     }
 }

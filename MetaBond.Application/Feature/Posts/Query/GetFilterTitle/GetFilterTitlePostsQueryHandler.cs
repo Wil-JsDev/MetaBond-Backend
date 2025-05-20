@@ -20,7 +20,7 @@ internal sealed class GetFilterTitlePostsQueryHandler(
 
         if (request.Title != null)
         {
-            var exists = await postsRepository.ValidateAsync(x => x.Title == request.Title);
+            var exists = await postsRepository.ValidateAsync(x => x.Title == request.Title,cancellationToken);
             if (!exists)
             {
                 logger.LogError("No post found with the title '{Title}'.", request.Title);
@@ -51,6 +51,7 @@ internal sealed class GetFilterTitlePostsQueryHandler(
                 Title: x.Title,
                 Content: x.Content,
                 ImageUrl: x.Image,
+                CreatedById: x.CreatedById,
                 CommunitiesId: x.CommunitiesId,
                 CreatedAt: x.CreatedAt
             ));

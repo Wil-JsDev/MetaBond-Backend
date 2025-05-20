@@ -20,7 +20,9 @@ internal sealed class CreateFriendshipCommandHandler(
             Domain.Models.Friendship friendship = new()
             {
                 Id = Guid.NewGuid(),
-                Status = request.Status
+                Status = request.Status,
+                RequesterId = request.RequesterId,
+                AddresseeId = request.AddresseeId,
             };
 
             await friendshipRepository.CreateAsync(friendship, cancellationToken);
@@ -31,6 +33,8 @@ internal sealed class CreateFriendshipCommandHandler(
             ( 
                 FriendshipId: friendship.Id,
                 Status: friendship.Status,
+                RequesterId: friendship.RequesterId,
+                AddresseeId: friendship.AddresseeId,
                 CreatedAt: friendship.CreateAdt
             );
 

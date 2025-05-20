@@ -7,5 +7,6 @@ public sealed class CreateRewardsCommand : ICommand<RewardsDTos>
 {
     public string? Description { get; set; }
 
+    public Guid UserId { get; set; }
     public int PointAwarded { get; set; }
 }

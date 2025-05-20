@@ -23,6 +23,23 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "status", new[] { "pending", "accepted", "blocked" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("MetaBond.Domain.Models.Admin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id")
+                        .HasName("PkAdmin");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Admins", (string)null);
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.Communities", b =>
                 {
                     b.Property<Guid>("Id")
@@ -51,6 +68,81 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .HasName("PkCommunities");
 
                     b.ToTable("Communities", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityManager", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id")
+                        .HasName("PkCommunityManager");
+
+                    b.HasIndex("CommunityId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommunityManagers", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id")
+                        .HasName("PkCommunityUser");
+
+                    b.HasIndex("CommunityId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommunityUsers", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.EmailConfirmationToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id")
+                        .HasName("PkEmailConfirmationToken");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmailConfirmationTokens", (string)null);
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.EventParticipation", b =>
@@ -108,8 +200,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("AddresseeId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("CreateAdt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RequesterId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -117,7 +217,59 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("PkFriendship");
 
+                    b.HasIndex("AddresseeId");
+
+                    b.HasIndex("RequesterId");
+
                     b.ToTable("Friendship", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Interest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
+
+                    b.HasKey("Id")
+                        .HasName("PkInterest");
+
+                    b.ToTable("Interests", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Moderator", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Moderators", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.ModeratorCommunity", b =>
+                {
+                    b.Property<Guid>("ModeratorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommunitiesId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ModeratorId", "CommunitiesId");
+
+                    b.HasIndex("CommunitiesId");
+
+                    b.ToTable("ModeratorCommunity", (string)null);
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
@@ -153,6 +305,9 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Image")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -167,6 +322,8 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .HasName("PkPosts");
 
                     b.HasIndex("CommunitiesId");
+
+                    b.HasIndex("CreatedById");
 
                     b.ToTable("Posts", (string)null);
                 });
@@ -186,11 +343,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id")
                         .HasName("PkProgressBoard");
 
                     b.HasIndex("CommunitiesId")
                         .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ProgressBoard", (string)null);
                 });
@@ -215,10 +377,15 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("UpdateAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id")
                         .HasName("PkProgressEntry");
 
                     b.HasIndex("ProgressBoardId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ProgressEntry", (string)null);
                 });
@@ -241,10 +408,139 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id")
                         .HasName("PkRewards");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Rewards", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsEmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Photo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id")
+                        .HasName("PkUser");
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.UserInterest", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("InterestId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId", "InterestId");
+
+                    b.HasIndex("InterestId");
+
+                    b.ToTable("UserInterests", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Admin", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("AdminRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkAdminsUserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityManager", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.Communities", "Community")
+                        .WithMany("CommunityManagers")
+                        .HasForeignKey("CommunityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FKCommunityManagerCommunity");
+
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("CommunityManagerRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunityManagersUserId");
+
+                    b.Navigation("Community");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityUser", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.Communities", "Community")
+                        .WithMany("CommunityUsers")
+                        .HasForeignKey("CommunityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunitiesId");
+
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("CommunityMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunityUsersUserId");
+
+                    b.Navigation("Community");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.EmailConfirmationToken", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("EmailConfirmationTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkEmailConfirmationTokensUserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.EventParticipation", b =>
@@ -280,6 +576,58 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("Communities");
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.Friendship", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.User", "Addressee")
+                        .WithMany("ReceivedFriendRequests")
+                        .HasForeignKey("AddresseeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FkAddresseeId");
+
+                    b.HasOne("MetaBond.Domain.Models.User", "Requester")
+                        .WithMany("SentFriendRequests")
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FkRequesterId");
+
+                    b.Navigation("Addressee");
+
+                    b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Moderator", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("ModeratorRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkModeratorsUserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.ModeratorCommunity", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.Communities", "Community")
+                        .WithMany("ModeratorCommunities")
+                        .HasForeignKey("CommunitiesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MetaBond.Domain.Models.Moderator", "Moderator")
+                        .WithMany("ModeratorCommunities")
+                        .HasForeignKey("ModeratorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Community");
+
+                    b.Navigation("Moderator");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.Posts", b =>
                 {
                     b.HasOne("MetaBond.Domain.Models.Communities", "Communities")
@@ -289,7 +637,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("FkCommunities");
 
+                    b.HasOne("MetaBond.Domain.Models.User", "CreatedBy")
+                        .WithMany("Posts")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkPostsCreatedById");
+
                     b.Navigation("Communities");
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ProgressBoard", b =>
@@ -301,7 +658,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("FkCommunitiesId");
 
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("ProgressBoards")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkProgressBoardsUserId");
+
                     b.Navigation("Communities");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ProgressEntry", b =>
@@ -313,12 +679,60 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("FkProgressBoardId");
 
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("ProgressEntries")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkProgressEntriesUserId");
+
                     b.Navigation("ProgressBoard");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Rewards", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("Rewards")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkRewardsUserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.UserInterest", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.Interest", "Interest")
+                        .WithMany("UserInterests")
+                        .HasForeignKey("InterestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkInterestId");
+
+                    b.HasOne("MetaBond.Domain.Models.User", "User")
+                        .WithMany("Interests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkUserInterestsUserId");
+
+                    b.Navigation("Interest");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.Communities", b =>
                 {
+                    b.Navigation("CommunityManagers");
+
+                    b.Navigation("CommunityUsers");
+
                     b.Navigation("Events");
+
+                    b.Navigation("ModeratorCommunities");
 
                     b.Navigation("Posts");
 
@@ -330,6 +744,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("EventParticipations");
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.Interest", b =>
+                {
+                    b.Navigation("UserInterests");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Moderator", b =>
+                {
+                    b.Navigation("ModeratorCommunities");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
                 {
                     b.Navigation("EventParticipations");
@@ -338,6 +762,33 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MetaBond.Domain.Models.ProgressBoard", b =>
                 {
                     b.Navigation("ProgressEntries");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.User", b =>
+                {
+                    b.Navigation("AdminRoles");
+
+                    b.Navigation("CommunityManagerRoles");
+
+                    b.Navigation("CommunityMemberships");
+
+                    b.Navigation("EmailConfirmationTokens");
+
+                    b.Navigation("Interests");
+
+                    b.Navigation("ModeratorRoles");
+
+                    b.Navigation("Posts");
+
+                    b.Navigation("ProgressBoards");
+
+                    b.Navigation("ProgressEntries");
+
+                    b.Navigation("ReceivedFriendRequests");
+
+                    b.Navigation("Rewards");
+
+                    b.Navigation("SentFriendRequests");
                 });
 #pragma warning restore 612, 618
         }

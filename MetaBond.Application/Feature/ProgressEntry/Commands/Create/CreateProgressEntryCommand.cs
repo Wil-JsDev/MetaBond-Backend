@@ -9,4 +9,5 @@ public sealed class CreateProgressEntryCommand : ICommand<ProgressEntryDTos>
 
     public string? Description { get; set; }
     
+    public Guid UserId { get; set; }
 }
