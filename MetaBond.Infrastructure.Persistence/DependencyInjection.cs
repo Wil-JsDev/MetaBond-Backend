@@ -15,7 +15,7 @@ namespace MetaBond.Infrastructure.Persistence
         public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
         {
             
-           #region Redis
+            #region Redis
             string connectionString = configuration.GetConnectionString("Redis")!;
             services.AddStackExchangeRedisCache(options =>
             {
