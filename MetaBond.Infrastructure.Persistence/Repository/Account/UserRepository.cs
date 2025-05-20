@@ -19,23 +19,6 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
         return await ValidateAsync(us => us.Username == username, cancellationToken);
     }
 
-    public async Task<bool> IsAccountConfirmedAsync(Guid userId, CancellationToken cancellationToken)
-    {
-       return await _metaBondContext.Set<User>()
-           .AsNoTracking()  
-           .AnyAsync(u => u.Id == userId && u.IsEmailConfirmed == true , cancellationToken);
-    }
-
-    public async Task ConfirmAccountAsync(Guid userId, CancellationToken cancellationToken)
-    {
-       var user = await _metaBondContext.Set<User>()
-           .AsNoTracking()
-           .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-       
-       user!.IsEmailConfirmed = true;
-       await SaveAsync(cancellationToken);
-    }
-
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         return  await  _metaBondContext.Set<User>()
@@ -50,6 +33,13 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Username == username, 
                 cancellationToken);
+    }
+
+    public async Task<bool> IsEmailConfirmedAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(us => us.Id == userId && us.IsEmailConfirmed == true, 
+            cancellationToken);
+            
     }
 
     public async Task<PagedResult<User>> GetPagedUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)

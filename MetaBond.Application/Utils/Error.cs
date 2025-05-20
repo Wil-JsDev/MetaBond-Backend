@@ -1,35 +1,58 @@
 ﻿using MetaBond.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MetaBond.Application.Utils
+namespace MetaBond.Application.Utils;
+
+/// <summary>
+/// Represents an error that occurred during an operation, including a code, description, and type.
+/// </summary>
+public class Error
 {
-    public class Error
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Error"/> class with the specified code, description, and error type.
+    /// </summary>
+    /// <param name="code">A unique identifier for the error.</param>
+    /// <param name="description">A human-readable description of the error.</param>
+    /// <param name="errorType">The type/category of the error.</param>
+    private Error(
+        string code, 
+        string description, 
+        ErrorType errorType)
     {
-        private Error(
-            string code, 
-            string description, 
-            ErrorType errorType)
-        {
-            Code = code;
-            Description = description;
-            ErrorType = errorType;
-        }
-
-        public string Code { get; }
-
-        public string Description { get; }
-
-        public ErrorType ErrorType { get; }
-
-        public static Error Failure(string code, string description) => 
-            new Error(code, description,ErrorType.Failure);
-
-        public static Error NotFound(string code, string description) =>
-            new Error(code, description, ErrorType.NotFound);
-
+        Code = code;
+        Description = description;
+        ErrorType = errorType;
     }
+
+    /// <summary>
+    /// Gets the unique code identifying the error.
+    /// </summary>
+    public string Code { get; }
+
+    /// <summary>
+    /// Gets the description of the error.
+    /// </summary>
+    public string Description { get; }
+
+    /// <summary>
+    /// Gets the type/category of the error.
+    /// </summary>
+    public ErrorType ErrorType { get; }
+
+    /// <summary>
+    /// Creates a generic failure error.
+    /// </summary>
+    /// <param name="code">The code identifying the error.</param>
+    /// <param name="description">A description of the failure.</param>
+    /// <returns>An instance of <see cref="Error"/> representing a failure.</returns>
+    public static Error Failure(string code, string description) => 
+        new Error(code, description, ErrorType.Failure);
+
+    /// <summary>
+    /// Creates a not found error.
+    /// </summary>
+    /// <param name="code">The code identifying the error.</param>
+    /// <param name="description">A description indicating what was not found.</param>
+    /// <returns>An instance of <see cref="Error"/> representing a not found error.</returns>
+    public static Error NotFound(string code, string description) =>
+        new Error(code, description, ErrorType.NotFound);
 }

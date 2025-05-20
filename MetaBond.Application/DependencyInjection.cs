@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using FluentValidation;
 using MetaBond.Application.Behaviors;
+using MetaBond.Application.Interfaces.Service;
+using MetaBond.Application.Services;
 
 namespace MetaBond.Application
 {
@@ -17,6 +19,10 @@ namespace MetaBond.Application
                 config.AddOpenBehavior(typeof(ValidationBehavior<,>));
             });
             services.AddProblemDetails();
+
+            #region Services
+            services.AddScoped<IEmailConfirmationTokenService, EmailConfirmationTokenService>();
+            #endregion
         }
     }
 }

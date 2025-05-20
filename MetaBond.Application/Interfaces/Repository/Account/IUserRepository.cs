@@ -55,22 +55,6 @@ public interface IUserRepository : IGenericRepository<User>
     Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Checks if a user's email account has been confirmed.
-    /// </summary>
-    /// <param name="userId">The userId of the user to check</param>
-    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
-    /// <returns>True if the account is confirmed; otherwise, false.</returns>
-    Task<bool> IsAccountConfirmedAsync(Guid userId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Confirms the email account of a user by updating their confirmation status.
-    /// </summary>
-    /// <param name="userId">The ID of the user to confirm.</param>
-    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
-    Task ConfirmAccountAsync(Guid userId, CancellationToken cancellationToken);
-
-
-    /// <summary>
     /// Retrieves a user along with their sent and received friendship requests,
     /// including the details of the other users involved in each friendship.
     /// </summary>
@@ -78,4 +62,12 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation if needed.</param>
     /// <returns>A <see cref="User"/> object with <c>SentRequests</c> and <c>ReceivedRequests</c> included, or <c>null</c> if the user is not found.</returns>
     Task<User?> GetUserWithFriendshipsAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Checks whether the user's email has been confirmed.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>True if the user's email is confirmed; otherwise, false.</returns>
+    Task<bool> IsEmailConfirmedAsync(Guid userId, CancellationToken cancellationToken);
 }
