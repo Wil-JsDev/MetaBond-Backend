@@ -27,7 +27,8 @@ public class ProgressEntryControllerTests
         CreateProgressEntryCommand command = new()
         {
             Description = "Description",
-            ProgressBoardId = Guid.NewGuid()
+            ProgressBoardId = Guid.NewGuid(),
+            UserId = Guid.NewGuid()
         };
 
         ProgressEntryDTos progressEntryDTos = new

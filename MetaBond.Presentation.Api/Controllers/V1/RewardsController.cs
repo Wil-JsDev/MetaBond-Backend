@@ -18,20 +18,13 @@ namespace MetaBond.Presentation.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:ApiVersion}/rewards")]
-    public class RewardsController : ControllerBase
+    public class RewardsController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public RewardsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost]
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> AddAsync([FromBody] CreateRewardsCommand rewardsCommand, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(rewardsCommand, cancellationToken);
+            var result = await mediator.Send(rewardsCommand, cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -44,7 +37,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new DeleteRewardsCommand { RewardsId = id };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if(!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -55,7 +48,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [DisableRateLimiting]
         public async Task<IActionResult> UpdateAsync([FromBody] UpdateRewardsCommand rewardsCommand,CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(rewardsCommand,cancellationToken);
+            var result = await mediator.Send(rewardsCommand,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -68,7 +61,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetByIdRewardsQuery { RewardsId= id };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return NotFound(result.Error);
 
@@ -79,7 +72,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetCountByIdAsync(CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetCountRewardsQuery(),cancellationToken);
+            var result = await mediator.Send(new GetCountRewardsQuery(),cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -92,7 +85,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetByDateRangeRewardQuery { Range = range };
 
-            var result = await _mediator.Send(query, cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
             if(!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -103,7 +96,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         [EnableRateLimiting("fixed")]
         public async Task<IActionResult> GetRecentAsync(CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetMostRecentRewardsQuery(),cancellationToken);
+            var result = await mediator.Send(new GetMostRecentRewardsQuery(),cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -116,7 +109,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
         {
             var query = new GetTopRewardsQuery { TopCount = count };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 
@@ -133,7 +126,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1
                 PageSize = pageSize
             };
 
-            var result = await _mediator.Send(query,cancellationToken);
+            var result = await mediator.Send(query,cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
 

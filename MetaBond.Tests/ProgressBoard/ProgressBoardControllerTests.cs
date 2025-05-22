@@ -28,7 +28,8 @@ public class ProgressBoardControllerTests
 
         CreateProgressBoardCommand createProgressBoardCommand = new()
         {
-            CommunitiesId = Guid.NewGuid()
+            CommunitiesId = Guid.NewGuid(),
+            UserId = Guid.NewGuid()
         };
 
         ProgressBoardDTos progressBoardDTos = new

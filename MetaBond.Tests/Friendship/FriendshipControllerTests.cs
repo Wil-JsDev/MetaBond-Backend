@@ -23,7 +23,9 @@ public class FriendshipControllerTests
         //Arrange
         CreateFriendshipCommand createFriendshipCommand = new()
         {
-            Status = Status.Accepted
+            Status = Status.Accepted,
+            RequesterId = Guid.NewGuid(),
+            AddresseeId = Guid.NewGuid()
         };
 
         FriendshipDTos friendshipDTos = new
