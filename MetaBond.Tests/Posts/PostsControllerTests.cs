@@ -38,7 +38,8 @@ public class PostsControllerTests
             {
                 Headers = new HeaderDictionary(),
                 ContentType = "image/png"
-            }
+            },
+            CreatedById = Guid.NewGuid()
         };
         
         var imageUrl = "https://cdn.fakeapp.com/images/test-image.png";
