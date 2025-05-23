@@ -70,4 +70,15 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     /// <returns>True if the user's email is confirmed; otherwise, false.</returns>
     Task<bool> IsEmailConfirmedAsync(Guid userId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Retrieves a user by their ID along with their associated interests.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The result contains the user with their interests loaded,
+    /// or <c>null</c> if the user is not found.
+    /// </returns>
+    Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken);
 }

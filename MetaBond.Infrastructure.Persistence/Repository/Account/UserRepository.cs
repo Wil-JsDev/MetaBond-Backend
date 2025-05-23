@@ -42,6 +42,15 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             
     }
 
+    public async Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return (await _metaBondContext.Set<User>()
+            .AsNoTracking()
+            .Include(s => s.Interests)!
+                .ThenInclude(s => s.Interest)
+            .FirstOrDefaultAsync(us => us.Id == userId, cancellationToken))!;
+    }
+
     public async Task<PagedResult<User>> GetPagedUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
        var totalRecord = await _metaBondContext.Set<User>().AsNoTracking().CountAsync(cancellationToken);
