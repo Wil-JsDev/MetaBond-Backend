@@ -81,4 +81,23 @@ public interface IUserRepository : IGenericRepository<User>
     /// or <c>null</c> if the user is not found.
     /// </returns>
     Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Checks if an email is already in use by another user, excluding a specified user ID.
+    /// </summary>
+    /// <param name="email">The email address to check.</param>
+    /// <param name="excludeUserId">The user ID to exclude from the check (typically the current user).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>True if the email is in use by another user; otherwise, false.</returns>
+    Task<bool> IsEmailInUseAsync(string email, Guid excludeUserId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Checks if a username is already in use by another user, excluding a specified user ID.
+    /// </summary>
+    /// <param name="username">The username to check.</param>
+    /// <param name="excludeUserId">The user ID to exclude from the check (typically the current user).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>True if the username is in use by another user; otherwise, false.</returns>
+    Task<bool> IsUsernameInUseAsync(string username, Guid excludeUserId, CancellationToken cancellationToken);
+    
 }
