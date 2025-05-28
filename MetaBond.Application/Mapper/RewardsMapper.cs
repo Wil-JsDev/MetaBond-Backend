@@ -11,11 +11,11 @@ public static class RewardsMapper
         return new RewardsWithUserDTos(
 
             RewardsId: x.Id,
-            User: new UserRewardsDTos(
+            User: (x.User != null ? new UserRewardsDTos(
                 UserId: x.User!.Id,
                 FirstName: x.User.FirstName,
                 LastName: x.User.LastName
-            ),
+            ) : null)!,
             Description: x.Description,
             PointAwarded: x.PointAwarded,
             DateAwarded: x.DateAwarded
