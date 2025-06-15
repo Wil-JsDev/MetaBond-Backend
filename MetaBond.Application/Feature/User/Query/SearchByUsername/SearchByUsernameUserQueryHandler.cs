@@ -22,7 +22,7 @@ internal sealed class SearchByUsernameUserQueryHandler(
         if (request != null)
         {
             var username = await decoratedCache.GetOrCreateAsync(
-                $"get-by-username-{request.Username}",
+                $"search-username-{request.Username}",
                 async () => await userRepository.SearchUsernameAsync(request.Username!, cancellationToken), 
                 cancellationToken: cancellationToken
             );
