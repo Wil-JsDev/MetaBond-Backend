@@ -95,4 +95,12 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             .AsSplitQuery()
             .FirstOrDefaultAsync(us =>  us.Id == userId, cancellationToken);
     }
+
+    public async Task UpdatePasswordAsync(User user, string newHashedPassword, CancellationToken cancellationToken)
+    {
+        user.Password = newHashedPassword;
+        _metaBondContext.Set<User>().Update(user);
+        await _metaBondContext.SaveChangesAsync(cancellationToken);
+    }
+    
 }

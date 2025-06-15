@@ -100,4 +100,12 @@ public interface IUserRepository : IGenericRepository<User>
     /// <returns>True if the username is in use by another user; otherwise, false.</returns>
     Task<bool> IsUsernameInUseAsync(string username, Guid excludeUserId, CancellationToken cancellationToken);
     
+    /// <summary>
+    /// Updates the password of the specified user with the provided new hashed password.
+    /// </summary>
+    /// <param name="user">The user whose password will be updated.</param>
+    /// <param name="newHashedPassword">The new password, already hashed.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task UpdatePasswordAsync(User user, string newHashedPassword, CancellationToken cancellationToken);
 }
