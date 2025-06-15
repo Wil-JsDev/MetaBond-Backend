@@ -12,7 +12,8 @@ internal sealed class CreateUserCommandHandler(
     IUserRepository userRepository,
     ILogger<CreateUserCommandHandler> logger,
     ICloudinaryService cloudinaryService,
-    IEmailService emailService
+    IEmailService emailService,
+    IEmailConfirmationTokenService emailConfirmationTokenService
     ) :  
     ICommandHandler<CreateUserCommand, UserDTos>
 {
@@ -38,7 +39,7 @@ internal sealed class CreateUserCommandHandler(
             {
                 logger.LogWarning("Email {Email} already exists.", request.Email!);
                 
-                return ResultT<UserDTos>.Failure(Error.Failure("400", "Email already exists"));
+                return ResultT<UserDTos>.Failure(Error.Conflict("409", "Email already exists"));
             }
 
             var userWithUsername = await userRepository.UsernameExistsAsync(request.Username!, cancellationToken);
@@ -46,7 +47,7 @@ internal sealed class CreateUserCommandHandler(
             {
                 logger.LogWarning("Username {Username} already exists.", request.Username!);
                 
-                return ResultT<UserDTos>.Failure(Error.Failure("400", "Username already exists"));
+                return ResultT<UserDTos>.Failure(Error.Conflict("409", "Username already exists"));
             }
             
             Domain.Models.User user = new()
@@ -62,10 +63,14 @@ internal sealed class CreateUserCommandHandler(
             
             await userRepository.CreateAsync(user, cancellationToken);
 
+            var token = await emailConfirmationTokenService.GenerateTokenAsync(user.Id,cancellationToken);
+            
+            string code = token.Value;
+            
             await emailService.SendEmailAsync(new EmailRequestDTo(
                 To: request.Email,
-                Body:"",
-                Subject: String.Empty
+                Body:EmailTemplates.ConfirmAccountEmailHtml(code),
+                Subject: "Confirm Account"
             ));
 
             UserDTos userDTos = new(
@@ -78,8 +83,9 @@ internal sealed class CreateUserCommandHandler(
             
             return  ResultT<UserDTos>.Success(userDTos); 
         }
-        logger.LogWarning("");
         
-        return ResultT<UserDTos>.Failure(Error.Failure("400",""));
+        logger.LogWarning("CreateUserCommand request was null.");
+        
+        return ResultT<UserDTos>.Failure(Error.Failure("400", "Invalid request: CreateUserCommand cannot be null."));
     }
 }
