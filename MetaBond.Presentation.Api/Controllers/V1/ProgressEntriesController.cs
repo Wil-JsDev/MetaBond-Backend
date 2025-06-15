@@ -9,6 +9,7 @@ using MetaBond.Application.Feature.ProgressEntry.Query.GetCountByBoard;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetDateRange;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetOrderByDescription;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetOrderById;
+using MetaBond.Application.Feature.ProgressEntry.Query.GetProgressEntriesWithAuthor;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetRecent;
 using MetaBond.Application.Feature.ProgressEntry.Query.Pagination;
 using MetaBond.Domain;
@@ -176,5 +177,14 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result.Value);
         }
 
+        [HttpGet("{progressEntriesId}/with-author")]
+        public async Task<IActionResult> GetProgressEntriesWithAuthorAsync([FromRoute]  Guid progressEntriesId, CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new GetProgressEntriesWithAuthorsQuery{ProgressEntryId =  progressEntriesId },cancellationToken);
+            if(!result.IsSuccess)
+                return BadRequest(result.Error);
+            
+            return Ok(result.Value);
+        }
     }
 }
