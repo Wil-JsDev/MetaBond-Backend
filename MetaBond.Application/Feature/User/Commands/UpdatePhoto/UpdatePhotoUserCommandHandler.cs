@@ -27,7 +27,7 @@ internal sealed class UpdatePhotoUserCommandHandler(
             {
                 logger.LogError($"User with id {request.UserId} not found", request.UserId);
                 
-                return ResultT<string>.Failure(Error.Failure("404", "User not found"));
+                return ResultT<string>.Failure(Error.NotFound("404", "User not found"));
             }
             
             if (request.ImageFile == null || request.ImageFile!.Length == 0)
