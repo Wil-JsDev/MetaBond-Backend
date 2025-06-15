@@ -25,46 +25,47 @@ internal sealed class GetUserWithFriendshipByIdQueryHandler(
             var user = await userRepository.GetByIdAsync(request.UserId ?? Guid.Empty);
             if (user == null)
             {
-                logger.LogError("User with id: {UserId} not found", request.UserId);
-                
-                return ResultT<UserWithFriendshipDTos>.Failure(Error.NotFound("404",""));
+                logger.LogError("User with ID: {UserId} not found.", request.UserId);
+        
+                return ResultT<UserWithFriendshipDTos>.Failure(Error.NotFound("404", "User not found."));
             }
-            
-            var userWithFriendship = await decoratedCache.GetOrCreateAsync($"get-user-with-friendship-{request.UserId}", 
+
+            var userWithFriendship = await decoratedCache.GetOrCreateAsync(
+                $"get-user-with-friendship-{request.UserId}", 
                 async () => await userRepository.GetUserWithFriendshipsAsync(request.UserId ?? Guid.Empty, cancellationToken), 
                 cancellationToken: cancellationToken);
 
-            
             var requesterFriendships = userWithFriendship!.ReceivedFriendRequests!.Select(x => new RequesterFriendshipDTos(
                 FriendshipId: x.Id,
-                RequesterId: x.RequesterId ??  Guid.Empty,
-                Username: x.Requester!.Username ??  string.Empty,
+                RequesterId: x.RequesterId ?? Guid.Empty,
+                Username: x.Requester!.Username ?? string.Empty,
                 StatusFriendship: x.Status
             )).ToList();
 
             var addresseeFriendships = userWithFriendship.SentFriendRequests!.Select(x => new AddresseeFriendshipDTos(
                 FriendshipId: x.Id,
-                AddresseeId: x.AddresseeId ??  Guid.Empty,
-                Username: x.Addressee!.Username ??  string.Empty,
+                AddresseeId: x.AddresseeId ?? Guid.Empty,
+                Username: x.Addressee!.Username ?? string.Empty,
                 StatusFriendship: x.Status
             )).ToList();
-            
+
             UserWithFriendshipDTos userWithFriendshipDTos = new
             (
-                UserId:  userWithFriendship!.Id,
+                UserId: userWithFriendship.Id,
                 FirstName: userWithFriendship.FirstName,
                 LastName: userWithFriendship.LastName,
-                Photo:  userWithFriendship.Photo,
+                Photo: userWithFriendship.Photo,
                 Requester: requesterFriendships,
                 Addressee: addresseeFriendships
             );
-        
-            logger.LogInformation("");
-            
+
+            logger.LogInformation("User with ID: {UserId} successfully retrieved along with friendships.", request.UserId);
+    
             return ResultT<UserWithFriendshipDTos>.Success(userWithFriendshipDTos);
         }
-        logger.LogWarning("");
 
-        return ResultT<UserWithFriendshipDTos>.Failure(Error.Failure("",""));
+        logger.LogWarning("The request object was null when trying to retrieve user with friendships.");
+
+        return ResultT<UserWithFriendshipDTos>.Failure(Error.Failure("400", "Invalid request. The request payload cannot be null."));
     }
 }
