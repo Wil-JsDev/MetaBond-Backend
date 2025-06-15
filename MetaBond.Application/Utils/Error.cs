@@ -55,4 +55,13 @@ public class Error
     /// <returns>An instance of <see cref="Error"/> representing a not found error.</returns>
     public static Error NotFound(string code, string description) =>
         new Error(code, description, ErrorType.NotFound);
+    
+    /// <summary>
+    /// Creates a conflict error, typically used when a resource already exists or there is a data conflict.
+    /// </summary>
+    /// <param name="code">The code identifying the conflict error.</param>
+    /// <param name="description">A description of the conflict.</param>
+    /// <returns>An instance of <see cref="Error"/> representing a conflict.</returns>
+    public static Error Conflict(string code, string description) =>
+        new Error(code, description, ErrorType.Conflict);
 }
