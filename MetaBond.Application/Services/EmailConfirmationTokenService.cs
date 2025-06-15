@@ -87,6 +87,21 @@ public class EmailConfirmationTokenService(
 
         return Result.Success();
     }
+    
+    public async Task<Result> IsCodeAvailableAsync(string code, CancellationToken cancellationToken)
+    {
+        var codeIsUsed = await emailConfirmationTokenRepository.IsCodeUnusedAsync(code, cancellationToken);
+        if (codeIsUsed)
+        {
+            logger.LogWarning("Code '{Code}' has already been used.", code);
+            
+            return Result.Failure(Error.Conflict("409", "The code has already been used."));
+        }
+        
+        logger.LogInformation("Code '{Code}' is valid and available.", code);
+        
+        return Result.Success();
+    }
 
     public async Task<Result> ConfirmAccountAsync(Guid userId, string token, CancellationToken cancellationToken)
     {
