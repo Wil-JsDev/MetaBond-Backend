@@ -6,8 +6,9 @@ public  sealed class UpdatePasswordUserValidator : AbstractValidator<UpdatePassw
 {
     public UpdatePasswordUserValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required.")
+            .EmailAddress().WithMessage("Email format is invalid.");
         
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("Password is required.")
@@ -17,7 +18,7 @@ public  sealed class UpdatePasswordUserValidator : AbstractValidator<UpdatePassw
             .NotEmpty().WithMessage("Password confirmation is required.")
             .Equal(x => x.NewPassword).WithMessage("Password confirmation must match the new password.");
 
-        RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("Recovery token is required.");
+        RuleFor(x => x.Code)
+            .NotEmpty().WithMessage("Recovery code is required.");
     }
 }
