@@ -59,4 +59,16 @@ public interface IEmailConfirmationTokenRepository
     /// <param name="tokenCode">The token string to mark as used.</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     Task MarkTokenAsUsedAsync(string tokenCode, CancellationToken cancellationToken);
+
+    
+    /// <summary>
+    /// Checks if the specified email confirmation code exists and has not been used.
+    /// </summary>
+    /// <param name="code">The email confirmation code to validate.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains 
+    /// <c>true</c> if the code exists and has not been used; otherwise, <c>false</c>.
+    /// </returns>
+    Task<bool> IsCodeUnusedAsync(string code, CancellationToken cancellationToken);
 }

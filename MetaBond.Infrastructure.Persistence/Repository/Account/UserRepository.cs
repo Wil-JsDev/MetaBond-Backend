@@ -42,6 +42,27 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             
     }
 
+    public async Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return (await _metaBondContext.Set<User>()
+            .AsNoTracking()
+            .Include(s => s.Interests)!
+                .ThenInclude(s => s.Interest)
+            .FirstOrDefaultAsync(us => us.Id == userId, cancellationToken))!;
+    }
+
+    public async Task<bool> IsEmailInUseAsync(string email, Guid excludeUserId, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(us => us.Email == email &&  us.Id != excludeUserId, 
+            cancellationToken);
+    }
+
+    public async Task<bool> IsUsernameInUseAsync(string username, Guid excludeUserId, CancellationToken cancellationToken)
+    {
+        return await ValidateAsync(us => us.Username == username &&  us.Id != excludeUserId, 
+            cancellationToken);
+    }
+
     public async Task<PagedResult<User>> GetPagedUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
        var totalRecord = await _metaBondContext.Set<User>().AsNoTracking().CountAsync(cancellationToken);
@@ -69,8 +90,17 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             .AsNoTracking()
             .Include(ep => ep.ReceivedFriendRequests)!
                 .ThenInclude(ef => ef.Requester)
-            .Include(ep => ep.ReceivedFriendRequests)!
-                .ThenInclude(ef => ef.Requester)
+            .Include(ep => ep.SentFriendRequests)!
+                .ThenInclude(ef => ef.Addressee)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(us =>  us.Id == userId, cancellationToken);
     }
+
+    public async Task UpdatePasswordAsync(User user, string newHashedPassword, CancellationToken cancellationToken)
+    {
+        user.Password = newHashedPassword;
+        _metaBondContext.Set<User>().Update(user);
+        await _metaBondContext.SaveChangesAsync(cancellationToken);
+    }
+    
 }

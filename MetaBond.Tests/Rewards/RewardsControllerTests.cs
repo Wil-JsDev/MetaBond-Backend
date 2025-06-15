@@ -27,6 +27,7 @@ public class RewardsControllerTests
         CreateRewardsCommand createRewardsCommand = new()
         {
             Description = "New Description",
+            UserId = Guid.NewGuid(),
             PointAwarded = 12
         };
 

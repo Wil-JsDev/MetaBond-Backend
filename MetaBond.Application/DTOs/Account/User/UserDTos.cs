@@ -6,6 +6,5 @@ public sealed record UserDTos
     string? FirstName,
     string? LastName,
     string? Username,
-    string? Photo,
-    bool IsEmailConfirmed
+    string? Photo
 );

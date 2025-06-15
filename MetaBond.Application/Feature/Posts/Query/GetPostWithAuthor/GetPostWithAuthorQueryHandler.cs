@@ -40,13 +40,14 @@ internal sealed class GetPostWithAuthorQueryHandler(
                 Title: x.Title,
                 Content: x.Content,
                 ImageUrl: x.Image,
-                CreatedBy: new UserPostsDTos(
+                CreatedBy: x.CreatedBy != null ? 
+                new UserPostsDTos(
                     UserId: x.CreatedBy!.Id,
                     Username: x.CreatedBy.Username,
                     FirstName: x.CreatedBy.FirstName,
                     LastName: x.CreatedBy.LastName,
                     Photo: x.CreatedBy.Photo
-                ),
+                ) : null,
                 CommunitiesId: x.CommunitiesId
             ));
 

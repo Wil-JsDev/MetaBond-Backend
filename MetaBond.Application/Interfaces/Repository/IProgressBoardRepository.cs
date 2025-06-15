@@ -1,25 +1,59 @@
 ﻿using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MetaBond.Application.Interfaces.Repository
+namespace MetaBond.Application.Interfaces.Repository;
+
+/// <summary>
+/// Repository interface for managing progress boards, including retrieval, pagination, and relationships with other entities.
+/// </summary>
+public interface IProgressBoardRepository : IGenericRepository<ProgressBoard>
 {
-    public interface IProgressBoardRepository : IGenericRepository<ProgressBoard>
-    {
-        Task<PagedResult<ProgressBoard>> GetPagedBoardsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+    /// <summary>
+    /// Retrieves a paginated list of progress boards.
+    /// </summary>
+    /// <param name="pageNumber">The page number to retrieve.</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+    /// <returns>A paginated result of progress boards.</returns>
+    Task<PagedResult<ProgressBoard>> GetPagedBoardsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressBoard>> GetRecentBoardsAsync(DateTime dateTime, CancellationToken cancellationToken);
+    /// <summary>
+    /// Retrieves progress boards created after a specific date.
+    /// </summary>
+    /// <param name="dateTime">The minimum creation date of the boards to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+    /// <returns>A collection of recently created progress boards.</returns>
+    Task<IEnumerable<ProgressBoard>> GetRecentBoardsAsync(DateTime dateTime, CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressBoard>> GetBoardsByDateRangeAsync(DateTime startTime, DateTime endTime, CancellationToken cancellationToken);
+    /// <summary>
+    /// Retrieves progress boards within a specified date range.
+    /// </summary>
+    /// <param name="startTime">The start date of the range.</param>
+    /// <param name="endTime">The end date of the range.</param>
+    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+    /// <returns>A collection of progress boards created within the given date range.</returns>
+    Task<IEnumerable<ProgressBoard>> GetBoardsByDateRangeAsync(DateTime startTime, DateTime endTime, CancellationToken cancellationToken);
 
-        Task<int> CountBoardsAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// Counts the total number of progress boards.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+    /// <returns>The total number of progress boards.</returns>
+    Task<int> CountBoardsAsync(CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressBoard>> GetBoardsWithEntriesAsync(Guid id,CancellationToken cancellationToken);
+    /// <summary>
+    /// Retrieves a progress board with its associated progress entries.
+    /// </summary>
+    /// <param name="id">The ID of the progress board.</param>
+    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+    /// <returns>A collection containing the board with its entries.</returns>
+    Task<IEnumerable<ProgressBoard>> GetBoardsWithEntriesAsync(Guid id, CancellationToken cancellationToken);
 
-        Task<IEnumerable<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId, CancellationToken cancellationToken);
-    }
+    /// <summary>
+    /// Retrieves a progress board along with information about its author.
+    /// </summary>
+    /// <param name="progressBoardId">The ID of the progress board.</param>
+    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
+    /// <returns>A collection containing the board with its author data.</returns>
+    Task<IEnumerable<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId, CancellationToken cancellationToken);
 }

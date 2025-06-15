@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Posts.Query.GetFilterRecent;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
 using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
+using MetaBond.Application.Feature.Posts.Query.GetPostWithAuthor;
 using MetaBond.Application.Feature.Posts.Query.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -142,6 +143,15 @@ namespace MetaBond.Presentation.Api.Controllers.V1
             return Ok(result.Value);
         }
 
-
+        [HttpGet("{postsId}/with-author")]
+        public async Task<IActionResult> GetPostsWithAuthorAsync([FromRoute]  Guid postsId, CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new GetPostWithAuthorQuery{PostsId = postsId},cancellationToken);
+            if(!result.IsSuccess)
+                return NotFound(result.Error);
+            
+            return Ok(result.Value);
+        }
+        
     }
 }
