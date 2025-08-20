@@ -11,13 +11,13 @@ internal sealed class DeleteRewardsCommandHandler(
     : ICommandHandler<DeleteRewardsCommand, Guid>
 {
     public async Task<ResultT<Guid>> Handle(
-        DeleteRewardsCommand request, 
+        DeleteRewardsCommand request,
         CancellationToken cancellationToken)
     {
         var reward = await repository.GetByIdAsync(request.RewardsId);
         if (reward != null)
         {
-            await repository.DeleteAsync(reward,cancellationToken);
+            await repository.DeleteAsync(reward, cancellationToken);
 
             logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Id);
 

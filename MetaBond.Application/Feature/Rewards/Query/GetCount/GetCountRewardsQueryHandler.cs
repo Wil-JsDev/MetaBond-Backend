@@ -18,19 +18,24 @@ internal sealed class GetCountRewardsQueryHandler(
     {
         if (request != null)
         {
-            var rewardsCount = await decoratedCache.GetOrCreateAsync(
-                "rewards-count",
-                async () => await repository.CountRewardsAsync(cancellationToken), 
-                cancellationToken: cancellationToken);
-            
+            var rewardsCount = await repository.CountRewardsAsync(cancellationToken);
+
+            if (rewardsCount == 0)
+            {
+                logger.LogWarning("No rewards found.");
+
+                return ResultT<int>.Failure(Error.NotFound("400", "No rewards found."));
+            }
+
             logger.LogInformation("Total rewards counted: {Count}.", rewardsCount);
 
             return ResultT<int>.Success(rewardsCount);
         }
 
-        logger.LogWarning("Failed to count rewards: The request was invalid or encountered an issue during processing.");
+        logger.LogWarning(
+            "Failed to count rewards: The request was invalid or encountered an issue during processing.");
 
-        return ResultT<int>.Failure(Error.NotFound("400", "Unable to count rewards due to an invalid request or processing error."));
+        return ResultT<int>.Failure(Error.NotFound("400",
+            "Unable to count rewards due to an invalid request or processing error."));
     }
-
 }
