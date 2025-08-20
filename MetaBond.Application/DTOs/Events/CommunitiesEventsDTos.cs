@@ -1,5 +1,5 @@
 ﻿namespace MetaBond.Application.DTOs.Events;
-public sealed record CommunitiesDTos
+public sealed record CommunitiesEventsDTos
 (
     Guid? Id,
     string? Description,
