@@ -1,4 +1,5 @@
 using MediatR;
+using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Feature.Rewards.Commands.Create;
 using MetaBond.Application.Feature.Rewards.Commands.Delete;
@@ -6,6 +7,7 @@ using MetaBond.Application.Feature.Rewards.Commands.Update;
 using MetaBond.Application.Feature.Rewards.Query.GetById;
 using MetaBond.Application.Feature.Rewards.Query.GetRange;
 using MetaBond.Application.Feature.Rewards.Query.GetTop;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Domain.Models;
@@ -21,7 +23,6 @@ public class RewardsControllerTests
     [Fact]
     public void CreateRewards_Test()
     {
-        
         // Arrange
 
         CreateRewardsCommand createRewardsCommand = new()
@@ -34,33 +35,31 @@ public class RewardsControllerTests
         RewardsDTos rewardsDTos = new
         (
             RewardsId: Guid.NewGuid(),
-            UserId: Guid.NewGuid(), 
+            UserId: Guid.NewGuid(),
             Description: createRewardsCommand.Description,
             PointAwarded: createRewardsCommand.PointAwarded,
             DateAwarded: DateTime.Now
         );
-        
+
         var expectedResult = ResultT<RewardsDTos>.Success(rewardsDTos);
 
         _mediator.Setup(m => m.Send(createRewardsCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var rewardsController = new RewardsController(_mediator.Object);
-        
+
         // Act
-        
+
         var resultController = rewardsController.AddAsync(createRewardsCommand, CancellationToken.None);
 
         // Assert
 
         Assert.NotNull(resultController);
-        
     }
 
     [Fact]
     public void DeleteRewards_Test()
     {
-        
         // Arrange
 
         DeleteRewardsCommand command = new()
@@ -69,11 +68,11 @@ public class RewardsControllerTests
         };
 
         var expectedResult = ResultT<Guid>.Success(command.RewardsId);
-        
+
         _mediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
-        
+
+
         var rewardsController = new RewardsController(_mediator.Object);
 
         // Act
@@ -81,15 +80,13 @@ public class RewardsControllerTests
         var resultController = rewardsController.DeleteAsync(command.RewardsId, CancellationToken.None);
 
         // Assert
-        
+
         Assert.NotNull(resultController);
-        
     }
 
     [Fact]
     public void UpdateRewards_Test()
     {
-        
         // Arrange
 
         UpdateRewardsCommand command = new()
@@ -98,7 +95,7 @@ public class RewardsControllerTests
             PointAwarded = 12,
             RewardsId = Guid.NewGuid()
         };
-        
+
         RewardsDTos rewardsDTos = new
         (
             RewardsId: command.RewardsId,
@@ -107,35 +104,33 @@ public class RewardsControllerTests
             PointAwarded: command.PointAwarded,
             DateAwarded: DateTime.Now
         );
-        
+
         var expectedResult = ResultT<RewardsDTos>.Success(rewardsDTos);
-        
+
         _mediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var rewardsController = new RewardsController(_mediator.Object);
-        
+
         // Act
-    
+
         var resultController = rewardsController.UpdateAsync(command, CancellationToken.None);
 
         // Assert
-        
+
         Assert.NotNull(resultController);
-        
     }
 
     [Fact]
     public void GetByIdRewards_Test()
     {
-        
         // Arrange
 
         GetByIdRewardsQuery query = new()
         {
             RewardsId = Guid.NewGuid()
         };
-        
+
         RewardsDTos rewardsDTos = new
         (
             RewardsId: query.RewardsId,
@@ -144,18 +139,18 @@ public class RewardsControllerTests
             PointAwarded: 12,
             DateAwarded: DateTime.Now
         );
-        
+
         var expectedResult = ResultT<RewardsDTos>.Success(rewardsDTos);
 
         _mediator.Setup(m => m.Send(query, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var rewardsController = new RewardsController(_mediator.Object);
-        
+
         // Act
 
         var resulController = rewardsController.GetByIdAsync(query.RewardsId, CancellationToken.None);
-        
+
         // Assert
 
         Assert.NotNull(resulController);
@@ -164,53 +159,13 @@ public class RewardsControllerTests
     [Fact]
     public void GetRangeRewards_Test()
     {
-        
         // Arrange
 
         GetByDateRangeRewardQuery query = new()
         {
             Range = DateRangeType.Month
         };
-        
-        IEnumerable<RewardsDTos> rewardsDTosEnumerable = new List<RewardsDTos>()
-        {
-            new RewardsDTos
-            (
-                RewardsId: Guid.NewGuid(),
-                UserId:  Guid.NewGuid(),
-                Description: "Description",
-                PointAwarded: 12,
-                DateAwarded: DateTime.Now
-            )
-        };
 
-        var expectedResult = ResultT<IEnumerable<RewardsDTos>>.Success(rewardsDTosEnumerable);
-        
-        _mediator.Setup(m => m.Send(query, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var rewardsController = new RewardsController(_mediator.Object);
-        
-        // Act
-
-        var resultController = rewardsController.GetDateRangeAsync(query.Range, CancellationToken.None);
-
-        // Assert
-        
-        Assert.NotNull(resultController);
-        
-    }
-
-    [Fact]
-    public void GetTopRewards_Test()
-    {
-        // Arrange
-
-        GetTopRewardsQuery query = new()
-        {
-            TopCount = 12
-        };
-        
         IEnumerable<RewardsDTos> rewardsDTosEnumerable = new List<RewardsDTos>()
         {
             new RewardsDTos
@@ -222,21 +177,86 @@ public class RewardsControllerTests
                 DateAwarded: DateTime.Now
             )
         };
-        
+
         var expectedResult = ResultT<IEnumerable<RewardsDTos>>.Success(rewardsDTosEnumerable);
-        
+
         _mediator.Setup(m => m.Send(query, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var rewardsController = new RewardsController(_mediator.Object);
-        
+
+        // Act
+
+        var resultController = rewardsController.GetDateRangeAsync(query.Range, CancellationToken.None);
+
+        // Assert
+
+        Assert.NotNull(resultController);
+    }
+
+    [Fact]
+    public void GetTopRewards_Test()
+    {
+        // Arrange
+
+        GetTopRewardsQuery query = new()
+        {
+            TopCount = 12
+        };
+
+        IEnumerable<RewardsWithUserDTos> rewardsWithUserDTosEnumerable = new List<RewardsWithUserDTos>()
+        {
+            new RewardsWithUserDTos
+            (
+                RewardsId: Guid.NewGuid(),
+                User: new UserRewardsDTos(
+                    UserId: Guid.NewGuid(),
+                    FirstName: "Carlos",
+                    LastName: "García"
+                ),
+                Description: "Por completar la meta semanal de aprendizaje",
+                PointAwarded: 50,
+                DateAwarded: DateTime.UtcNow.AddDays(-3)
+            ),
+            new RewardsWithUserDTos
+            (
+                RewardsId: Guid.NewGuid(),
+                User: new UserRewardsDTos(
+                    UserId: Guid.NewGuid(),
+                    FirstName: "Ana",
+                    LastName: "Martínez"
+                ),
+                Description: "Reconocimiento al usuario más activo del mes",
+                PointAwarded: 120,
+                DateAwarded: DateTime.UtcNow.AddDays(-10)
+            ),
+            new RewardsWithUserDTos
+            (
+                RewardsId: Guid.NewGuid(),
+                User: new UserRewardsDTos(
+                    UserId: Guid.NewGuid(),
+                    FirstName: "Luis",
+                    LastName: "Fernández"
+                ),
+                Description: "Por apoyar en la comunidad respondiendo preguntas",
+                PointAwarded: 80,
+                DateAwarded: DateTime.UtcNow.AddDays(-1)
+            )
+        };
+
+        var expectedResult = ResultT<IEnumerable<RewardsWithUserDTos>>.Success(rewardsWithUserDTosEnumerable);
+
+        _mediator.Setup(m => m.Send(query, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var rewardsController = new RewardsController(_mediator.Object);
+
         // Act
 
         var resultController = rewardsController.GetTopRewards(query.TopCount, CancellationToken.None);
-        
+
         // Assert
-        
+
         Assert.NotNull(resultController);
-        
     }
 }
