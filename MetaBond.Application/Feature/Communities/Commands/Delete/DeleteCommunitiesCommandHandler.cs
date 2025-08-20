@@ -15,7 +15,7 @@ internal sealed class DeleteCommunitiesCommandHandler(
         var communities = await communitiesRepository.GetByIdAsync(request.Id);
         if (communities != null)
         {
-            await communitiesRepository.DeleteAsync(communities,cancellationToken);
+            await communitiesRepository.DeleteAsync(communities, cancellationToken);
             logger.LogInformation("Community with ID {CommunityId} successfully deleted.", request.Id);
 
             return ResultT<Guid>.Success(request.Id);
