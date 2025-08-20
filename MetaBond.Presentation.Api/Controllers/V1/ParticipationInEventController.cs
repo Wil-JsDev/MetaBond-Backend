@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
 using MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
@@ -17,21 +18,32 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateParticipationInEventCommand createParticipation,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Create a new participation in an event",
+        Description = "Creates a new participation record in an event using the provided command data."
+    )]
+    public async Task<IActionResult> CreateAsync([FromBody] CreateParticipationInEventCommand createParticipation,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(createParticipation,cancellationToken);
-        if(!result.IsSuccess)
+        var result = await mediator.Send(createParticipation, cancellationToken);
+        if (!result.IsSuccess)
             return BadRequest(result.Error);
 
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpPut]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> UpdateAsync([FromBody] UpdateParticipationInEventCommand updateParticipationInEventCommand,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Update participation in an event",
+        Description = "Updates an existing participation record using the provided command data."
+    )]
+    public async Task<IActionResult> UpdateAsync(
+        [FromBody] UpdateParticipationInEventCommand updateParticipationInEventCommand,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(updateParticipationInEventCommand,cancellationToken);
-        if (!result.IsSuccess) 
+        var result = await mediator.Send(updateParticipationInEventCommand, cancellationToken);
+        if (!result.IsSuccess)
             return NotFound(result.Error);
 
         return Ok(result.Value);
@@ -39,11 +51,14 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
 
     [HttpGet("{id}")]
     [DisableRateLimiting]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get participation by ID",
+        Description = "Retrieves a specific participation record by its unique identifier."
+    )]
+    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var query = new GetByIdParticipationInEventQuery {ParticipationInEventId = id};
-
-        var result = await mediator.Send(query,cancellationToken);
+        var query = new GetByIdParticipationInEventQuery { ParticipationInEventId = id };
+        var result = await mediator.Send(query, cancellationToken);
         if (!result.IsSuccess)
             return NotFound(result.Error);
 
@@ -52,12 +67,16 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
 
     [HttpGet("{participationInEventId}/events")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> GetParticipationInEventDetailsAsync([FromRoute] Guid participationInEventId, CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get events for a participation",
+        Description = "Retrieves the details of events associated with a specific participation."
+    )]
+    public async Task<IActionResult> GetParticipationInEventDetailsAsync([FromRoute] Guid participationInEventId,
+        CancellationToken cancellationToken)
     {
-        var query = new GetEventsQuery { ParticipationInEventId = participationInEventId};
-
+        var query = new GetEventsQuery { ParticipationInEventId = participationInEventId };
         var result = await mediator.Send(query, cancellationToken);
-        if(!result.IsSuccess)
+        if (!result.IsSuccess)
             return NotFound(result.Error);
 
         return Ok(result.Value);
@@ -65,15 +84,20 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
 
     [HttpGet("pagination")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get paginated participation records",
+        Description =
+            "Retrieves a paginated list of participation records based on the specified page number and page size."
+    )]
+    public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
-        var query = new GetPagedParticipationInEventQuery()
+        var query = new GetPagedParticipationInEventQuery
         {
             PageNumber = pageNumber,
             PageSize = pageSize
         };
-
-        var result = await mediator.Send(query,cancellationToken);
+        var result = await mediator.Send(query, cancellationToken);
         if (!result.IsSuccess)
             return BadRequest(result.Error);
 
