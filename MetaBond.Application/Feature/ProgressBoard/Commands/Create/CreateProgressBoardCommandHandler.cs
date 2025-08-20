@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -15,9 +16,6 @@ internal sealed class CreateProgressBoardCommandHandler(
         CreateProgressBoardCommand request,
         CancellationToken cancellationToken)
     {
-
-        if (request != null)
-        {
             Domain.Models.ProgressBoard progressBoard = new()
             {
                 Id = Guid.NewGuid(),
@@ -29,20 +27,8 @@ internal sealed class CreateProgressBoardCommandHandler(
 
             logger.LogInformation("Progress board created successfully with ID: {ProgressBoardId}", progressBoard.Id);
 
-            ProgressBoardDTos progressBoardDTos = new
-            (
-                ProgressBoardId: progressBoard.Id,
-                CommunitiesId: progressBoard.CommunitiesId,
-                UserId: progressBoard.UserId,
-                CreatedAt: progressBoard.CreatedAt,
-                UpdatedAt: progressBoard.UpdatedAt
-            );
+            var progressBoardDTos = ProgressBoardMapper.ProgressBoardToDto(progressBoard);
 
             return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
-
-        }
-        logger.LogError("Failed to create progress board. Request is null.");
-
-        return ResultT<ProgressBoardDTos>.Failure(Error.Failure("400", "Invalid request data"));
     }
 }
