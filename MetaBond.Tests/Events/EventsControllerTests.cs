@@ -287,7 +287,7 @@ public class EventsControllerTests
             Id = Guid.NewGuid()
         };
 
-        IEnumerable<CommunitiesDTos> communitiesDTosEnumerable = new List<CommunitiesDTos>
+        IEnumerable<CommunitiesEventsDTos> communitiesDTosEnumerable = new List<CommunitiesEventsDTos>
         {
             new(
                 Guid.NewGuid(),
@@ -315,7 +315,7 @@ public class EventsControllerTests
             ),
         };
         
-        var expectedResult = ResultT<IEnumerable<CommunitiesDTos>>.Success(communitiesDTosEnumerable);
+        var expectedResult = ResultT<IEnumerable<CommunitiesEventsDTos>>.Success(communitiesDTosEnumerable);
         
         _mediator.Setup(m => m.Send(eventsDetailsQuery, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);

@@ -2,6 +2,7 @@
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -15,53 +16,43 @@ internal sealed class GetPostsByIdCommunitiesQueryHandler(
     : IQueryHandler<GetPostsByIdCommunitiesQuery, IEnumerable<PostsWithCommunitiesDTos>>
 {
     public async Task<ResultT<IEnumerable<PostsWithCommunitiesDTos>>> Handle(
-        GetPostsByIdCommunitiesQuery request, 
+        GetPostsByIdCommunitiesQuery request,
         CancellationToken cancellationToken)
     {
         var posts = await postsRepository.GetByIdAsync(request.PostsId);
-        if (posts == null)
+        if (posts is null)
         {
             logger.LogError("Post with ID '{PostsId}' not found.", request.PostsId);
 
-            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
+            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.NotFound("404",
+                $"{request.PostsId} not found"));
         }
 
         string cacheKey = $"get-posts-by-id-details-{request.PostsId}";
         var postsWithCommunities = await decoratedCache.GetOrCreateAsync(
             cacheKey,
-            async () => await postsRepository.GetPostsByIdWithCommunitiesAsync(
-                request.PostsId, 
-                cancellationToken), 
+            async () =>
+            {
+                var postsWithCommunity = await postsRepository.GetPostsByIdWithCommunitiesAsync(
+                    request.PostsId,
+                    cancellationToken);
+
+                var postsWithCommunitiesDTos = postsWithCommunity.ToPostsWithCommunitiesDtos();
+
+                return postsWithCommunitiesDTos;
+            },
             cancellationToken: cancellationToken);
-        
-        IEnumerable<Domain.Models.Posts> withCommunities = postsWithCommunities.ToList();
-        if (!withCommunities.Any())
+
+        IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTosEnumerable = postsWithCommunities.ToList();
+        if (!postsWithCommunitiesDTosEnumerable.Any())
         {
             logger.LogError("No communities found for post with ID '{PostsId}'.", request.PostsId);
 
-            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.Failure("400","The list is empty"));
+            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.Failure("400", "The list is empty"));
         }
 
-        IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTos = withCommunities.Select(x => new PostsWithCommunitiesDTos
-        (
-            PostsId: x.Id,
-            Title: x.Title,
-            Content: x.Content,
-            ImageUrl: x.Image,
-            Communities: x.Communities != null 
-                ?
-                [
-                    new CommunitySummaryDto(
-                        x.Communities.Description,
-                        x.Communities.Category,
-                        x.Communities.CreateAt
-                    )
-                ] : new List<CommunitySummaryDto>(),
-            CreatedAt: x.CreatedAt
-        ));
-
-        IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTosEnumerable = postsWithCommunitiesDTos.ToList();
-        logger.LogInformation("Successfully retrieved {Count} posts with their associated communities for post ID '{PostsId}'.", 
+        logger.LogInformation(
+            "Successfully retrieved {Count} posts with their associated communities for post ID '{PostsId}'.",
             postsWithCommunitiesDTosEnumerable.Count(), request.PostsId);
 
         return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(postsWithCommunitiesDTosEnumerable);

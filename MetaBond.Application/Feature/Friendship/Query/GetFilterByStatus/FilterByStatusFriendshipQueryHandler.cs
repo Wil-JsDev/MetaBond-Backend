@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.Extensions.Caching.Distributed;
@@ -15,44 +16,45 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
     : IQueryHandler<FilterByStatusFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
     public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
-        FilterByStatusFriendshipQuery request, 
+        FilterByStatusFriendshipQuery request,
         CancellationToken cancellationToken)
     {
         var exists = await friendshipRepository.ValidateAsync(x => x.Status == request.Status, cancellationToken);
         if (!exists)
         {
             logger.LogError("No active friendship found with status '{Status}'.", request.Status);
-    
-            return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.NotFound("404", $"No active friendship exists with status '{request.Status}'.")); 
+
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.NotFound("404",
+                $"No active friendship exists with status '{request.Status}'."));
         }
-        
+
         var getStatusFriendship = GetStatusFriendship();
         if (getStatusFriendship.TryGetValue((request.Status), out var statusFilter))
         {
             string cacheKey = $"FilterStatusFriendship-{request.Status}";
             var friendshipStatusFilter = await decoratedCache.GetOrCreateAsync(
                 cacheKey,
-                async () => await statusFilter(cancellationToken), 
+                async () =>
+                {
+                    var status = await statusFilter(cancellationToken);
+                    
+                    var friendshipDTos = status.Select(FriendshipMapper.MapFriendshipDTos);
+
+                    return friendshipDTos;
+                },
                 cancellationToken: cancellationToken);
-            IEnumerable<Domain.Models.Friendship> friendships = friendshipStatusFilter.ToList();
-            if (!friendships.Any())
+
+            var friendshipDTosEnumerable = friendshipStatusFilter.ToList();
+            
+            if (!friendshipDTosEnumerable.Any())
             {
                 logger.LogError("No friendships found with status: {Status}", request.Status);
 
-                return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "No friendships found with the given status"));
+                return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400",
+                    "No friendships found with the given status"));
             }
 
-            var friendshipDTos = friendships.Select(x => new FriendshipDTos
-            (
-                FriendshipId: x.Id,
-                Status: x.Status,
-                RequesterId: x.RequesterId,
-                AddresseeId: x.AddresseeId,
-                CreatedAt: x.CreateAdt
-            ));
-
-            IEnumerable<FriendshipDTos> friendshipDTosEnumerable = friendshipDTos.ToList();
-            logger.LogInformation("Successfully retrieved {Count} friendships with status: {Status}", 
+            logger.LogInformation("Successfully retrieved {Count} friendships with status: {Status}",
                 friendshipDTosEnumerable.Count(), request.Status);
 
             return ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
@@ -64,14 +66,29 @@ internal sealed class FilterByStatusFriendshipQueryHandler(
     }
 
     #region Private Methods
-    private Dictionary<Status, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>> GetStatusFriendship()
+
+    private Dictionary<Status, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>>
+        GetStatusFriendship()
     {
         return new Dictionary<Status, Func<CancellationToken, Task<IEnumerable<Domain.Models.Friendship>>>>()
         {
-            { (Status.Pending), async cancellationToken => await friendshipRepository.GetFilterByStatusAsync (Status.Pending,cancellationToken)},
-            {(Status.Accepted), async cancellationToken => await friendshipRepository.GetFilterByStatusAsync (Status.Accepted,cancellationToken)},
-            {(Status.Blocked), async cancellationToken => await friendshipRepository.GetFilterByStatusAsync (Status.Blocked,cancellationToken)}
+            {
+                (Status.Pending),
+                async cancellationToken =>
+                    await friendshipRepository.GetFilterByStatusAsync(Status.Pending, cancellationToken)
+            },
+            {
+                (Status.Accepted),
+                async cancellationToken =>
+                    await friendshipRepository.GetFilterByStatusAsync(Status.Accepted, cancellationToken)
+            },
+            {
+                (Status.Blocked),
+                async cancellationToken =>
+                    await friendshipRepository.GetFilterByStatusAsync(Status.Blocked, cancellationToken)
+            }
         };
     }
+
     #endregion
 }

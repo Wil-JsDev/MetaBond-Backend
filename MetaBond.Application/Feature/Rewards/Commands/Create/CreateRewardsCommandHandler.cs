@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -12,10 +13,9 @@ internal sealed class CreateRewardsCommandHandler(
     : ICommandHandler<CreateRewardsCommand, RewardsDTos>
 {
     public async Task<ResultT<RewardsDTos>> Handle(
-        CreateRewardsCommand request, 
+        CreateRewardsCommand request,
         CancellationToken cancellationToken)
     {
-
         if (request != null)
         {
             Domain.Models.Rewards rewardsModel = new()
@@ -30,20 +30,13 @@ internal sealed class CreateRewardsCommandHandler(
 
             logger.LogInformation("Reward created successfully with ID: {RewardsId}", rewardsModel.Id);
 
-            RewardsDTos rewardsDTos = new
-            (
-                RewardsId: rewardsModel.Id,
-                UserId: rewardsModel.UserId,
-                Description: rewardsModel.Description,
-                PointAwarded: rewardsModel.PointAwarded,
-                DateAwarded: rewardsModel.DateAwarded
-            );
+            var rewardsDTos = RewardsMapper.ToDto(rewardsModel);
 
             return ResultT<RewardsDTos>.Success(rewardsDTos);
         }
 
         logger.LogError("Failed to create reward: invalid request data");
 
-        return ResultT<RewardsDTos>.Failure(Error.Failure("400","Invalid request"));
+        return ResultT<RewardsDTos>.Failure(Error.Failure("400", "Invalid request"));
     }
 }

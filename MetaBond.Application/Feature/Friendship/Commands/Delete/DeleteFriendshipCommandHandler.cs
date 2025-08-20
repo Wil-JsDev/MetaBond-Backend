@@ -11,13 +11,13 @@ internal sealed class DeleteFriendshipCommandHandler(
     : ICommandHandler<DeleteFriendshipCommand, Guid>
 {
     public async Task<ResultT<Guid>> Handle(
-        DeleteFriendshipCommand request, 
+        DeleteFriendshipCommand request,
         CancellationToken cancellationToken)
     {
         var friendship = await friendshipRepository.GetByIdAsync(request.Id);
         if (friendship != null)
         {
-            await friendshipRepository.DeleteAsync(friendship,cancellationToken);
+            await friendshipRepository.DeleteAsync(friendship, cancellationToken);
 
             logger.LogInformation("Friendship with ID: {FriendshipId} deleted successfully.", friendship.Id);
 
@@ -27,6 +27,5 @@ internal sealed class DeleteFriendshipCommandHandler(
         logger.LogError("Failed to delete friendship: ID {FriendshipId} not found.", request.Id);
 
         return ResultT<Guid>.Failure(Error.Failure("404", $"{request.Id} not found"));
-
     }
 }

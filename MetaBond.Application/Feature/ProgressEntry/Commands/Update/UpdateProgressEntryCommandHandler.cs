@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -25,19 +26,11 @@ internal sealed class UpdateProgressEntryCommandHandler(
             
             logger.LogInformation("Progress entry with ID {Id} successfully updated.", request.ProgressEntryId);
             
-            ProgressEntryDTos entryDTos = new
-            (
-                ProgressEntryId: progressEntry.Id,
-                ProgressBoardId: progressEntry.ProgressBoardId,
-                UserId: progressEntry.UserId,
-                Description: progressEntry.Description,
-                CreatedAt: progressEntry.CreatedAt,
-                UpdateAt: progressEntry.UpdateAt
-            );
+            var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry);
 
             logger.LogInformation("Returning updated progress entry data.");
 
-            return ResultT<ProgressEntryDTos>.Success(entryDTos);
+            return ResultT<ProgressEntryDTos>.Success(progressEntryDto);
         }
 
         logger.LogError("Progress entry with ID {Id} not found.", request.ProgressEntryId);

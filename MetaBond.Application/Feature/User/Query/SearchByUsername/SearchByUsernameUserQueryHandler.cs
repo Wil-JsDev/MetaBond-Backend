@@ -1,6 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.Interfaces.Repository.Account;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -11,46 +12,36 @@ internal sealed class SearchByUsernameUserQueryHandler(
     IUserRepository userRepository,
     ILogger<SearchByUsernameUserQueryHandler> logger,
     IDistributedCache decoratedCache
-    ) : 
+) :
     IQueryHandler<SearchByUsernameUserQuery, IEnumerable<UserDTos>>
 {
     public async Task<ResultT<IEnumerable<UserDTos>>> Handle(
-        SearchByUsernameUserQuery request, 
+        SearchByUsernameUserQuery request,
         CancellationToken cancellationToken)
     {
-
-        if (request != null)
-        {
-            var username = await decoratedCache.GetOrCreateAsync(
-                $"search-username-{request.Username}",
-                async () => await userRepository.SearchUsernameAsync(request.Username!, cancellationToken), 
-                cancellationToken: cancellationToken
-            );
-
-            IEnumerable<Domain.Models.User> enumerable = username.ToList();
-            if (!enumerable.Any())
+        var result = await decoratedCache.GetOrCreateAsync(
+            $"search-username-{request.Username}",
+            async () =>
             {
-                logger.LogWarning("User not found: {Username}", request.Username);
-        
-                return ResultT<IEnumerable<UserDTos>>.Failure(Error.NotFound("404", "User not found"));
-            }
+                var username = await userRepository.SearchUsernameAsync(request.Username!, cancellationToken);
 
-            IEnumerable<UserDTos> userDTo = enumerable.Select(x => new UserDTos
-            (
-                UserId: x.Id,
-                FirstName: x.FirstName,
-                LastName: x.LastName,
-                Username: x.Username,
-                Photo: x.Photo
-            ));
+                IEnumerable<UserDTos> userDTo = username.Select(UserMapper.MapUserDTos);
 
-            logger.LogInformation("User found successfully: {Username}", request.Username!);
-    
-            return ResultT<IEnumerable<UserDTos>>.Success(userDTo);
+                return userDTo;
+            },
+            cancellationToken: cancellationToken
+        );
+
+        List<UserDTos> enumerable = result.ToList();
+        if (!enumerable.Any())
+        {
+            logger.LogWarning("User not found: {Username}", request.Username);
+
+            return ResultT<IEnumerable<UserDTos>>.Failure(Error.NotFound("404", "User not found"));
         }
 
-        logger.LogWarning("Request object is null when trying to search for user.");
+        logger.LogInformation("User found successfully: {Username}", request.Username!);
 
-        return ResultT<IEnumerable<UserDTos>>.Failure(Error.Failure("400", "Invalid request: request cannot be null."));
+        return ResultT<IEnumerable<UserDTos>>.Success(enumerable);
     }
 }

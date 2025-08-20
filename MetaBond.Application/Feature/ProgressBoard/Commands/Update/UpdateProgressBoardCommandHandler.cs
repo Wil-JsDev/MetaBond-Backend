@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -12,34 +13,28 @@ internal sealed class UpdateProgressBoardCommandHandler(
     : ICommandHandler<UpdateProgressBoardCommand, ProgressBoardDTos>
 {
     public async Task<ResultT<ProgressBoardDTos>> Handle(
-        UpdateProgressBoardCommand request, 
+        UpdateProgressBoardCommand request,
         CancellationToken cancellationToken)
     {
-
         var progressBoard = await progressBoardRepository.GetByIdAsync(request.ProgressBoardId);
-        if (progressBoard != null)
+        if (progressBoard is null)
         {
-            progressBoard.CommunitiesId = request.CommunitiesId;
-            progressBoard.UpdatedAt = DateTime.UtcNow;
+            logger.LogError("Failed to update progress board. ID: {ProgressBoardId} not found.",
+                request.ProgressBoardId);
 
-            await progressBoardRepository.UpdateAsync(progressBoard,cancellationToken);
-
-            logger.LogInformation("Progress board with ID: {ProgressBoardId} updated successfully.", progressBoard.Id);
-
-            ProgressBoardDTos progressBoardDTos = new
-            (
-                ProgressBoardId: progressBoard.Id,
-                CommunitiesId: progressBoard.CommunitiesId,
-                UserId:  progressBoard.UserId,
-                CreatedAt: progressBoard.CreatedAt,
-                UpdatedAt: progressBoard.UpdatedAt
-            );
-
-            return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
-
+            return ResultT<ProgressBoardDTos>.Failure(Error.NotFound("404",
+                $"Progress board with ID {request.ProgressBoardId} not found"));
         }
-        logger.LogError("Failed to update progress board. ID: {ProgressBoardId} not found.", request.ProgressBoardId);
 
-        return ResultT<ProgressBoardDTos>.Failure(Error.NotFound("404", $"Progress board with ID {request.ProgressBoardId} not found"));
+        progressBoard.CommunitiesId = request.CommunitiesId;
+        progressBoard.UpdatedAt = DateTime.UtcNow;
+
+        await progressBoardRepository.UpdateAsync(progressBoard, cancellationToken);
+
+        logger.LogInformation("Progress board with ID: {ProgressBoardId} updated successfully.", progressBoard.Id);
+
+        var progressBoardDTos = ProgressBoardMapper.ProgressBoardToDto(progressBoard);
+
+        return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
     }
 }

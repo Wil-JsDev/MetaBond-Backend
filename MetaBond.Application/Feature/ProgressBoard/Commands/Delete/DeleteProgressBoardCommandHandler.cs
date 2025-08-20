@@ -11,23 +11,25 @@ namespace MetaBond.Application.Feature.ProgressBoard.Commands.Delete
         : ICommandHandler<DeleteProgressBoardCommand, Guid>
     {
         public async Task<ResultT<Guid>> Handle(
-            DeleteProgressBoardCommand request, 
+            DeleteProgressBoardCommand request,
             CancellationToken cancellationToken)
         {
-
             var progressBoard = await repository.GetByIdAsync(request.ProgressBoardId);
             if (progressBoard != null)
             {
-                await repository.DeleteAsync(progressBoard,cancellationToken);
+                await repository.DeleteAsync(progressBoard, cancellationToken);
 
-                logger.LogInformation("Progress board with ID: {ProgressBoardId} deleted successfully.", progressBoard.Id);
+                logger.LogInformation("Progress board with ID: {ProgressBoardId} deleted successfully.",
+                    progressBoard.Id);
 
                 return ResultT<Guid>.Success(progressBoard.Id);
-
             }
-            logger.LogError("Failed to delete progress board. ID: {ProgressBoardId} not found.", request.ProgressBoardId);
 
-            return ResultT<Guid>.Failure(Error.NotFound("404", $"Progress board with ID {request.ProgressBoardId} not found"));
+            logger.LogError("Failed to delete progress board. ID: {ProgressBoardId} not found.",
+                request.ProgressBoardId);
+
+            return ResultT<Guid>.Failure(Error.NotFound("404",
+                $"Progress board with ID {request.ProgressBoardId} not found"));
         }
     }
 }

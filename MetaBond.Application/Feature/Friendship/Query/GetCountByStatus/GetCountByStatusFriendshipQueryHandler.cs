@@ -14,7 +14,7 @@ internal sealed class GetCountByStatusFriendshipQueryHandler(
     : IQueryHandler<GetCountByStatusFriendshipQuery, int>
 {
     public async Task<ResultT<int>> Handle(
-        GetCountByStatusFriendshipQuery request, 
+        GetCountByStatusFriendshipQuery request,
         CancellationToken cancellationToken)
     {
         var friendship = CountStatusAsync();
@@ -22,28 +22,47 @@ internal sealed class GetCountByStatusFriendshipQueryHandler(
         {
             string cacheKey = $"GetCountByStatusFriendshipQuery-{request.Status}";
             var result = await decoratedCache.GetOrCreateAsync(
-                cacheKey, 
-                async () => await countFriendship(cancellationToken), 
+                cacheKey,
+                async () =>
+                {
+                    var count = await countFriendship(cancellationToken);
+                    return count;
+                },
                 cancellationToken: cancellationToken);
 
             logger.LogInformation("Successfully retrieved count for status {Status}: {Count}", request.Status, result);
 
-            return ResultT<int>.Success(result);    
+            return ResultT<int>.Success(result);
         }
+
         logger.LogError("Failed to retrieve count: Invalid status {Status}", request.Status);
 
         return ResultT<int>.Failure(Error.Failure("400", "Invalid status"));
     }
 
     #region Private Methods
-    private Dictionary<Domain.Status, Func<CancellationToken, Task<int>>> CountStatusAsync()
+
+    private Dictionary<Status, Func<CancellationToken, Task<int>>> CountStatusAsync()
     {
-        return new Dictionary<Domain.Status, Func<CancellationToken, Task<int>>>
+        return new Dictionary<Status, Func<CancellationToken, Task<int>>>
         {
-            {(Status.Accepted), async cancellationToken => await friendshipRepository.CountByStatusAsync(Domain.Status.Accepted,cancellationToken)},
-            {(Status.Pending), async cancellationToken => await friendshipRepository.CountByStatusAsync(Domain.Status.Pending,cancellationToken)},
-            {(Status.Blocked), async cancellationToken => await friendshipRepository.CountByStatusAsync(Domain.Status.Blocked,cancellationToken)}
+            {
+                (Status.Accepted),
+                async cancellationToken =>
+                    await friendshipRepository.CountByStatusAsync(Status.Accepted, cancellationToken)
+            },
+            {
+                (Status.Pending),
+                async cancellationToken =>
+                    await friendshipRepository.CountByStatusAsync(Status.Pending, cancellationToken)
+            },
+            {
+                (Status.Blocked),
+                async cancellationToken =>
+                    await friendshipRepository.CountByStatusAsync(Status.Blocked, cancellationToken)
+            }
         };
     }
+
     #endregion
 }

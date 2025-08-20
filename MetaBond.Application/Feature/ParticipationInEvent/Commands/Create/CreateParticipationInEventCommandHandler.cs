@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -13,7 +14,7 @@ internal sealed class CreateParticipationInEventCommandHandler(
     : ICommandHandler<CreateParticipationInEventCommand, ParticipationInEventDTos>
 {
     public async Task<ResultT<ParticipationInEventDTos>> Handle(
-        CreateParticipationInEventCommand request, 
+        CreateParticipationInEventCommand request,
         CancellationToken cancellationToken)
     {
         if (request != null)
@@ -26,26 +27,24 @@ internal sealed class CreateParticipationInEventCommandHandler(
 
             await participationInEventRepository.CreateAsync(inEvent, cancellationToken);
 
-            logger.LogInformation("Participation created for EventId: {EventId} with ParticipationId: {ParticipationId}",
+            logger.LogInformation(
+                "Participation created for EventId: {EventId} with ParticipationId: {ParticipationId}",
                 inEvent.EventId, inEvent.Id);
-            
+
             Domain.Models.EventParticipation eventParticipation = new()
             {
-                EventId   = request.EventId,
+                EventId = request.EventId,
                 ParticipationInEventId = inEvent.Id
             };
-            
+
             await eventParticipationRepository.CreateAsync(eventParticipation, cancellationToken);
-            
-            logger.LogInformation("EventParticipation record created for EventId: {EventId} with ParticipationInEventId: {ParticipationInEventId}", 
+
+            logger.LogInformation(
+                "EventParticipation record created for EventId: {EventId} with ParticipationInEventId: {ParticipationInEventId}",
                 eventParticipation.EventId, eventParticipation.ParticipationInEventId);
-            
-            ParticipationInEventDTos inEventDTos = new
-            (
-                ParticipationInEventId: inEvent.Id,
-                EventId: inEvent.EventId
-            );
-                
+
+            var inEventDTos = EventParticipationMapper.EventParticipationToDto(eventParticipation);
+
             return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
         }
 

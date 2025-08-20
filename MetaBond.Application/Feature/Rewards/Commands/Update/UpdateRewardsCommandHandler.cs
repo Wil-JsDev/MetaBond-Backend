@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,7 @@ internal sealed class UpdateRewardsCommandHandler(
     : ICommandHandler<UpdateRewardsCommand, RewardsDTos>
 {
     public async Task<ResultT<RewardsDTos>> Handle(
-        UpdateRewardsCommand request, 
+        UpdateRewardsCommand request,
         CancellationToken cancellationToken)
     {
         var reward = await rewardsRepository.GetByIdAsync(request.RewardsId);
@@ -22,18 +23,11 @@ internal sealed class UpdateRewardsCommandHandler(
 
             reward.PointAwarded = request.PointAwarded;
 
-            await rewardsRepository.UpdateAsync(reward,cancellationToken);
+            await rewardsRepository.UpdateAsync(reward, cancellationToken);
 
             logger.LogInformation("Reward with ID: {RewardsId} updated successfully.", request.RewardsId);
 
-            RewardsDTos rewardsDTos = new
-            (
-                RewardsId: reward.Id,
-                UserId:  reward.UserId,
-                Description: reward.Description,
-                PointAwarded: reward.PointAwarded,
-                DateAwarded: reward.DateAwarded
-            );
+            var rewardsDTos = RewardsMapper.ToDto(reward);
 
             return ResultT<RewardsDTos>.Success(rewardsDTos);
         }

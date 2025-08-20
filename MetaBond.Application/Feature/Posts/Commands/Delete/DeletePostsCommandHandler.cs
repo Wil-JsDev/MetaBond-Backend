@@ -23,7 +23,7 @@ internal sealed class DeletePostsCommandHandler(
         await postsRepository.DeleteAsync(posts, cancellationToken);
 
         logger.LogInformation("Post with ID {PostId} successfully deleted.", request.PostsId);
-        
+
         return ResultT<Guid>.Success(posts.Id);
     }
 }

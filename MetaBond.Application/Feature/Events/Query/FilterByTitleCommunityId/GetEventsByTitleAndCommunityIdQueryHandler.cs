@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Security.Cryptography;
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,15 +13,14 @@ public class GetEventsByTitleAndCommunityIdQueryHandler(
     ILogger<GetEventsByTitleAndCommunityIdQueryHandler> logger,
     IDistributedCache decoratedCache,
     ICommunitiesRepository communitiesRepository
-    ) : IQueryHandler<GetEventsByTitleAndCommunityIdQuery,IEnumerable<EventsDto>>
+) : IQueryHandler<GetEventsByTitleAndCommunityIdQuery, IEnumerable<EventsDto>>
 {
-    
     public async Task<ResultT<IEnumerable<EventsDto>>> Handle(
-        GetEventsByTitleAndCommunityIdQuery request, 
+        GetEventsByTitleAndCommunityIdQuery request,
         CancellationToken cancellationToken)
     {
         var communitiesId = await communitiesRepository.GetByIdAsync(request.CommunitiesId);
-        if (communitiesId == null)
+        if (communitiesId is null)
         {
             logger.LogError($"Community with ID {request.CommunitiesId} not found.");
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"{request.CommunitiesId} not found"));
@@ -34,39 +32,41 @@ public class GetEventsByTitleAndCommunityIdQueryHandler(
 
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "The title cannot be null or empty"));
         }
-        
+
         var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title, cancellationToken);
         if (!exists)
         {
             logger.LogError($"Event with title '{request.Title}' not found in the system.");
+
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"Not found title: {request.Title}"));
         }
-        
+
         string cacheKey = $"communityId-{request.CommunitiesId}-title-{request.Title}";
         var eventsAndCommunity = await decoratedCache.GetOrCreateAsync(
             cacheKey,
-            async () => await eventsRepository.GetEventsByTitleAndCommunityIdAsync(request.CommunitiesId, request.Title,
-                cancellationToken), cancellationToken: cancellationToken);
-        
-        IEnumerable<Domain.Models.Events> eventsEnumerable = eventsAndCommunity.ToList();
-        if (!eventsEnumerable.Any())
+            async () =>
+            {
+                var eventsByTitle = await eventsRepository.GetEventsByTitleAndCommunityIdAsync(request.CommunitiesId,
+                    request.Title,
+                    cancellationToken);
+
+                var eventsList = eventsByTitle.Select(EventsMapper.EventsToDto).ToList();
+
+                return eventsList;
+            }, cancellationToken: cancellationToken);
+
+        var eventsDtos = eventsAndCommunity.ToList();
+        if (!eventsDtos.Any())
         {
-            logger.LogError($"No events found for the title '{request.Title}' in the community with ID {request.CommunitiesId}.");
-            return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"No events found for title '{request.Title}' in the community."));
+            logger.LogError(
+                $"No events found for the title '{request.Title}' in the community with ID {request.CommunitiesId}.");
+            return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404",
+                $"No events found for title '{request.Title}' in the community."));
         }
 
-        IEnumerable<EventsDto> eventsList = eventsEnumerable.Select(x => new EventsDto
-        (
-            Id: x.Id,
-            Description: x.Description,
-            Title: x.Title,
-            DateAndTime: x.DateAndTime,
-            CreatedAt: x.CreateAt,
-            CommunitiesId: x.CommunitiesId
-        ));
-        
-        logger.LogInformation($"Successfully retrieved events for title '{request.Title}' in community with ID {request.CommunitiesId}");
-        
-        return ResultT<IEnumerable<EventsDto>>.Success(eventsList);
+        logger.LogInformation(
+            $"Successfully retrieved events for title '{request.Title}' in community with ID {request.CommunitiesId}");
+
+        return ResultT<IEnumerable<EventsDto>>.Success(eventsDtos);
     }
 }
