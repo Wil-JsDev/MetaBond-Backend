@@ -2,6 +2,7 @@
 using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Service;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -14,10 +15,9 @@ internal sealed class CreatePostsCommandHandler(
     : ICommandHandler<CreatePostsCommand, PostsDTos>
 {
     public async Task<ResultT<PostsDTos>> Handle(
-        CreatePostsCommand request, 
+        CreatePostsCommand request,
         CancellationToken cancellationToken)
     {
-            
         if (request != null)
         {
             string imageUrl = "";
@@ -35,28 +35,20 @@ internal sealed class CreatePostsCommandHandler(
                 Id = Guid.NewGuid(),
                 Title = request.Title,
                 Content = request.Content,
-                Image =  imageUrl,
+                Image = imageUrl,
                 CreatedById = request.CreatedById ?? Guid.Empty,
                 CommunitiesId = request.CommunitiesId
             };
 
-            await postsRepository.CreateAsync(postsModel,cancellationToken);
+            await postsRepository.CreateAsync(postsModel, cancellationToken);
 
             logger.LogInformation("Post created successfully with ID: {PostId}", postsModel.Id);
 
-            PostsDTos postsDTos = new
-            (
-                PostsId: postsModel.Id,
-                Title: postsModel.Title,
-                Content: postsModel.Content,
-                ImageUrl: postsModel.Image,
-                CreatedById: postsModel.CreatedById,
-                CommunitiesId: postsModel.CommunitiesId,
-                CreatedAt: postsModel.CreatedAt
-            );
+            PostsDTos postsDTos = PostsMapper.PostsToDto(postsModel);
 
             return ResultT<PostsDTos>.Success(postsDTos);
         }
+
         logger.LogError("Request is null. Unable to create post.");
 
         return ResultT<PostsDTos>.Failure(Error.Failure("400", "Invalid request"));
