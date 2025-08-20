@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -26,11 +27,7 @@ internal sealed class UpdateParticipationInEventCommandHandler(
             logger.LogInformation("Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
                 participationInEvent.Id, participationInEvent.EventId);
 
-            ParticipationInEventDTos inEventDTos = new
-            (
-                ParticipationInEventId: participationInEvent.Id,
-                EventId: participationInEvent.EventId
-            );
+            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent);
 
             return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
         }
