@@ -12,14 +12,14 @@ internal sealed class UpdateFriendshipCommandHandler(
     : ICommandHandler<UpdateFriendshipCommand, UpdateFriendshipDTos>
 {
     public async Task<ResultT<UpdateFriendshipDTos>> Handle(
-        UpdateFriendshipCommand request, 
+        UpdateFriendshipCommand request,
         CancellationToken cancellationToken)
     {
         var friendship = await friendshipRepository.GetByIdAsync(request.Id);
         if (friendship != null)
-        { 
+        {
             friendship.Status = request.Status;
-                
+
             await friendshipRepository.UpdateAsync(friendship, cancellationToken);
 
             logger.LogInformation("Friendship with ID: {FriendshipId} updated successfully. New Status: {Status}",
@@ -27,16 +27,14 @@ internal sealed class UpdateFriendshipCommandHandler(
 
             UpdateFriendshipDTos friendshipDTos = new
             (
-               StatusFriendship:  friendship.Status
+                StatusFriendship: friendship.Status
             );
 
             return ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);
-
         }
 
         logger.LogError("Failed to update friendship: ID {FriendshipId} not found.", request.Id);
 
-        return ResultT<UpdateFriendshipDTos>.Failure(Error.NotFound("404",$"{request.Id} not found")); 
-            
+        return ResultT<UpdateFriendshipDTos>.Failure(Error.NotFound("404", $"{request.Id} not found"));
     }
 }

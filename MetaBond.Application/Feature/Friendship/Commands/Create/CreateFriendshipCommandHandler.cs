@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,7 @@ internal sealed class CreateFriendshipCommandHandler(
     : ICommandHandler<CreateFriendshipCommand, FriendshipDTos>
 {
     public async Task<ResultT<FriendshipDTos>> Handle(
-        CreateFriendshipCommand request, 
+        CreateFriendshipCommand request,
         CancellationToken cancellationToken)
     {
         if (request != null)
@@ -29,18 +30,11 @@ internal sealed class CreateFriendshipCommandHandler(
 
             logger.LogInformation("Friendship created successfully with ID: {FriendshipId}", friendship.Id);
 
-            FriendshipDTos friendshipDTos = new
-            ( 
-                FriendshipId: friendship.Id,
-                Status: friendship.Status,
-                RequesterId: friendship.RequesterId,
-                AddresseeId: friendship.AddresseeId,
-                CreatedAt: friendship.CreateAdt
-            );
+            var friendshipDTos = FriendshipMapper.MapFriendshipDTos(friendship);
 
             return ResultT<FriendshipDTos>.Success(friendshipDTos);
-
         }
+
         logger.LogError("Failed to create friendship: request is null.");
 
         return ResultT<FriendshipDTos>.Failure(Error.Failure("400", "Failed to create the friendship"));
