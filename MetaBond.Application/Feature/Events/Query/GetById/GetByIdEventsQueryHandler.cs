@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,36 +15,23 @@ namespace MetaBond.Application.Feature.Events.Query.GetById
         : IQueryHandler<GetByIdEventsQuery, EventsDto>
     {
         public async Task<ResultT<EventsDto>> Handle(
-            GetByIdEventsQuery request, 
+            GetByIdEventsQuery request,
             CancellationToken cancellationToken)
         {
-            
-            var events =  await decoratedCache.GetOrCreateAsync(
-                $"events-{request.Id}",
-                async () => await eventsRepository.GetByIdAsync(request.Id), 
-                cancellationToken: cancellationToken);
-            if (events != null)
+            var events = await eventsRepository.GetByIdAsync(request.Id);
+
+            if (events is null)
             {
-                EventsDto eventsDto = new
-                (
-                    Id: events.Id,
-                    Description: events.Description,
-                    Title: events.Title,
-                    DateAndTime: events.DateAndTime,
-                    CreatedAt: events.CreateAt,
-                    CommunitiesId: events.CommunitiesId
-                );
+                logger.LogError("Event with ID {Id} not found.", request.Id);
 
-                logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Id);
-
-                return ResultT<EventsDto>.Success(eventsDto);
-
+                return ResultT<EventsDto>.Failure(Error.NotFound("404", $"{request.Id} not found"));
             }
 
-            logger.LogError("Event with ID {Id} not found.", request.Id);
+            var eventsDto = EventsMapper.EventsToDto(events);
+            
+            logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Id);
 
-            return ResultT<EventsDto>.Failure(Error.NotFound("404", $"{request.Id} not found"));
-
+            return ResultT<EventsDto>.Success(eventsDto);
         }
     }
 }

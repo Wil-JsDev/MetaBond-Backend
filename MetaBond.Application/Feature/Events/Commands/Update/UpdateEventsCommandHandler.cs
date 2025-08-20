@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,7 @@ internal sealed class UpdateEventsCommandHandler(
     : ICommandHandler<UpdateEventsCommand, EventsDto>
 {
     public async Task<ResultT<EventsDto>> Handle(
-        UpdateEventsCommand request, 
+        UpdateEventsCommand request,
         CancellationToken cancellationToken)
     {
         var events = await eventsRepository.GetByIdAsync(request.Id);
@@ -24,15 +25,7 @@ internal sealed class UpdateEventsCommandHandler(
 
             logger.LogInformation("Event with ID {EventId} was successfully updated.", request.Id);
 
-            EventsDto eventsDto = new
-            (
-                Id: events.Id,
-                Description: events.Description,
-                Title: events.Title,
-                DateAndTime: events.DateAndTime,
-                CreatedAt: events.CreateAt,
-                CommunitiesId: events.CommunitiesId
-            );
+            var eventsDto = EventsMapper.EventsToDto(events);
 
             return ResultT<EventsDto>.Success(eventsDto);
         }
@@ -40,6 +33,5 @@ internal sealed class UpdateEventsCommandHandler(
         logger.LogError("Failed to update event. Event with ID {EventId} was not found.", request.Id);
 
         return ResultT<EventsDto>.Failure(Error.NotFound("404", $"{request.Id} not found"));
-            
     }
 }
