@@ -11,14 +11,13 @@ internal sealed class DeleteProgressEntryCommandHandler(
     : ICommandHandler<DeleteProgressEntryCommand, Guid>
 {
     public async Task<ResultT<Guid>> Handle(
-        DeleteProgressEntryCommand request, 
+        DeleteProgressEntryCommand request,
         CancellationToken cancellationToken)
     {
         var progressEntry = await repository.GetByIdAsync(request.Id);
         if (progressEntry != null)
         {
-               
-            await repository.DeleteAsync(progressEntry,cancellationToken);
+            await repository.DeleteAsync(progressEntry, cancellationToken);
             logger.LogInformation("Progress entry with ID {Id} successfully deleted.", request.Id);
 
             return ResultT<Guid>.Success(request.Id);
