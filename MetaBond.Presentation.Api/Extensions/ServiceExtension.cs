@@ -43,7 +43,7 @@ public static class ServiceExtension
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = async (context, toke) =>
             {
-                await context.HttpContext.Response.WriteAsync("Request limit exceeded. Please try again later");
+                await context.HttpContext.Response.WriteAsync("Request limit exceeded. Please try again later", cancellationToken: toke);
             };
 
             options.AddFixedWindowLimiter("fixed", limiterOptions =>

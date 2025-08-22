@@ -1,13 +1,15 @@
 using MetaBond.Infrastructure.Persistence;
 using MetaBond.Infrastructure.Shared;
 using MetaBond.Application;
+using MetaBond.Infrastructure.Persistence.Context;
 using Serilog;
 using MetaBond.Presentation.Api.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 try
 {
     Log.Information("starting server");
-     
+
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Host.UseSerilog((context, loggerConfiguration) =>
@@ -16,9 +18,7 @@ try
     });
 
     // Add services to the container.
-
     builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.RateLimiting();
@@ -32,6 +32,9 @@ try
     builder.Services.AddVersioning();
 
     var app = builder.Build();
+    
+    app.ApplyMigrations();
+    
     app.UseExceptionHandler(_ => { });
 
     app.UseSerilogRequestLogging();
@@ -54,11 +57,10 @@ try
     app.MapControllers();
 
     app.Run();
-
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex,"server terminated unexpectedly");
+    Log.Fatal(ex, "server terminated unexpectedly");
 }
 finally
 {
