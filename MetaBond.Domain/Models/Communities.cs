@@ -1,10 +1,5 @@
 ﻿using MetaBond.Domain.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace MetaBond.Domain.Models;
 
@@ -20,7 +15,7 @@ public sealed class Communities : BaseModel
 
     public ICollection<Posts>? Posts { get; set; }
 
-    public ICollection<CommunityManager>? CommunityManagers { get; set; } = new List<CommunityManager>();
+    public ICollection<CommunityMembership>? CommunityMemberships { get; set; }
 
     [JsonIgnore] public ICollection<Events>? Events { get; set; }
 }

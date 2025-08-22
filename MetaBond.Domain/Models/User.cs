@@ -18,20 +18,22 @@ public sealed class User
 
     public bool IsEmailConfirmed { get; set; }
 
-    // Relationships
-    public ICollection<Admin>? AdminRoles { get; set; }
+    public Guid? RoleId { get; set; }
 
-    public ICollection<CommunityManager>? CommunityManagerRoles { get; set; }
+    // Relationships
+    public Roles? Role { get; set; }
 
     public ICollection<EmailConfirmationToken>? EmailConfirmationTokens { get; set; }
+
+    public ICollection<CommunityMembership>? CommunityMemberships { get; set; }
 
     // Interest
     public ICollection<UserInterest>? Interests { get; set; }
 
     // Friendships
-    public ICollection<Friendship>? SentFriendRequests { get; set; } // Como Requester
+    public ICollection<Friendship>? SentFriendRequests { get; set; } // Requester
 
-    public ICollection<Friendship>? ReceivedFriendRequests { get; set; } // Como Addressee
+    public ICollection<Friendship>? ReceivedFriendRequests { get; set; } // Addressee
 
     public ICollection<Posts>? Posts { get; set; }
 
