@@ -28,13 +28,15 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
         public DbSet<User> Users { get; set; }
 
-        public DbSet<CommunityManager> CommunityManagers { get; set; }
-
         public DbSet<EmailConfirmationToken> EmailConfirmationTokens { get; set; }
 
         public DbSet<Interest> Interests { get; set; }
 
         public DbSet<UserInterest> UserInterests { get; set; }
+
+        public DbSet<Roles> Roles { get; set; }
+
+        public DbSet<CommunityMembership> CommunityMembership { get; set; }
 
         #endregion
 
@@ -46,6 +48,12 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<Communities>()
                 .ToTable("Communities");
+
+            modelBuilder.Entity<Roles>()
+                .ToTable("Roles");
+
+            modelBuilder.Entity<CommunityMembership>()
+                .ToTable("CommunityMemberships");
 
             modelBuilder.Entity<Events>()
                 .ToTable("Events");
@@ -76,9 +84,6 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<Admin>()
                 .ToTable("Admins");
-
-            modelBuilder.Entity<CommunityManager>()
-                .ToTable("CommunityManagers");
 
             modelBuilder.Entity<Interest>()
                 .ToTable("Interests");
@@ -137,10 +142,6 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .HasKey(x => x.Id)
                 .HasName("PkAdmin");
 
-            modelBuilder.Entity<CommunityManager>()
-                .HasKey(x => x.Id)
-                .HasName("PkCommunityManager");
-
             modelBuilder.Entity<Interest>()
                 .HasKey(x => x.Id)
                 .HasName("PkInterest");
@@ -149,12 +150,40 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .HasKey(x => x.Id)
                 .HasName("PkEmailConfirmationToken");
 
+            modelBuilder.Entity<Roles>()
+                .HasKey(x => x.Id)
+                .HasName("PkRoles");
+
+            modelBuilder.Entity<CommunityMembership>()
+                .HasKey(us => new { us.UserId, us.CommunityId });
+
             modelBuilder.Entity<UserInterest>()
                 .HasKey(uc => new { uc.UserId, uc.InterestId });
 
             #endregion
 
             #region Relationships
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(ro => ro.Users)
+                .HasForeignKey(u => u.RoleId)
+                .IsRequired()
+                .HasConstraintName("FkUserRolesId");
+
+            modelBuilder.Entity<User>()
+                .HasMany(us => us.CommunityMemberships)
+                .WithOne(cm => cm.User)
+                .HasForeignKey(cm => cm.UserId)
+                .IsRequired()
+                .HasConstraintName("FkCommunityMembershipsUserId");
+
+            modelBuilder.Entity<CommunityMembership>()
+                .HasOne(cm => cm.Community)
+                .WithMany(cm => cm.CommunityMemberships)
+                .HasForeignKey(cm => cm.CommunityId)
+                .IsRequired()
+                .HasConstraintName("FkCommunityMembershipsCommunityId");
 
             modelBuilder.Entity<Communities>()
                 .HasMany(c => c.Events)
@@ -197,26 +226,6 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .HasForeignKey(x => x.ProgressBoardId)
                 .IsRequired()
                 .HasConstraintName("FkProgressBoardId");
-
-            modelBuilder.Entity<Admin>()
-                .HasOne(x => x.User)
-                .WithMany(x => x.AdminRoles)
-                .HasForeignKey(ad => ad.UserId)
-                .IsRequired()
-                .HasConstraintName("FkAdminsUserId");
-
-            modelBuilder.Entity<CommunityManager>()
-                .HasOne(cm => cm.User)
-                .WithMany(us => us.CommunityManagerRoles)
-                .HasForeignKey(cm => cm.UserId)
-                .IsRequired()
-                .HasConstraintName("FkCommunityManagersUserId");
-
-            modelBuilder.Entity<CommunityManager>()
-                .HasOne(cm => cm.Community)
-                .WithMany(cu => cu.CommunityManagers)
-                .IsRequired()
-                .HasConstraintName("FKCommunityManagerCommunity");
 
             modelBuilder.Entity<UserInterest>()
                 .HasOne(ui => ui.Interest)
@@ -420,6 +429,25 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .HasMaxLength(50)
                     .IsRequired();
             });
+
+            #endregion
+            
+            #region Roles
+
+            modelBuilder.Entity<Roles>(entity =>
+            {
+                entity.Property(e => e.Name)
+                    .HasMaxLength(25)
+                    .IsRequired();
+            });
+            
+            modelBuilder.Entity<Roles>(entity =>
+            {
+                entity.Property(e => e.Description)
+                    .HasMaxLength(100)
+                    .IsRequired();
+            });
+
 
             #endregion
         }
