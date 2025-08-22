@@ -44,7 +44,6 @@ public static class DependencyInjection
         services.AddTransient<IEventParticipationRepository, EventParticipationRepository>();
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IAdminRepository, AdminRepository>();
-        services.AddTransient<ICommunityManagerRepository, CommunityManagerRepository>();
         services.AddTransient<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
         services.AddTransient<IInterestRepository, InterestRepository>();
         services.AddTransient<IUserInterestRepository, UserInterestRepository>();
