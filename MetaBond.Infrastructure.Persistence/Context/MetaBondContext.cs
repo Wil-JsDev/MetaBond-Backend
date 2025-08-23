@@ -1,5 +1,6 @@
 ﻿using MetaBond.Domain;
 using MetaBond.Domain.Models;
+using MetaBond.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetaBond.Infrastructure.Persistence.Context
@@ -43,6 +44,12 @@ namespace MetaBond.Infrastructure.Persistence.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            #region Extensions
+
+            modelBuilder.SeedRoles();
+
+            #endregion
 
             #region Tables
 
@@ -431,7 +438,7 @@ namespace MetaBond.Infrastructure.Persistence.Context
             });
 
             #endregion
-            
+
             #region Roles
 
             modelBuilder.Entity<Roles>(entity =>
@@ -440,14 +447,13 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .HasMaxLength(25)
                     .IsRequired();
             });
-            
+
             modelBuilder.Entity<Roles>(entity =>
             {
                 entity.Property(e => e.Description)
                     .HasMaxLength(100)
                     .IsRequired();
             });
-
 
             #endregion
         }
