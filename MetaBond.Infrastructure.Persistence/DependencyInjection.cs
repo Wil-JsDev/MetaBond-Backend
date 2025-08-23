@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddTransient<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
         services.AddTransient<IInterestRepository, InterestRepository>();
         services.AddTransient<IUserInterestRepository, UserInterestRepository>();
+        services.AddTransient<IRoleRepository, RoleRepository>();
 
         #endregion
     }
