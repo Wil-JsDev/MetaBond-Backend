@@ -42,7 +42,7 @@ public static class CommunityMembershipMapper
         return new LeaveCommunityDto
         (
             communityMembership.IsActive,
-            communityMembership.LeftOnUtc = DateTime.UtcNow
+            communityMembership.LeftOnUtc
         );
     }
     
