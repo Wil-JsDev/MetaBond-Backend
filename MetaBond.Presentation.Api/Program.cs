@@ -1,10 +1,8 @@
 using MetaBond.Infrastructure.Persistence;
 using MetaBond.Infrastructure.Shared;
 using MetaBond.Application;
-using MetaBond.Infrastructure.Persistence.Context;
 using Serilog;
 using MetaBond.Presentation.Api.Extensions;
-using Microsoft.EntityFrameworkCore;
 
 try
 {
@@ -32,9 +30,9 @@ try
     builder.Services.AddVersioning();
 
     var app = builder.Build();
-    
+
     app.ApplyMigrations();
-    
+
     app.UseExceptionHandler(_ => { });
 
     app.UseSerilogRequestLogging();
@@ -60,7 +58,8 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "server terminated unexpectedly");
+    Console.WriteLine($"Error: {ex}");
+    Log.Fatal("server terminated unexpectedly");
 }
 finally
 {
