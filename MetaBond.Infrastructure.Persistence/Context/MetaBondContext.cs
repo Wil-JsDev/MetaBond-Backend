@@ -448,11 +448,21 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .IsRequired();
             });
 
-            modelBuilder.Entity<Roles>(entity =>
+            #endregion
+
+            #region Community Membership
+
+            modelBuilder.Entity<CommunityMembership>(entity =>
             {
-                entity.Property(e => e.Description)
-                    .HasMaxLength(100)
+                entity.Property(e => e.Role)
+                    .HasMaxLength(25)
                     .IsRequired();
+
+                entity.Property(c => c.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(c => c.LeftOnUtc)
+                    .HasColumnType("timestamp without time zone");
             });
 
             #endregion
