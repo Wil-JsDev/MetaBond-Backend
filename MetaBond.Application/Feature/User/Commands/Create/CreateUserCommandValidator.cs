@@ -5,7 +5,7 @@ namespace MetaBond.Application.Feature.User.Commands.Create;
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
     private readonly string[] _allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
-    
+
     public CreateUserCommandValidator()
     {
         RuleFor(x => x.FirstName)
@@ -34,5 +34,10 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
             .Must(file => file!.Length > 0).WithMessage("Image file cannot be empty.")
             .Must(file => _allowedExtensions.Contains(Path.GetExtension(file!.FileName).ToLower()))
             .WithMessage("Only .jpg, .jpeg, .png and .webp image formats are allowed.");
+
+        RuleFor(x => x.InterestsIds)
+            .NotNull().WithMessage("Interests list is required.")
+            .Must(list => list.Any()).WithMessage("At least one interest must be selected.")
+            .Must(list => list.All(id => id != Guid.Empty)).WithMessage("All interests must be valid GUIDs.");
     }
 }

@@ -16,6 +16,7 @@ internal sealed class CreateUserCommandHandler(
     ICloudinaryService cloudinaryService,
     IEmailService emailService,
     IRoleService roleService,
+    IUserInterestRepository userInterestRepository,
     IEmailConfirmationTokenService emailConfirmationTokenService
 ) :
     ICommandHandler<CreateUserCommand, UserDTos>
@@ -72,6 +73,10 @@ internal sealed class CreateUserCommandHandler(
         };
 
         await userRepository.CreateAsync(user, cancellationToken);
+
+        await userInterestRepository.AssociateInterestsToUserAsync(user.Id, request.InterestsIds, cancellationToken);
+
+        logger.LogInformation("User {UserId} created successfully", user.Id);
 
         var token = await emailConfirmationTokenService.GenerateTokenAsync(user.Id, cancellationToken);
 
