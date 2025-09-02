@@ -22,15 +22,15 @@ internal sealed class GetInterestByNameQueryHandler(
         if (string.IsNullOrEmpty(request.InterestName))
         {
             logger.LogError("Interest name cannot be null or empty");
-        
+
             return ResultT<PagedResult<InterestWithUserDto>>.Failure(Error.Failure("400", "Interest name is required"));
         }
 
         var validationPaginationResult =
             PaginationHelper.ValidatePagination<InterestWithUserDto>(request.PageNumber, request.PageSize, logger);
-        if (validationPaginationResult != null)
-            return validationPaginationResult;
-        
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
+
         if (!await interestRepository.InterestExistsAsync(request.InterestName, cancellationToken))
         {
             logger.LogError("Interest with name {InterestName} not found", request.InterestName);
