@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -10,6 +11,7 @@ namespace MetaBond.Application.Feature.ProgressEntry.Query.GetOrderById;
 
 internal sealed class GetOrderByIdProgressEntryQueryHandler(
     IProgressEntryRepository progressEntryRepository,
+    IProgressBoardRepository progressBoardRepository,
     IDistributedCache decoratedCache,
     ILogger<GetOrderByIdProgressEntryQueryHandler> logger)
     : IQueryHandler<GetOrderByIdProgressEntryQuery, IEnumerable<ProgressEntryBasicDTos>>
@@ -18,6 +20,16 @@ internal sealed class GetOrderByIdProgressEntryQueryHandler(
         GetOrderByIdProgressEntryQuery request,
         CancellationToken cancellationToken)
     {
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
+
+        if (!progressBoard.IsSuccess)
+            return progressBoard.Error!;
+
         var result = await decoratedCache.GetOrCreateAsync(
             $"order-by-id-progress-board-{request.ProgressBoardId}",
             async () =>
@@ -26,7 +38,7 @@ internal sealed class GetOrderByIdProgressEntryQueryHandler(
                     await progressEntryRepository.GetOrderByIdAsync(request.ProgressBoardId, cancellationToken);
 
                 var entryBasicDtos = progressEntries.ToBasicDtos();
-                
+
                 return entryBasicDtos;
             },
             cancellationToken: cancellationToken);

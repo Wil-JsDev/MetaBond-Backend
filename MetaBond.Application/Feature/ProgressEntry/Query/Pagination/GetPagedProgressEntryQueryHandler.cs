@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -19,14 +20,14 @@ internal sealed class GetPagedProgressEntryQueryHandler(
         GetPagedProgressEntryQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.PageNumber <= 0 || request.PageSize <= 0)
-        {
-            logger.LogError("Invalid pagination parameters: PageNumber={PageNumber}, PageSize={PageSize}",
-                request.PageNumber, request.PageSize);
+        var validationPaginationResult = PaginationHelper.ValidatePagination<ProgressEntryDTos>(
+            request.PageNumber,
+            request.PageSize,
+            logger
+        );
 
-            return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400",
-                "Page Number and Page Size must be greater than zero."));
-        }
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
 
         var getPagedProgressEntry = await decoratedCache.GetOrCreateAsync(
             $"progress-entry-get-paged-{request.PageNumber}-size-{request.PageSize}",

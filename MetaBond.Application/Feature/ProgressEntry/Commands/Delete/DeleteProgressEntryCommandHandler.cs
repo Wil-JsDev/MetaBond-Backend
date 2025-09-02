@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -14,10 +15,18 @@ internal sealed class DeleteProgressEntryCommandHandler(
         DeleteProgressEntryCommand request,
         CancellationToken cancellationToken)
     {
-        var progressEntry = await repository.GetByIdAsync(request.Id);
-        if (progressEntry != null)
+        var progressEntry = await EntityHelper.GetEntityByIdAsync
+        (
+            repository.GetByIdAsync,
+            request.Id,
+            "ProgressEntry",
+            logger
+        );
+
+        if (progressEntry.IsSuccess)
         {
-            await repository.DeleteAsync(progressEntry, cancellationToken);
+            await repository.DeleteAsync(progressEntry.Value, cancellationToken);
+
             logger.LogInformation("Progress entry with ID {Id} successfully deleted.", request.Id);
 
             return ResultT<Guid>.Success(request.Id);

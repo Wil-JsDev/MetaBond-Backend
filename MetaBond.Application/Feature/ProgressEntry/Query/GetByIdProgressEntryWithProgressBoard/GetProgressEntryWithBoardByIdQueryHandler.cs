@@ -1,5 +1,6 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -18,8 +19,14 @@ internal sealed class GetProgressEntryWithBoardByIdQueryHandler(
         GetProgressEntryWithBoardByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var progressEntry = await repository.GetByIdAsync(request.ProgressEntryId);
-        if (progressEntry is null)
+        var progressEntry = await EntityHelper.GetEntityByIdAsync(
+            repository.GetByIdAsync,
+            request.ProgressEntryId,
+            "ProgressEntry",
+            logger
+        );
+
+        if (!progressEntry.IsSuccess)
         {
             logger.LogError("Progress entry with ID {ProgressEntryId} not found.", request.ProgressEntryId);
 

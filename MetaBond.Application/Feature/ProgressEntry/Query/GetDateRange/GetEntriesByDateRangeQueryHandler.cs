@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,6 +20,16 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
         GetEntriesByDateRangeQuery request,
         CancellationToken cancellationToken)
     {
+        var progressEntryResult = await EntityHelper.GetEntityByIdAsync(
+            progressEntryRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressEntry",
+            logger
+        );
+
+        if (!progressEntryResult.IsSuccess)
+            return progressEntryResult.Error!;
+
         var progressEntry = GetValue(request.ProgressBoardId);
         if (progressEntry.TryGetValue((request.Range), out var dateRange))
         {

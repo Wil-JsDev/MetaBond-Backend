@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -18,14 +19,15 @@ internal sealed class GetOrderByDescriptionProgressEntryQueryHandler(
         GetOrderByDescriptionProgressEntryQuery request,
         CancellationToken cancellationToken)
     {
-        var progressBoard = await progressBoardRepository.GetByIdAsync(request.ProgressBoardId);
-        if (progressBoard is null)
-        {
-            logger.LogError($"No progress board found with id: {request.ProgressBoardId}");
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
 
-            return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Failure(Error.NotFound("404",
-                "No progress board found"));
-        }
+        if (!progressBoard.IsSuccess)
+            return progressBoard.Error!;
 
         var result = await decoratedCache.GetOrCreateAsync(
             $"order-by-description-progress-entry-{request.ProgressBoardId}",
