@@ -22,15 +22,11 @@ internal sealed class GetCommunityMemberQueryHandler(
     public async Task<ResultT<PagedResult<CommunityMembersDto>>> Handle(GetCommunityMemberQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.PageNumber <= 0 || request.PageSize <= 0)
-        {
-            logger.LogError("Invalid pagination params: PageNumber={PageNumber}, PageSize={PageSize}",
-                request.PageNumber, request.PageSize);
+        var validationPagination = PaginationHelper.ValidatePagination<CommunityMembersDto>(request.PageNumber,
+            request.PageSize, logger);
 
-            return ResultT<PagedResult<CommunityMembersDto>>.Failure(
-                Error.Failure("400", "Page number and page size must be greater than zero.")
-            );
-        }
+        if (!validationPagination.IsSuccess)
+            return validationPagination;
 
         var communityResult = await EntityHelper.GetEntityByIdAsync(communitiesRepository.GetByIdAsync,
             request.CommunityId ?? Guid.Empty,

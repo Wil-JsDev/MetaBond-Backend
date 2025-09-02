@@ -29,6 +29,12 @@ internal sealed class GetUserCommunitiesQueryHandler(
                 "Invalid request: GetUserCommunitiesQuery cannot be null."));
         }
 
+        var validationPagination = PaginationHelper.ValidatePagination<CommunitiesDTos>(request.PageNumber,
+            request.PageSize, logger);
+
+        if (!validationPagination.IsSuccess)
+            return validationPagination;
+
         var userResult = await EntityHelper.GetEntityByIdAsync(userRepository.GetByIdAsync,
             request.UserId ?? Guid.Empty,
             "User",
