@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -10,6 +11,7 @@ namespace MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 
 internal sealed class GetFilterTitlePostsQueryHandler(
     IPostsRepository postsRepository,
+    ICommunitiesRepository communitiesRepository,
     IDistributedCache decoratedCache,
     ILogger<GetFilterTitlePostsQueryHandler> logger)
     : IQueryHandler<GetFilterTitlePostsQuery, IEnumerable<PostsDTos>>
@@ -18,6 +20,16 @@ internal sealed class GetFilterTitlePostsQueryHandler(
         GetFilterTitlePostsQuery request,
         CancellationToken cancellationToken)
     {
+        var community = await EntityHelper.GetEntityByIdAsync(
+            communitiesRepository.GetByIdAsync,
+            request.CommunitiesId,
+            "Communities",
+            logger
+        );
+
+        if (!community.IsSuccess)
+            return ResultT<IEnumerable<PostsDTos>>.Failure(community.Error!);
+
         if (string.IsNullOrEmpty(request.Title))
         {
             logger.LogError("Invalid request: GetFilterTitlePostsQuery request is null.");

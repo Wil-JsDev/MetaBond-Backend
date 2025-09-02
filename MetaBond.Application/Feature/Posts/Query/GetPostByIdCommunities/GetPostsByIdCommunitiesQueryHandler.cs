@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,14 +20,13 @@ internal sealed class GetPostsByIdCommunitiesQueryHandler(
         GetPostsByIdCommunitiesQuery request,
         CancellationToken cancellationToken)
     {
-        var posts = await postsRepository.GetByIdAsync(request.PostsId);
-        if (posts is null)
-        {
-            logger.LogError("Post with ID '{PostsId}' not found.", request.PostsId);
-
-            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.NotFound("404",
-                $"{request.PostsId} not found"));
-        }
+        var posts = await EntityHelper.GetEntityByIdAsync(
+            postsRepository.GetByIdAsync,
+            request.PostsId,
+            "Posts",
+            logger);
+        if (!posts.IsSuccess)
+            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(posts.Error!);
 
         string cacheKey = $"get-posts-by-id-details-{request.PostsId}";
         var postsWithCommunities = await decoratedCache.GetOrCreateAsync(

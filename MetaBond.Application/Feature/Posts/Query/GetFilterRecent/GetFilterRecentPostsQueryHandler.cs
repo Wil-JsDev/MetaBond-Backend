@@ -18,6 +18,13 @@ internal sealed class GetFilterRecentPostsQueryHandler(
         GetFilterRecentPostsQuery request,
         CancellationToken cancellationToken)
     {
+        if (request.TopCount <= 0)
+        {
+            logger.LogError("Invalid request: GetFilterRecentPostsQuery request is null.");
+
+            return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "Invalid request"));
+        }
+
         string cacheKey = $"get-filter-recent-top-count{request.TopCount}-community-{request.CommunitiesId}";
         var result = await decoratedCache.GetOrCreateAsync(
             cacheKey,

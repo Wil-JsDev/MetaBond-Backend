@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -10,6 +11,7 @@ namespace MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
 
 internal sealed class GetFilterTop10QueryHandler(
     IPostsRepository postsRepository,
+    ICommunitiesRepository communitiesRepository,
     IDistributedCache decoratedCache,
     ILogger<GetFilterTop10QueryHandler> logger)
     : IQueryHandler<GetFilterTop10Query, IEnumerable<PostsDTos>>
@@ -18,6 +20,16 @@ internal sealed class GetFilterTop10QueryHandler(
         GetFilterTop10Query request,
         CancellationToken cancellationToken)
     {
+        var community = await EntityHelper.GetEntityByIdAsync(
+            communitiesRepository.GetByIdAsync,
+            request.CommunitiesId,
+            "Communities",
+            logger
+        );
+
+        if (!community.IsSuccess)
+            return ResultT<IEnumerable<PostsDTos>>.Failure(community.Error!);
+
         string cacheKey = $"top-count-recent-posts-{request.CommunitiesId}";
         var top10CountPosts = await decoratedCache.GetOrCreateAsync(
             cacheKey,

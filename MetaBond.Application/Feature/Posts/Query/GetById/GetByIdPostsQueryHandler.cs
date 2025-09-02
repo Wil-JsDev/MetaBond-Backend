@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -14,12 +15,16 @@ internal sealed class GetByIdPostsQueryHandler(
 {
     public async Task<ResultT<PostsDTos>> Handle(GetByIdPostsQuery request, CancellationToken cancellationToken)
     {
-        var posts = await postsRepository.GetByIdAsync(request.PostsId);
-        if (posts != null)
+        var posts = await EntityHelper.GetEntityByIdAsync(
+            postsRepository.GetByIdAsync,
+            request.PostsId,
+            "Posts",
+            logger);
+        if (posts.IsSuccess)
         {
-            PostsDTos postsDTos = PostsMapper.PostsToDto(posts);
+            PostsDTos postsDTos = PostsMapper.PostsToDto(posts.Value);
 
-            logger.LogInformation("Post retrieved successfully with ID: {PostId}", posts.Id);
+            logger.LogInformation("Post retrieved successfully with ID: {PostId}", posts.Value.Id);
 
             return ResultT<PostsDTos>.Success(postsDTos);
         }
