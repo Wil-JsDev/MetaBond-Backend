@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -19,6 +20,16 @@ internal sealed class GetPagedProgressBoardQueryHandler(
         GetPagedProgressBoardQuery request,
         CancellationToken cancellationToken)
     {
+        var validationPagination = PaginationHelper.ValidatePagination<ProgressBoardDTos>
+        (
+            request.PageNumber,
+            request.PageSize,
+            logger
+        );
+
+        if (!validationPagination.IsSuccess)
+            return validationPagination.Error!;
+
         string cacheKey = $"get-progress-board-paged-{request.PageNumber}-{request.PageSize}";
         var pageProgressBoard = await decoratedCache.GetOrCreateAsync(
             cacheKey,
