@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Communities;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -17,16 +18,22 @@ public class GetByIdCommunitiesHandler(
     public async Task<ResultT<CommunitiesDTos>> Handle(GetByIdCommunitiesQuery request,
         CancellationToken cancellationToken)
     {
-        var communities = await communitiesRepository.GetByIdAsync(request.Id);
+        var communities = await EntityHelper.GetEntityByIdAsync
+        (
+            communitiesRepository.GetByIdAsync,
+            request.Id,
+            "Communities",
+            logger
+        );
 
-        if (communities is null)
+        if (!communities.IsSuccess)
         {
             logger.LogError("Community with ID {CommunityId} was not found.", request.Id);
 
             return ResultT<CommunitiesDTos>.Failure(Error.NotFound("404", $"{request.Id} not found"));
         }
 
-        var communitiesDto = CommunityMapper.MapCommunitiesDTos(communities);
+        var communitiesDto = CommunityMapper.MapCommunitiesDTos(communities.Value);
 
         logger.LogInformation("Successfully retrieved community with ID {CommunityId}.", request.Id);
 

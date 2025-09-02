@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Communities;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
@@ -17,14 +18,12 @@ internal sealed class GetPagedCommunitiesQueryHandler(
     public async Task<ResultT<PagedResult<CommunitiesDTos>>> Handle(GetPagedCommunitiesQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.PageNumber <= 0 || request.PageSize <= 0)
-        {
-            logger.LogError("Invalid page number or page size. Both must be greater than zero.");
+        var validationPagination =
+            PaginationHelper.ValidatePagination<CommunitiesDTos>(request.PageNumber, request.PageSize, logger);
 
-            return ResultT<PagedResult<CommunitiesDTos>>.Failure(Error.Failure("400",
-                "Page number and page size must be greater than zero."));
-        }
-        
+        if (!validationPagination.IsSuccess)
+            return validationPagination;
+
         var cacheKey = $"paged-communities-page-{request.PageNumber}-size-{request.PageSize}";
         var result = await decoratedCache.GetOrCreateAsync(cacheKey,
             async () =>
