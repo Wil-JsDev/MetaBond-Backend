@@ -19,6 +19,13 @@ internal sealed class GetByDateRangeRewardQueryHandler(
         GetByDateRangeRewardQuery request,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(request.Range.ToString()))
+        {
+            logger.LogError("Invalid date range: {Range}. No matching rewards found.", request.Range);
+
+            return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400", "Invalid date range"));
+        }
+
         var rewards = GetValue();
         if (rewards.TryGetValue((request.Range), out var dateRange))
         {

@@ -18,6 +18,13 @@ internal sealed class GetTopRewardsQueryHandler(
         GetTopRewardsQuery request,
         CancellationToken cancellationToken)
     {
+        if (request.TopCount <= 0)
+        {
+            logger.LogError("Invalid top count: {TopCount}.", request.TopCount);
+
+            return ResultT<IEnumerable<RewardsWithUserDTos>>.Failure(Error.Failure("400", "Invalid top count"));
+        }
+
         var result = await decoratedCache.GetOrCreateAsync(
             $"rewards-get-top-by-points-{request.TopCount}",
             async () =>
