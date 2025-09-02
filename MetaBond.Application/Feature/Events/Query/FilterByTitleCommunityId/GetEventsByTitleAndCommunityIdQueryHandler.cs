@@ -1,5 +1,6 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,10 +20,17 @@ public class GetEventsByTitleAndCommunityIdQueryHandler(
         GetEventsByTitleAndCommunityIdQuery request,
         CancellationToken cancellationToken)
     {
-        var communitiesId = await communitiesRepository.GetByIdAsync(request.CommunitiesId);
-        if (communitiesId is null)
+        var communitiesId = await EntityHelper.GetEntityByIdAsync
+        (
+            communitiesRepository.GetByIdAsync,
+            request.CommunitiesId,
+            "Communities",
+            logger
+        );
+        if (!communitiesId.IsSuccess)
         {
             logger.LogError($"Community with ID {request.CommunitiesId} not found.");
+
             return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", $"{request.CommunitiesId} not found"));
         }
 

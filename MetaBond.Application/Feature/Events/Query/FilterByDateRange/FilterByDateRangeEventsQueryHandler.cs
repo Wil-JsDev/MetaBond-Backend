@@ -20,6 +20,15 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
             FilterByDateRangeEventsQuery request,
             CancellationToken cancellationToken)
         {
+            var exists = await eventsRepository.ValidateAsync(x => x.Id == request.CommunitiesId, cancellationToken);
+            if (!exists)
+            {
+                logger.LogError("The community with ID {Id} does not exist.", request.CommunitiesId);
+
+                return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404",
+                    $"{request.CommunitiesId} not found"));
+            }
+
             var status = FilterByDateRange(request.CommunitiesId);
             if (status.TryGetValue((request.DateRangeFilter), out var getStatusList))
             {
@@ -32,7 +41,7 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange
 
                         var listsEvents = eventsLists.ToList();
                         IEnumerable<EventsDto> dTos = listsEvents.Select(EventsMapper.EventsToDto).ToList();
-                        
+
                         return dTos;
                     },
                     cancellationToken: cancellationToken);
