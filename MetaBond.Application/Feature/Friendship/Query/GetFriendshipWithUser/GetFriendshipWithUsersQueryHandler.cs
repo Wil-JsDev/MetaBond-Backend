@@ -1,6 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Friendship;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,13 +20,13 @@ internal sealed class GetFriendshipWithUsersQueryHandler(
         GetFriendshipWithUsersQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.FriendshipId is null)
-        {
-            logger.LogWarning("FriendshipId is null in request.");
+        var friendship =
+            await EntityHelper.GetEntityByIdAsync(friendshipRepository.GetByIdAsync,
+                request.FriendshipId ?? Guid.Empty,
+                "Friendship",
+                logger);
 
-            return ResultT<IEnumerable<FriendshipWithUserDTos>>.Failure(Error.Failure("400",
-                "FriendshipId cannot be null."));
-        }
+        if (!friendship.IsSuccess) return ResultT<IEnumerable<FriendshipWithUserDTos>>.Failure(friendship.Error!);
 
         var getFriendshipWithUser =
             await decoratedCache.GetOrCreateAsync($"GetFriendshipWithUsersQueryCache-{request.FriendshipId}",
@@ -35,7 +36,7 @@ internal sealed class GetFriendshipWithUsersQueryHandler(
                         (Guid)request.FriendshipId!,
                         cancellationToken);
 
-                   return friendshipUser.ToFriendshipWithUserDtos().ToList();
+                    return friendshipUser.ToFriendshipWithUserDtos().ToList();
                 },
                 cancellationToken: cancellationToken);
 

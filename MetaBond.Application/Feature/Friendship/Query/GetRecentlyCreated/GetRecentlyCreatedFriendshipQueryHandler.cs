@@ -18,33 +18,41 @@ internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
         GetRecentlyCreatedFriendshipQuery request,
         CancellationToken cancellationToken)
     {
-            string cacheKey = $"GetRecentlyCreatedFriendship-{request.Limit}";
-            var friendshipRecently = await decoratedCache.GetOrCreateAsync(
-                cacheKey,
-                async () =>
-                {
-                    var recentFriendship =
-                        await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, cancellationToken);
-                    
-                    var friendshipDTos = recentFriendship.Select(FriendshipMapper.MapFriendshipDTos).ToList();
-                    
-                    return friendshipDTos;
-                },
-                cancellationToken: cancellationToken);
+        if (request.Limit <= 0)
+        {
+            logger.LogError("Invalid limit: {Limit}", request.Limit);
 
-            if (!friendshipRecently.Any())
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(
+                Error.Failure("400", "Invalid limit. Limit must be greater than zero."));
+        }
+
+        string cacheKey = $"GetRecentlyCreatedFriendship-{request.Limit}";
+        var friendshipRecently = await decoratedCache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
             {
-                logger.LogError("No recent friendships found for the given limit: {Limit}", request.Limit);
+                var recentFriendship =
+                    await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, cancellationToken);
 
-                return ResultT<IEnumerable<FriendshipDTos>>.Failure(
-                    Error.Failure("400", "No recent friendships found."));
-            }
-            
+                var friendshipDTos = recentFriendship.Select(FriendshipMapper.MapFriendshipDTos).ToList();
 
-            IEnumerable<FriendshipDTos> value = friendshipRecently.ToList();
-            logger.LogInformation("Successfully retrieved {Count} recent friendships with limit: {Limit}",
-                value.Count(), request.Limit);
+                return friendshipDTos;
+            },
+            cancellationToken: cancellationToken);
 
-            return ResultT<IEnumerable<FriendshipDTos>>.Success(value);
+        if (!friendshipRecently.Any())
+        {
+            logger.LogError("No recent friendships found for the given limit: {Limit}", request.Limit);
+
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(
+                Error.Failure("400", "No recent friendships found."));
+        }
+
+
+        IEnumerable<FriendshipDTos> value = friendshipRecently.ToList();
+        logger.LogInformation("Successfully retrieved {Count} recent friendships with limit: {Limit}",
+            value.Count(), request.Limit);
+
+        return ResultT<IEnumerable<FriendshipDTos>>.Success(value);
     }
 }

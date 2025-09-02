@@ -18,6 +18,13 @@ internal sealed class GetOrderByIdFriendshipQueryHandler(
         GetOrderByIdFriendshipQuery request,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(request.Sort))
+        {
+            logger.LogError("Sort parameter is required.");
+
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "Sort parameter is required."));
+        }
+
         var friendshipSort = GetSort();
         if (friendshipSort.TryGetValue((request.Sort!.ToUpper()), out var getSortFriendship))
         {
@@ -28,8 +35,9 @@ internal sealed class GetOrderByIdFriendshipQueryHandler(
                 {
                     var sortFriendship = await getSortFriendship(cancellationToken);
 
-                    IEnumerable<FriendshipDTos> friendshipDTos = sortFriendship.Select(FriendshipMapper.MapFriendshipDTos);
-                    
+                    IEnumerable<FriendshipDTos> friendshipDTos =
+                        sortFriendship.Select(FriendshipMapper.MapFriendshipDTos);
+
                     return friendshipDTos;
                 },
                 cancellationToken: cancellationToken);
