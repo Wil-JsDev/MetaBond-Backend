@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -19,15 +20,22 @@ internal sealed class GetPagedParticipationInEventQueryHandler(
         GetPagedParticipationInEventQuery request,
         CancellationToken cancellationToken)
     {
-        
         if (request is null)
         {
             logger.LogError("The request is null.");
-            
+
             return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.Failure("400",
                 "The request is null"));
         }
-        
+
+        var paginationValidationResult = PaginationHelper.ValidatePagination<ParticipationInEventDTos>(
+            request.PageNumber,
+            request.PageSize,
+            logger);
+
+        if (!paginationValidationResult.IsSuccess)
+            return paginationValidationResult.Error!;
+
         string cacheKey = $"get-participation-in-event-paged-{request.PageNumber}-size-{request.PageSize}";
         var result = await decoratedCache.GetOrCreateAsync(
             cacheKey,
@@ -38,8 +46,9 @@ internal sealed class GetPagedParticipationInEventQueryHandler(
                     request.PageSize,
                     cancellationToken);
 
-
-                var dtoItems = participationInEvent.Items!.Select(ParticipationInEventMapper.ParticipationInEventToDto).ToList();
+                var dtoItems = participationInEvent.Items!
+                    .Select(ParticipationInEventMapper.ParticipationInEventToDto)
+                    .ToList();
 
                 PagedResult<ParticipationInEventDTos> result = new()
                 {
@@ -66,7 +75,7 @@ internal sealed class GetPagedParticipationInEventQueryHandler(
         logger.LogInformation(
             "Successfully retrieved {TotalItems} participation for page {PageNumber} of {TotalPages}.",
             result.TotalItems, request.PageNumber, result.TotalPages);
-        
+
         return ResultT<PagedResult<ParticipationInEventDTos>>.Success(result);
     }
 }
