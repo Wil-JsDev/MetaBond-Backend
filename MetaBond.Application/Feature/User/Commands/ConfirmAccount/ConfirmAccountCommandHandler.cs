@@ -1,4 +1,5 @@
 using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
@@ -26,14 +27,15 @@ internal sealed class ConfirmAccountCommandHandler(
 
         var userId = request.UserId ?? Guid.Empty;
 
-        var user = await userRepository.GetByIdAsync(userId);
+        var user = await EntityHelper.GetEntityByIdAsync(
+            userRepository.GetByIdAsync,
+            userId,
+            "User",
+            logger
+        );
 
-        if (user == null)
-        {
-            logger.LogWarning("ConfirmAccountCommand: No user found with ID '{UserId}'.", userId);
-
-            return ResultT<string>.Failure(Error.NotFound("404", $"No user found with ID '{userId}'."));
-        }
+        if (!user.IsSuccess)
+            return user.Error!;
 
         var result = await emailConfirmationTokenService.ConfirmAccountAsync(userId, request.Code!, cancellationToken);
 

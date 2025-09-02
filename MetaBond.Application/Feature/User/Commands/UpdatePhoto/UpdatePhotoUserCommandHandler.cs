@@ -1,5 +1,6 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.Feature.User.Commands.Update;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
@@ -19,14 +20,15 @@ internal sealed class UpdatePhotoUserCommandHandler(
         UpdatePhotoUserCommand request,
         CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId);
+        var user = await EntityHelper.GetEntityByIdAsync(
+            userRepository.GetByIdAsync,
+            request.UserId,
+            "User",
+            logger
+        );
 
-        if (user is null)
-        {
-            logger.LogError($"User with id {request.UserId} not found", request.UserId);
-
-            return ResultT<string>.Failure(Error.NotFound("404", "User not found"));
-        }
+        if (!user.IsSuccess)
+            return user.Error!;
 
         if (request.ImageFile == null || request.ImageFile!.Length == 0)
         {
@@ -42,12 +44,12 @@ internal sealed class UpdatePhotoUserCommandHandler(
             request.ImageFile.FileName,
             cancellationToken);
 
-        user.Photo = imageUrl;
+        user.Value.Photo = imageUrl;
 
-        await userRepository.UpdateAsync(user, cancellationToken);
+        await userRepository.UpdateAsync(user.Value, cancellationToken);
 
         logger.LogInformation("Updated user with id {UserId}.", request.UserId);
 
-        return ResultT<string>.Success(user.Photo!);
+        return ResultT<string>.Success(user.Value.Photo!);
     }
 }

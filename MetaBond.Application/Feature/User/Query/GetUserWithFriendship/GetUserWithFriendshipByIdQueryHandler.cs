@@ -1,6 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Friendship;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -20,13 +21,15 @@ internal sealed class GetUserWithFriendshipByIdQueryHandler(
         GetUserWithFriendshipByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId ?? Guid.Empty);
-        if (user is null)
-        {
-            logger.LogError("User with ID: {UserId} not found.", request.UserId);
+        var user = await EntityHelper.GetEntityByIdAsync(
+            userRepository.GetByIdAsync,
+            request.UserId ?? Guid.Empty,
+            "User",
+            logger
+        );
 
-            return ResultT<UserWithFriendshipDTos>.Failure(Error.NotFound("404", "User not found."));
-        }
+        if (!user.IsSuccess)
+            return user.Error!;
 
         var userWithFriendship = await userRepository.GetUserWithFriendshipsAsync(request.UserId ?? Guid.Empty,
             cancellationToken);

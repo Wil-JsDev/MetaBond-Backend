@@ -19,26 +19,28 @@ internal sealed class GetByUsernameUserQueryHandler(
         GetByUsernameUserQuery request,
         CancellationToken cancellationToken)
     {
-        if (request != null)
+        if (string.IsNullOrWhiteSpace(request.Username))
         {
-            var user = await userRepository.GetByUsernameAsync(request.Username!, cancellationToken);
+            logger.LogWarning("Username is required but was null or empty.");
 
-            if (user == null)
-            {
-                logger.LogWarning("User not found: {Username}", request.Username);
-
-                return ResultT<UserDTos>.Failure(Error.NotFound("404", $"User '{request.Username!}' was not found."));
-            }
-
-            var userDTos = UserMapper.MapUserDTos(user);
-
-            logger.LogInformation("User found: {Username}", request.Username);
-
-            return ResultT<UserDTos>.Success(userDTos);
+            return ResultT<UserDTos>.Failure(
+                Error.Failure("400", "The username cannot be null or empty."));
         }
 
-        logger.LogWarning("Request is null. Unable to process username search.");
+        var user = await userRepository.GetByUsernameAsync(request.Username!, cancellationToken);
 
-        return ResultT<UserDTos>.Failure(Error.Failure("400", "Invalid request: request cannot be null."));
+        if (user == null)
+        {
+            logger.LogWarning("No user found with the username '{Username}'.", request.Username);
+
+            return ResultT<UserDTos>.Failure(
+                Error.NotFound("404", $"No user was found with the username '{request.Username}'."));
+        }
+
+        var userDTos = UserMapper.MapUserDTos(user);
+
+        logger.LogInformation("Successfully retrieved user with username '{Username}'.", request.Username);
+
+        return ResultT<UserDTos>.Success(userDTos);
     }
 }
