@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -16,16 +17,22 @@ internal sealed class UpdateEventsCommandHandler(
         UpdateEventsCommand request,
         CancellationToken cancellationToken)
     {
-        var events = await eventsRepository.GetByIdAsync(request.Id);
+        var events = await EntityHelper.GetEntityByIdAsync(eventsRepository.GetByIdAsync,
+            request.Id,
+            "Events",
+            logger);
+
+        if (!events.IsSuccess) return ResultT<EventsDto>.Failure(events.Error!);
+
         if (events != null)
         {
-            events.Description = request.Description;
-            events.Title = request.Title;
-            await eventsRepository.UpdateAsync(events, cancellationToken);
+            events.Value.Description = request.Description;
+            events.Value.Title = request.Title;
+            await eventsRepository.UpdateAsync(events.Value, cancellationToken);
 
             logger.LogInformation("Event with ID {EventId} was successfully updated.", request.Id);
 
-            var eventsDto = EventsMapper.EventsToDto(events);
+            var eventsDto = EventsMapper.EventsToDto(events.Value);
 
             return ResultT<EventsDto>.Success(eventsDto);
         }

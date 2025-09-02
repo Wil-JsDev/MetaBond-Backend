@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -13,20 +14,26 @@ internal sealed class UpdateProgressEntryCommandHandler(
     : ICommandHandler<UpdateProgressEntryCommand, ProgressEntryDTos>
 {
     public async Task<ResultT<ProgressEntryDTos>> Handle(
-        UpdateProgressEntryCommand request, 
+        UpdateProgressEntryCommand request,
         CancellationToken cancellationToken)
     {
-        var progressEntry = await progressEntryRepository.GetByIdAsync(request.ProgressEntryId);
-        if (progressEntry != null)
+        var progressEntry = await EntityHelper.GetEntityByIdAsync
+        (
+            progressEntryRepository.GetByIdAsync,
+            request.ProgressEntryId,
+            "ProgressEntry",
+            logger
+        );
+        if (progressEntry.IsSuccess)
         {
-            progressEntry.Description = request.Description;
-            progressEntry.UpdateAt = DateTime.UtcNow;
+            progressEntry.Value.Description = request.Description;
+            progressEntry.Value.UpdateAt = DateTime.UtcNow;
 
-            await progressEntryRepository.UpdateAsync(progressEntry,cancellationToken);
-            
+            await progressEntryRepository.UpdateAsync(progressEntry.Value, cancellationToken);
+
             logger.LogInformation("Progress entry with ID {Id} successfully updated.", request.ProgressEntryId);
-            
-            var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry);
+
+            var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry.Value);
 
             logger.LogInformation("Returning updated progress entry data.");
 

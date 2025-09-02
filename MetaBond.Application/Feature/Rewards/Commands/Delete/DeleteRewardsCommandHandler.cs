@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -14,14 +15,20 @@ internal sealed class DeleteRewardsCommandHandler(
         DeleteRewardsCommand request,
         CancellationToken cancellationToken)
     {
-        var reward = await repository.GetByIdAsync(request.RewardsId);
-        if (reward != null)
+        var reward = await EntityHelper.GetEntityByIdAsync(
+            repository.GetByIdAsync,
+            request.RewardsId,
+            "Rewards",
+            logger
+        );
+
+        if (reward.IsSuccess)
         {
-            await repository.DeleteAsync(reward, cancellationToken);
+            await repository.DeleteAsync(reward.Value, cancellationToken);
 
-            logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Id);
+            logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Value.Id);
 
-            return ResultT<Guid>.Success(reward.Id);
+            return ResultT<Guid>.Success(reward.Value.Id);
         }
 
         logger.LogError("Reward with ID {RewardsId} not found", request.RewardsId);

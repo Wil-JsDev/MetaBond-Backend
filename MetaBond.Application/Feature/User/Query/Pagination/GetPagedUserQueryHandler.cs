@@ -1,5 +1,6 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -20,14 +21,15 @@ internal sealed class GetPagedUserQueryHandler(
         GetPagedUserQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.PageNumber <= 0 || request.PageSize <= 0)
-        {
-            logger.LogWarning("Invalid pagination parameters: PageNumber = {PageNumber}, PageSize = {PageSize}.",
-                request.PageNumber, request.PageSize);
+        var validationPaginationResult = PaginationHelper.ValidatePagination<UserDTos>
+        (
+            request.PageNumber,
+            request.PageSize,
+            logger
+        );
 
-            return ResultT<PagedResult<UserDTos>>.Failure(Error.Failure("400",
-                "Invalid pagination parameters. Page number and page size must be greater than zero."));
-        }
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
 
         var pagedUser = await decoratedCache.GetOrCreateAsync(
             $"get-paged-user-{request.PageNumber}-size-{request.PageSize}",

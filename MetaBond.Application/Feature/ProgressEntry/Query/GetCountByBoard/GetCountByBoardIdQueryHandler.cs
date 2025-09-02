@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -16,8 +17,13 @@ internal sealed class GetCountByBoardIdQueryHandler(
         GetCountByBoardIdQuery request,
         CancellationToken cancellationToken)
     {
-        var progressBoard = await progressBoardRepository.GetByIdAsync(request.ProgressBoardId);
-        if (progressBoard is null)
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
+        if (!progressBoard.IsSuccess)
         {
             logger.LogError($"No progress board found with id: {request.ProgressBoardId}");
 

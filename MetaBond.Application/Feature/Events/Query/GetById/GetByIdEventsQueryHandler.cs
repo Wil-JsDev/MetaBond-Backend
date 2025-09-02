@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -18,18 +19,23 @@ namespace MetaBond.Application.Feature.Events.Query.GetById
             GetByIdEventsQuery request,
             CancellationToken cancellationToken)
         {
-            var events = await eventsRepository.GetByIdAsync(request.Id);
-
-            if (events is null)
+            var events = await EntityHelper.GetEntityByIdAsync
+            (
+                eventsRepository.GetByIdAsync,
+                request.Id,
+                "Events",
+                logger
+            );
+            if (!events.IsSuccess)
             {
-                logger.LogError("Event with ID {Id} not found.", request.Id);
+                logger.LogError("Events with ID {EventId} not found.", request.Id);
 
-                return ResultT<EventsDto>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+                return ResultT<EventsDto>.Failure(events.Error!);
             }
 
-            var eventsDto = EventsMapper.EventsToDto(events);
-            
-            logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Id);
+            var eventsDto = EventsMapper.EventsToDto(events.Value);
+
+            logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Value.Id);
 
             return ResultT<EventsDto>.Success(eventsDto);
         }

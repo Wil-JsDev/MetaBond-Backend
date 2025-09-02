@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,13 +20,18 @@ internal sealed class GetEventsWithParticipationInEventQueryHandler(
         GetEventsWithParticipationInEventQuery request,
         CancellationToken cancellationToken)
     {
-        var events = await eventsRepository.GetByIdAsync(request.EventsId ?? Guid.Empty);
-        if (events is null)
+        var events = await EntityHelper.GetEntityByIdAsync
+        (
+            eventsRepository.GetByIdAsync,
+            request.EventsId ?? Guid.Empty,
+            "Events",
+            logger
+        );
+        if (!events.IsSuccess)
         {
-            logger.LogError("Event with ID: {EventId} not found.", request.EventsId);
+            logger.LogError("Events with ID {EventsId} not found.", request.EventsId);
 
-            return ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Failure(Error.NotFound("404",
-                $"{request.EventsId} not found"));
+            return ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Failure(events.Error!);
         }
 
         var eventsWithParticipationInEvents = await decoratedCache.GetOrCreateAsync(
@@ -33,7 +39,7 @@ internal sealed class GetEventsWithParticipationInEventQueryHandler(
             async () =>
             {
                 var eventsList =
-                    await eventsRepository.GetEventsWithParticipationAsync(events.Id, cancellationToken);
+                    await eventsRepository.GetEventsWithParticipationAsync(events.Value.Id, cancellationToken);
 
                 var eventsEnumerable = eventsList.ToList();
 

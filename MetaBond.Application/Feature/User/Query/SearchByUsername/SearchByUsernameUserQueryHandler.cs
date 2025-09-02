@@ -19,6 +19,14 @@ internal sealed class SearchByUsernameUserQueryHandler(
         SearchByUsernameUserQuery request,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Username))
+        {
+            logger.LogWarning("Username is required but was null or empty.");
+
+            return ResultT<IEnumerable<UserDTos>>.Failure(
+                Error.Failure("400", "The username cannot be null or empty."));
+        }
+
         var result = await decoratedCache.GetOrCreateAsync(
             $"search-username-{request.Username}",
             async () =>

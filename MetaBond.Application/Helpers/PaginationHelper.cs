@@ -3,6 +3,7 @@ using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Helpers;
+
 public static class PaginationHelper
 {
     public static ResultT<PagedResult<T>> ValidatePagination<T>(int pageNumber, int pageSize, ILogger logger)
@@ -17,6 +18,6 @@ public static class PaginationHelper
                     "Invalid pagination parameters. PageNumber and PageSize must be greater than zero."));
         }
 
-        return null; // Indicates that it is valid
+        return ResultT<PagedResult<T>>.Success(null); // Indicates that it is valid
     }
 }

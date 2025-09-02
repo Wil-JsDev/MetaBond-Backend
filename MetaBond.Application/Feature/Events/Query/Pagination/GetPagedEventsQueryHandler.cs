@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -18,13 +19,11 @@ namespace MetaBond.Application.Feature.Events.Query.Pagination
         public async Task<ResultT<PagedResult<EventsDto>>> Handle(GetPagedEventsQuery request,
             CancellationToken cancellationToken)
         {
-            if (request.PageNumber <= 0 && request.PageSize <= 0)
-            {
-                logger.LogError("Invalid pagination parameters");
+            var validationPagination = PaginationHelper.ValidatePagination<EventsDto>(request.PageNumber,
+                request.PageSize, logger);
 
-                return ResultT<PagedResult<EventsDto>>.Failure(Error.Failure("400",
-                    "PageNumber and PageSize must be greater than 0."));
-            }
+            if (!validationPagination.IsSuccess)
+                return validationPagination;
 
             string cacheKey = $"paged-events-page-{request.PageNumber}-size-{request.PageSize}";
             var eventsPaged = await decoratedCache.GetOrCreateAsync(

@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -10,6 +11,7 @@ namespace MetaBond.Application.Feature.ProgressEntry.Query.GetRecent;
 
 internal sealed class GetRecentEntriesQueryHandler(
     IProgressEntryRepository repository,
+    IProgressBoardRepository progressBoardRepository,
     IDistributedCache decoratedCache,
     ILogger<GetRecentEntriesQueryHandler> logger)
     : IQueryHandler<GetRecentEntriesQuery, IEnumerable<ProgressEntryDTos>>
@@ -18,6 +20,16 @@ internal sealed class GetRecentEntriesQueryHandler(
         GetRecentEntriesQuery request,
         CancellationToken cancellationToken)
     {
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
+
+        if (!progressBoard.IsSuccess)
+            return progressBoard.Error!;
+
         if (request.TopCount <= 0)
         {
             logger.LogInformation("Invalid request: TopCount must be greater than zero.");

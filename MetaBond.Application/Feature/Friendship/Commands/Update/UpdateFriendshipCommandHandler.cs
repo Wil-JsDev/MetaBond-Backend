@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -15,19 +16,26 @@ internal sealed class UpdateFriendshipCommandHandler(
         UpdateFriendshipCommand request,
         CancellationToken cancellationToken)
     {
-        var friendship = await friendshipRepository.GetByIdAsync(request.Id);
-        if (friendship != null)
-        {
-            friendship.Status = request.Status;
+        var friendship =
+            await EntityHelper.GetEntityByIdAsync(friendshipRepository.GetByIdAsync,
+                request.Id,
+                "Friendship",
+                logger);
 
-            await friendshipRepository.UpdateAsync(friendship, cancellationToken);
+        if (!friendship.IsSuccess) return ResultT<UpdateFriendshipDTos>.Failure(friendship.Error!);
+
+        if (friendship.IsSuccess)
+        {
+            friendship.Value.Status = request.Status;
+
+            await friendshipRepository.UpdateAsync(friendship.Value, cancellationToken);
 
             logger.LogInformation("Friendship with ID: {FriendshipId} updated successfully. New Status: {Status}",
-                friendship.Id, friendship.Status);
+                friendship.Value.Id, friendship.Value.Status);
 
             UpdateFriendshipDTos friendshipDTos = new
             (
-                StatusFriendship: friendship.Status
+                StatusFriendship: friendship.Value.Status
             );
 
             return ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);

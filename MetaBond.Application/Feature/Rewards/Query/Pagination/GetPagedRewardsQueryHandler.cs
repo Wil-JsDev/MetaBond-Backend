@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -19,59 +20,52 @@ internal sealed class GetPagedRewardsQueryHandler(
         GetPagedRewardsQuery request,
         CancellationToken cancellationToken)
     {
-        if (request != null)
-        {
-            if (request.PageNumber <= 0 || request.PageSize <= 0)
+        var validationPaginationResult = PaginationHelper.ValidatePagination<RewardsDTos>
+        (
+            request.PageNumber,
+            request.PageSize,
+            logger
+        );
+
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
+
+        var pagedRewards = await decoratedCache.GetOrCreateAsync(
+            $"get-paged-rewards-{request.PageNumber}-size-{request.PageSize}",
+            async () =>
             {
-                logger.LogWarning(
-                    "Invalid pagination parameters: PageNumber={PageNumber}, PageSize={PageSize}. Both must be greater than zero.",
-                    request.PageNumber, request.PageSize);
+                var rewards = await rewardsRepository.GetPagedRewardsAsync(
+                    request.PageNumber,
+                    request.PageSize,
+                    cancellationToken);
 
-                return ResultT<PagedResult<RewardsDTos>>.Failure(Error.Failure("400",
-                    "Page Number and Page Size must be greater than zero."));
-            }
+                var rewardsDto = rewards.Items!.Select(RewardsMapper.ToDto);
 
-            var pagedRewards = await decoratedCache.GetOrCreateAsync(
-                $"get-paged-rewards-{request.PageNumber}-size-{request.PageSize}",
-                async () =>
+                PagedResult<RewardsDTos> resultPaged = new()
                 {
-                    var rewards = await rewardsRepository.GetPagedRewardsAsync(
-                        request.PageNumber,
-                        request.PageSize,
-                        cancellationToken);
+                    TotalItems = rewards.TotalItems,
+                    TotalPages = rewards.TotalPages,
+                    CurrentPage = rewards.CurrentPage,
+                    Items = rewardsDto
+                };
 
-                    var rewardsDto = rewards.Items!.Select(RewardsMapper.ToDto);
+                return resultPaged;
+            },
+            cancellationToken: cancellationToken);
 
-                    PagedResult<RewardsDTos> resultPaged = new()
-                    {
-                        TotalItems = rewards.TotalItems,
-                        TotalPages = rewards.TotalPages,
-                        CurrentPage = rewards.CurrentPage,
-                        Items = rewardsDto
-                    };
+        if (!pagedRewards.Items!.Any())
+        {
+            logger.LogWarning("No rewards found for the requested page {PageNumber}.", request.PageNumber);
 
-                    return resultPaged;
-                },
-                cancellationToken: cancellationToken);
-
-            if (!pagedRewards.Items!.Any())
-            {
-                logger.LogWarning("No rewards found for the requested page {PageNumber}.", request.PageNumber);
-
-                return ResultT<PagedResult<RewardsDTos>>.Failure(Error.Failure("400",
-                    "No rewards available for the requested page."));
-            }
-
-            var rewardsDTosEnumerable = pagedRewards.Items.ToList();
-
-            logger.LogInformation("Successfully retrieved {Count} rewards for page {PageNumber}.",
-                rewardsDTosEnumerable.Count(), request.PageNumber);
-
-            return ResultT<PagedResult<RewardsDTos>>.Success(pagedRewards);
+            return ResultT<PagedResult<RewardsDTos>>.Failure(Error.Failure("400",
+                "No rewards available for the requested page."));
         }
 
-        logger.LogError("Received a null request for paginated rewards.");
+        var rewardsDTosEnumerable = pagedRewards.Items.ToList();
 
-        return ResultT<PagedResult<RewardsDTos>>.Failure(Error.Failure("400", "Invalid request."));
+        logger.LogInformation("Successfully retrieved {Count} rewards for page {PageNumber}.",
+            rewardsDTosEnumerable.Count(), request.PageNumber);
+
+        return ResultT<PagedResult<RewardsDTos>>.Success(pagedRewards);
     }
 }

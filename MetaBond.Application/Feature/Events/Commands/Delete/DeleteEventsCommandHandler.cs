@@ -1,4 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -14,10 +16,14 @@ namespace MetaBond.Application.Feature.Events.Commands.Delete
             DeleteEventsCommand request,
             CancellationToken cancellationToken)
         {
-            var events = await eventsRepository.GetByIdAsync(request.Id);
-            if (events != null)
+            var events = await EntityHelper.GetEntityByIdAsync(eventsRepository.GetByIdAsync,
+                request.Id,
+                "Events",
+                logger);
+
+            if (events.IsSuccess)
             {
-                await eventsRepository.DeleteAsync(events, cancellationToken);
+                await eventsRepository.DeleteAsync(events.Value, cancellationToken);
 
                 logger.LogInformation("Event with ID {EventId} was successfully deleted.", request.Id);
 

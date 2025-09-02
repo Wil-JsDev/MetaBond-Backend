@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,12 +20,18 @@ internal sealed class GetEventsDetailsQueryHandler(
         GetEventsDetailsQuery request,
         CancellationToken cancellationToken)
     {
-        var events = await eventsRepository.GetByIdAsync(request.Id);
-        if (events is null)
+        var events = await EntityHelper.GetEntityByIdAsync
+        (
+            eventsRepository.GetByIdAsync,
+            request.Id,
+            "Events",
+            logger
+        );
+        if (!events.IsSuccess)
         {
-            logger.LogError("Event with ID {Id} not found.", request.Id);
+            logger.LogError("Events with ID {EventsId} not found.", request.Id);
 
-            return ResultT<IEnumerable<CommunitiesEventsDTos>>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+            return ResultT<IEnumerable<CommunitiesEventsDTos>>.Failure(events.Error!);
         }
 
         var result = await decoratedCache.GetOrCreateAsync(

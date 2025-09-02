@@ -23,8 +23,8 @@ internal sealed class GetInterestByUserQueryHandler(
         // Validate pagination parameters
         var validationPaginationResult =
             PaginationHelper.ValidatePagination<InterestDTos>(request.PageNumber, request.PageSize, logger);
-        if (validationPaginationResult is not null)
-            return validationPaginationResult.Value;
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
 
         var user = await EntityHelper.GetEntityByIdAsync(userRepository.GetByIdAsync, request.UserId, "User", logger);
         if (!user.IsSuccess)

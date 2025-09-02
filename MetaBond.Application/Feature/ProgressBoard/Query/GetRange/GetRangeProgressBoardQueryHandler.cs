@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -20,6 +21,16 @@ internal sealed class GetRangeProgressBoardQueryHandler(
         GetRangeProgressBoardQuery request,
         CancellationToken cancellationToken)
     {
+        var paginationValidationResult = PaginationHelper.ValidatePagination<ProgressBoardWithProgressEntryDTos>
+        (
+            request.Page,
+            request.PageSize,
+            logger
+        );
+        
+        if (!paginationValidationResult.IsSuccess)
+            return paginationValidationResult.Error!;
+
         var progressBoard = GetValue();
         if (progressBoard.TryGetValue((request.DateRangeType), out var progressBoardValue))
         {

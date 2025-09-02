@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -12,18 +13,23 @@ internal sealed class DeletePostsCommandHandler(
 {
     public async Task<ResultT<Guid>> Handle(DeletePostsCommand request, CancellationToken cancellationToken)
     {
-        var posts = await postsRepository.GetByIdAsync(request.PostsId);
-        if (posts == null)
+        var posts = await EntityHelper.GetEntityByIdAsync(
+            postsRepository.GetByIdAsync,
+            request.PostsId,
+            "Posts",
+            logger
+        );
+        if (!posts.IsSuccess)
         {
             logger.LogError("Post with ID {PostId} not found.", request.PostsId);
 
             return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
         }
 
-        await postsRepository.DeleteAsync(posts, cancellationToken);
+        await postsRepository.DeleteAsync(posts.Value, cancellationToken);
 
         logger.LogInformation("Post with ID {PostId} successfully deleted.", request.PostsId);
 
-        return ResultT<Guid>.Success(posts.Id);
+        return ResultT<Guid>.Success(posts.Value.Id);
     }
 }

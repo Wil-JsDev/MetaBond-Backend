@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -17,13 +18,20 @@ internal sealed class GetByIdFriendshipQueryHandler(
         GetByIdFriendshipQuery request,
         CancellationToken cancellationToken)
     {
-        var friendship = await friendshipRepository.GetByIdAsync(request.Id);
-        if (friendship is not null)
+        var friendship =
+            await EntityHelper.GetEntityByIdAsync(friendshipRepository.GetByIdAsync,
+                request.Id,
+                "Friendship",
+                logger);
+
+        if (!friendship.IsSuccess) return ResultT<FriendshipDTos>.Failure(friendship.Error!);
+
+        if (friendship.IsSuccess)
         {
-            var friendshipDTos = FriendshipMapper.MapFriendshipDTos(friendship);
+            var friendshipDTos = FriendshipMapper.MapFriendshipDTos(friendship.Value);
 
             logger.LogInformation("Friendship retrieved successfully. ID: {FriendshipId}, Status: {Status}",
-                friendship.Id, friendship.Status);
+                friendship.Value.Id, friendship.Value.Status);
 
             return ResultT<FriendshipDTos>.Success(friendshipDTos);
         }

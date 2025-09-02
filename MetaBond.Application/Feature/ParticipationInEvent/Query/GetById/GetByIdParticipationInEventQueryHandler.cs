@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -17,14 +18,19 @@ internal sealed class GetByIdParticipationInEventQueryHandler(
         GetByIdParticipationInEventQuery request,
         CancellationToken cancellationToken)
     {
-        var participationInEvent = await repository.GetByIdAsync(request.ParticipationInEventId);
+        var participationInEvent = await EntityHelper.GetEntityByIdAsync(
+            repository.GetByIdAsync,
+            request.ParticipationInEventId,
+            "ParticipationInEvent",
+            logger
+        );
 
-        if (participationInEvent != null)
+        if (participationInEvent.IsSuccess)
         {
-            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent);
+            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent.Value);
 
             logger.LogInformation("Successfully retrieved participation with ParticipationId: {ParticipationId}.",
-                participationInEvent.Id);
+                participationInEvent.Value.Id);
 
             return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
         }

@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,25 +20,24 @@ internal sealed class GetProgressBoardIdWithEntriesQueryHandler(
         GetProgressBoardIdWithEntriesQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.PageNumber <= 0 || request.PageSize <= 0)
-        {
-            logger.LogWarning("Invalid pagination parameters: Page = {Page}, PageSize = {PageSize}", request.PageNumber,
-                request.PageSize);
+        var paginationValidationResult = PaginationHelper.ValidatePagination<ProgressBoardWithProgressEntryDTos>(
+            request.PageNumber,
+            request.PageSize,
+            logger
+        );
 
-            return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
-                Error.Failure("400",
-                    "Page number and page size must be greater than zero. Please provide valid pagination values."));
-        }
+        if (!paginationValidationResult.IsSuccess)
+            return paginationValidationResult.Error!;
 
-        var progressBoard = await repository.GetByIdAsync(request.ProgressBoardId);
-        if (progressBoard is null)
-        {
-            logger.LogError("No progress board found for ProgressBoardId: {ProgressBoardId}",
-                request.ProgressBoardId);
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            repository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
 
-            return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(Error.NotFound("404",
-                "No progress board found for the given id"));
-        }
+        if (!progressBoard.IsSuccess)
+            return progressBoard.Error!;
 
         var progressBoardList = await repository.GetBoardsWithEntriesAsync(request.ProgressBoardId, cancellationToken);
 

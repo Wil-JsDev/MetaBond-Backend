@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -19,6 +20,14 @@ internal class GetPagedPostsQueryHandler(
         GetPagedPostsQuery request,
         CancellationToken cancellationToken)
     {
+        var validationPaginationResult = PaginationHelper.ValidatePagination<PostsDTos>(
+            request.PageNumber,
+            request.PageSize,
+            logger
+        );
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
+
         string cacheKey = $"get-paged-posts-{request.PageNumber}-size-{request.PageSize}";
 
         var pagedPosts = await decoratedCache.GetOrCreateAsync(
@@ -31,7 +40,7 @@ internal class GetPagedPostsQueryHandler(
                     cancellationToken);
 
                 var postsDto = pagedResultPosts.Items!.Select(PostsMapper.PostsToDto);
-                
+
                 PagedResult<PostsDTos> result = new()
                 {
                     TotalItems = pagedResultPosts.TotalItems,
@@ -39,11 +48,11 @@ internal class GetPagedPostsQueryHandler(
                     CurrentPage = pagedResultPosts.CurrentPage,
                     Items = postsDto
                 };
-                
+
                 return result;
             },
             cancellationToken: cancellationToken);
-        
+
         if (!pagedPosts.Items!.Any())
         {
             logger.LogError("No posts found for the requested page: {PageNumber}, PageSize: {PageSize}",

@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -13,27 +14,34 @@ internal sealed class UpdateParticipationInEventCommandHandler(
     : ICommandHandler<UpdateParticipationInEventCommand, ParticipationInEventDTos>
 {
     public async Task<ResultT<ParticipationInEventDTos>> Handle(
-        UpdateParticipationInEventCommand request, 
+        UpdateParticipationInEventCommand request,
         CancellationToken cancellationToken)
     {
-        var participationInEvent = await participationInEventRepository.GetByIdAsync(request.Id);
+        var participationInEvent = await EntityHelper.GetEntityByIdAsync(
+            participationInEventRepository.GetByIdAsync,
+            request.Id,
+            "ParticipationInEvent",
+            logger
+        );
 
-        if (participationInEvent != null)
+        if (participationInEvent.IsSuccess)
         {
-            participationInEvent.EventId = request.EventId;
+            participationInEvent.Value.EventId = request.EventId;
 
-            await participationInEventRepository.UpdateAsync(participationInEvent,cancellationToken);
+            await participationInEventRepository.UpdateAsync(participationInEvent.Value, cancellationToken);
 
-            logger.LogInformation("Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
-                participationInEvent.Id, participationInEvent.EventId);
+            logger.LogInformation(
+                "Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
+                participationInEvent.Value.Id, participationInEvent.Value.EventId);
 
-            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent);
+            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent.Value);
 
             return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
         }
 
         logger.LogError("Participation with Id: {ParticipationId} not found for update.", request.Id);
 
-        return ResultT<ParticipationInEventDTos>.Failure(Error.NotFound("404", $"{request.Id} Participation not found"));
+        return ResultT<ParticipationInEventDTos>.Failure(Error.NotFound("404",
+            $"{request.Id} Participation not found"));
     }
 }

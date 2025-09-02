@@ -1,6 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,14 +20,13 @@ internal sealed class GetPostWithAuthorQueryHandler(
         GetPostWithAuthorQuery request,
         CancellationToken cancellationToken)
     {
-        var posts = await postsRepository.GetByIdAsync(request.PostsId ?? Guid.Empty);
-        if (posts is null)
-        {
-            logger.LogWarning("Post with ID '{PostsId}' not found.", request.PostsId);
-
-            return ResultT<IEnumerable<PostsWithUserDTos>>.Failure(Error.NotFound("404",
-                $"{request.PostsId} not found"));
-        }
+        var posts = await EntityHelper.GetEntityByIdAsync(
+            postsRepository.GetByIdAsync,
+            request.PostsId ?? Guid.Empty,
+            "Posts",
+            logger);
+        if (!posts.IsSuccess)
+            return ResultT<IEnumerable<PostsWithUserDTos>>.Failure(posts.Error!);
 
         var postsWithAuthor = await decoratedCache.GetOrCreateAsync($"GetPostsWithAuthor-{request.PostsId}",
             async () =>

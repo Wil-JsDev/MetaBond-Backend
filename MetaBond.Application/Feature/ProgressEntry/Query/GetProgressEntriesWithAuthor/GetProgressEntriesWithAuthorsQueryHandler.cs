@@ -1,6 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -19,14 +20,15 @@ public class GetProgressEntriesWithAuthorsQueryHandler(
     public async Task<ResultT<IEnumerable<ProgressEntriesWithUserDTos>>> Handle(
         GetProgressEntriesWithAuthorsQuery request, CancellationToken cancellationToken)
     {
-        var progressEntryId = await progressEntryRepository.GetByIdAsync(request.ProgressEntryId);
-        if (progressEntryId == null)
-        {
-            logger.LogError($"ProgressEntry with id {request.ProgressEntryId} not found");
-
-            return ResultT<IEnumerable<ProgressEntriesWithUserDTos>>.Failure(Error.NotFound("404",
-                "Progress entry not found"));
-        }
+        var progressEntry = await EntityHelper.GetEntityByIdAsync
+        (
+            progressEntryRepository.GetByIdAsync,
+            request.ProgressEntryId,
+            "ProgressEntry",
+            logger
+        );
+        if (!progressEntry.IsSuccess)
+            return progressEntry.Error!;
 
         var result = await decorated.GetOrCreateAsync(
             $"Get-Progress-Entries-With-Authors-{request.ProgressEntryId}",

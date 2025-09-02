@@ -1,6 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Rewards;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -22,14 +23,15 @@ internal sealed class GetUsersByRewardIdQueryHandler(
         GetUsersByRewardIdQuery request,
         CancellationToken cancellationToken)
     {
-        var reward = await rewardsRepository.GetByIdAsync(request.RewardsId);
-        if (reward is null)
-        {
-            logger.LogWarning("Reward with ID {RewardId} not found.", request.RewardsId);
+        var reward = await EntityHelper.GetEntityByIdAsync(
+            rewardsRepository.GetByIdAsync,
+            request.RewardsId,
+            "Rewards",
+            logger
+        );
 
-            return ResultT<IEnumerable<RewardsWithUserDTos>>.Failure(
-                Error.NotFound("404", $"Reward with ID {request.RewardsId} not found."));
-        }
+        if (!reward.IsSuccess)
+            return reward.Error!;
 
         var rewardsWithUser = await decorated.GetOrCreateAsync(
             $"Get-User-By-Rewards-By-Id-{request.RewardsId}",
@@ -37,7 +39,8 @@ internal sealed class GetUsersByRewardIdQueryHandler(
             {
                 var rewards = await rewardsRepository.GetUsersByRewardIdAsync(request.RewardsId, cancellationToken);
 
-                IEnumerable<RewardsWithUserDTos> rewardsWithUserDTos = rewards.Select(RewardsMapper.RewardsWithUserToDto);
+                IEnumerable<RewardsWithUserDTos> rewardsWithUserDTos =
+                    rewards.Select(RewardsMapper.RewardsWithUserToDto);
 
                 return rewardsWithUserDTos;
             },

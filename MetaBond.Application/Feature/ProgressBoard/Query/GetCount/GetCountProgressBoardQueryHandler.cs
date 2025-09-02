@@ -15,7 +15,7 @@ internal sealed class GetCountProgressBoardQueryHandler(
         GetCountProgressBoardQuery request,
         CancellationToken cancellationToken)
     {
-        var progressBoardCount =await progressBoardRepository.CountBoardsAsync(cancellationToken);
+        var progressBoardCount = await progressBoardRepository.CountBoardsAsync(cancellationToken);
 
         if (progressBoardCount == 0)
         {

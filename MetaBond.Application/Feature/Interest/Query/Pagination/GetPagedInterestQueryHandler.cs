@@ -20,10 +20,10 @@ internal sealed class GetPagedInterestQueryHandler(
         CancellationToken cancellationToken)
     {
         // Validate page number and size
-        var validationResult =
+        var validationPaginationResult =
             PaginationHelper.ValidatePagination<InterestDTos>(request.PageNumber, request.PageSize, logger);
-        if (validationResult != null)
-            return validationResult;
+        if (!validationPaginationResult.IsSuccess)
+            return validationPaginationResult.Error!;
 
         var result = await cache.GetOrCreateAsync($"get-paged-interest-{request.PageNumber}-{request.PageSize}",
             async () =>

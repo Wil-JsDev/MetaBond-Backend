@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
@@ -19,8 +20,18 @@ internal sealed class GetPagedFriendshipQueryHandler(
         GetPagedFriendshipQuery? request,
         CancellationToken cancellationToken)
     {
+        var validationPagination = PaginationHelper.ValidatePagination<FriendshipDTos>
+        (
+            request!.PageNumber,
+            request.PageSize,
+            logger
+        );
+
+        if (!validationPagination.IsSuccess)
+            return validationPagination;
+
         string cacheKey = $"paged-friendship-page-{request!.PageNumber}-size-{request.PageSize}";
-        
+
         var pagedFriendship = await decoratedCache.GetOrCreateAsync(
             cacheKey,
             async () =>

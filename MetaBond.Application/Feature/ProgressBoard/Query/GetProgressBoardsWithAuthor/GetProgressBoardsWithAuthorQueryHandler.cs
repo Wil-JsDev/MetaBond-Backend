@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -22,23 +23,29 @@ internal sealed class GetProgressBoardsWithAuthorQueryHandler(
     (GetProgressBoardsWithAuthorQuery request,
         CancellationToken cancellationToken)
     {
-        var progressBoardId = await progressBoardRepository.GetByIdAsync(request.ProgressBoardId);
-        if (progressBoardId is null)
-        {
-            logger.LogWarning("ProgressBoard with id: {RequestProgressBoardId} not found", request.ProgressBoardId);
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
 
-            return ResultT<IEnumerable<ProgressBoardWithUserDTos>>.Failure(Error.NotFound("404",
-                "ProgressBoard not found"));
+        if (!progressBoard.IsSuccess)
+        {
+            logger.LogError("Failed to retrieve progress board. ID: {ProgressBoardId} not found.",
+                request.ProgressBoardId);
+
+            return ResultT<IEnumerable<ProgressBoardWithUserDTos>>.Failure(progressBoard.Error!);
         }
 
         var progressBoards = await decorated.GetOrCreateAsync($"GetProgressBoardsWithAuthor_{request.ProgressBoardId}",
             async () =>
             {
-                var progressBoard = await progressBoardRepository.GetProgressBoardsWithAuthorAsync(
-                    progressBoardId.Id,
+                var progressBoardList = await progressBoardRepository.GetProgressBoardsWithAuthorAsync(
+                    progressBoard.Value.Id,
                     cancellationToken);
 
-                var boardsWithAuthor = progressBoard.Select(ProgressBoardMapper.ToDTo);
+                var boardsWithAuthor = progressBoardList.Select(ProgressBoardMapper.ToDTo);
 
                 return boardsWithAuthor;
             },

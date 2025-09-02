@@ -1,5 +1,6 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Account.CommunityMembership;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Mapper;
@@ -28,38 +29,32 @@ internal sealed class JoinCommunityCommandHandler(
             );
         }
 
-        var community = await communitiesRepository.GetByIdAsync(request.CommunityId ?? Guid.Empty);
-        if (community is null)
-        {
-            logger.LogError("Community with ID {CommunityId} was not found when processing JoinCommunityCommand.",
-                request.CommunityId);
+        var communityResult = await EntityHelper.GetEntityByIdAsync(communitiesRepository.GetByIdAsync,
+            request.CommunityId ?? Guid.Empty,
+            "Community",
+            logger
+        );
+        if (!communityResult.IsSuccess) return ResultT<CommunityMembershipDto>.Failure(communityResult.Error!);
 
-            return ResultT<CommunityMembershipDto>.Failure(
-                Error.NotFound("404", $"Community with ID {request.CommunityId} was not found.")
-            );
-        }
+        var userResult = await EntityHelper.GetEntityByIdAsync(userRepository.GetByIdAsync,
+            request.UserId ?? Guid.Empty,
+            "User",
+            logger
+        );
 
-        var user = await userRepository.GetByIdAsync(request.UserId ?? Guid.Empty);
-        if (user is null)
-        {
-            logger.LogError("User with ID {UserId} was not found when processing JoinCommunityCommand.",
-                request.UserId);
-
-            return ResultT<CommunityMembershipDto>.Failure(
-                Error.NotFound("404", $"User with ID {request.UserId} was not found.")
-            );
-        }
+        if (!userResult.IsSuccess) return ResultT<CommunityMembershipDto>.Failure(userResult.Error!);
 
         var communityMembership = new Domain.Models.CommunityMembership
         {
-            CommunityId = community.Id,
-            UserId = user.Id,
+            CommunityId = communityResult.Value.Id,
+            UserId = userResult.Value.Id,
             Role = CommunityMembershipRoles.Member.ToString()
         };
 
         await communityMembershipRepository.JoinCommunityAsync(communityMembership, cancellationToken);
 
-        logger.LogInformation("User {UserId} successfully joined Community {CommunityId}.", user.Id, community.Id);
+        logger.LogInformation("User {UserId} successfully joined Community {CommunityId}.", communityResult.Value.Id,
+            userResult.Value.Id);
 
         var communityMembershipDto = CommunityMembershipMapper.ModelToDto(communityMembership);
 
