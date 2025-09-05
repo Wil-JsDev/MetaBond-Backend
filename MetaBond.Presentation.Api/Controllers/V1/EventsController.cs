@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Feature.Events.Commands.Create;
 using MetaBond.Application.Feature.Events.Commands.Delete;
 using MetaBond.Application.Feature.Events.Commands.Update;
@@ -11,6 +12,9 @@ using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationIn
 using MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetOrderById;
 using MetaBond.Application.Feature.Events.Query.Pagination;
+using MetaBond.Application.Helpers;
+using MetaBond.Application.Pagination;
+using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -29,14 +33,10 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Create a new event",
         Description = "Creates a new event using the provided command data."
     )]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateEventsCommand eventsCommand,
+    public async Task<ResultT<EventsDto>> CreateAsync([FromBody] CreateEventsCommand eventsCommand,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(eventsCommand, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result);
+        return await mediator.Send(eventsCommand, cancellationToken);
     }
 
     [HttpDelete("{id}")]
@@ -45,14 +45,11 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Delete an event by ID",
         Description = "Deletes the event identified by the given ID."
     )]
-    public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<Guid>> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new DeleteEventsCommand { Id = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpPut]
@@ -61,14 +58,10 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Update an event",
         Description = "Updates an existing event using the provided command data."
     )]
-    public async Task<IActionResult> UpdateAsync([FromBody] UpdateEventsCommand updateEventsCommand,
+    public async Task<ResultT<EventsDto>> UpdateAsync([FromBody] UpdateEventsCommand updateEventsCommand,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(updateEventsCommand, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(updateEventsCommand, cancellationToken);
     }
 
     [HttpGet("{id}")]
@@ -77,14 +70,11 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get event by ID",
         Description = "Retrieves a specific event by its unique identifier."
     )]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<EventsDto>> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new GetByIdEventsQuery { Id = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("communities/{communitiesId}/search/by-date-range")]
@@ -93,7 +83,7 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Filter events by date range for a community",
         Description = "Retrieves events for a specific community that fall within the specified date range."
     )]
-    public async Task<IActionResult> FilterByRangeAsync(
+    public async Task<ResultT<IEnumerable<EventsDto>>> FilterByRangeAsync(
         [FromRoute] Guid communitiesId,
         [FromQuery] DateRangeFilter dateRange,
         CancellationToken cancellationToken)
@@ -104,11 +94,7 @@ public class EventsController(IMediator mediator) : ControllerBase
             DateRangeFilter = dateRange
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("search/title/{title}")]
@@ -120,11 +106,12 @@ public class EventsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> FilterByTitleAsync([FromRoute] string title, CancellationToken cancellationToken)
     {
         var query = new FilterByTitleEventsQuery { Title = title };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        var result = await mediator.Send(query, cancellationToken);
+
+        return !result.IsSuccess
+            ? StatusCode(result.Error!.Code.ToInt(), result.Error)
+            : Ok(result.Value);
     }
 
     [HttpGet("communities/{communityId}/search/title/{title}")]
@@ -133,7 +120,7 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get events by title and community",
         Description = "Retrieves events with the specified title within a specific community."
     )]
-    public async Task<IActionResult> GetEventsByTitleAndCommunityIdAsync(
+    public async Task<ResultT<IEnumerable<EventsDto>>> GetEventsByTitleAndCommunityIdAsync(
         [FromRoute] Guid communityId,
         [FromRoute] string title,
         CancellationToken cancellationToken)
@@ -144,11 +131,7 @@ public class EventsController(IMediator mediator) : ControllerBase
             Title = title
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{eventId}/communities")]
@@ -157,15 +140,13 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get event with communities",
         Description = "Retrieves the details of an event including the communities it belongs to."
     )]
-    public async Task<IActionResult> GetEventsWithCommunitiesAsync([FromRoute] Guid eventId,
+    public async Task<ResultT<IEnumerable<CommunitiesEventsDTos>>> GetEventsWithCommunitiesAsync(
+        [FromRoute] Guid eventId,
         CancellationToken cancellationToken)
     {
         var query = new GetEventsDetailsQuery { Id = eventId };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{eventId}/participation-in-event")]
@@ -174,15 +155,13 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get event participation",
         Description = "Retrieves participation details for a specific event."
     )]
-    public async Task<IActionResult> GetEventsWithParticipationInEventAsync([FromRoute] Guid eventId,
+    public async Task<ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>> GetEventsWithParticipationInEventAsync(
+        [FromRoute] Guid eventId,
         CancellationToken cancellationToken)
     {
         var query = new GetEventsWithParticipationInEventQuery { EventsId = eventId };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("order")]
@@ -191,14 +170,12 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Order events",
         Description = "Retrieves events ordered by the specified field."
     )]
-    public async Task<IActionResult> OrderByIdAsync([FromQuery] string orderBy, CancellationToken cancellationToken)
+    public async Task<ResultT<IEnumerable<EventsDto>>> OrderByIdAsync([FromQuery] string orderBy,
+        CancellationToken cancellationToken)
     {
         var query = new GetOrderByIdEventsQuery { Order = orderBy };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("pagination")]
@@ -207,7 +184,8 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get paginated events",
         Description = "Retrieves a paginated list of events based on the specified page number and size."
     )]
-    public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,
+    public async Task<ResultT<PagedResult<EventsDto>>> GetPagedAsync([FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetPagedEventsQuery
@@ -216,10 +194,6 @@ public class EventsController(IMediator mediator) : ControllerBase
             PageSize = pageSize,
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 }

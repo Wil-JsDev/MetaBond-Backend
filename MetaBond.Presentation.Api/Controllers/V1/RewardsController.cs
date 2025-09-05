@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Feature.Rewards.Commands.Create;
 using MetaBond.Application.Feature.Rewards.Commands.Delete;
 using MetaBond.Application.Feature.Rewards.Commands.Update;
@@ -10,6 +11,9 @@ using MetaBond.Application.Feature.Rewards.Query.GetRecent;
 using MetaBond.Application.Feature.Rewards.Query.GetTop;
 using MetaBond.Application.Feature.Rewards.Query.GetUsersByReward;
 using MetaBond.Application.Feature.Rewards.Query.Pagination;
+using MetaBond.Application.Helpers;
+using MetaBond.Application.Pagination;
+using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -28,14 +32,10 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Create a new reward",
         Description = "Creates a new reward using the provided command data."
     )]
-    public async Task<IActionResult> AddAsync([FromBody] CreateRewardsCommand rewardsCommand,
+    public async Task<ResultT<RewardsDTos>> AddAsync([FromBody] CreateRewardsCommand rewardsCommand,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(rewardsCommand, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(rewardsCommand, cancellationToken);
     }
 
     [HttpPut]
@@ -44,14 +44,10 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Update a reward",
         Description = "Updates an existing reward using the provided command data."
     )]
-    public async Task<IActionResult> UpdateAsync([FromBody] UpdateRewardsCommand rewardsCommand,
+    public async Task<ResultT<RewardsDTos>> UpdateAsync([FromBody] UpdateRewardsCommand rewardsCommand,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(rewardsCommand, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(rewardsCommand, cancellationToken);
     }
 
     [HttpDelete("{id}")]
@@ -60,14 +56,11 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Delete a reward",
         Description = "Deletes a reward by its unique ID."
     )]
-    public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<Guid>> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new DeleteRewardsCommand { RewardsId = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{id}")]
@@ -76,14 +69,11 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get reward by ID",
         Description = "Retrieves a reward using its unique ID."
     )]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<RewardsDTos>> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new GetByIdRewardsQuery { RewardsId = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("count")]
@@ -92,13 +82,9 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get total count of rewards",
         Description = "Returns the total number of rewards in the system."
     )]
-    public async Task<IActionResult> GetCountByIdAsync(CancellationToken cancellationToken)
+    public async Task<ResultT<int>> GetCountByIdAsync(CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetCountRewardsQuery(), cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(new GetCountRewardsQuery(), cancellationToken);
     }
 
     [HttpGet("filter-by-date-range")]
@@ -107,15 +93,12 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get rewards by date range",
         Description = "Retrieves rewards filtered by a specified date range."
     )]
-    public async Task<IActionResult> GetDateRangeAsync([FromQuery] DateRangeType range,
+    public async Task<ResultT<IEnumerable<RewardsDTos>>> GetDateRangeAsync([FromQuery] DateRangeType range,
         CancellationToken cancellationToken)
     {
         var query = new GetByDateRangeRewardQuery { Range = range };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("filter/recent")]
@@ -124,13 +107,9 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get most recent rewards",
         Description = "Retrieves the most recent rewards added to the system."
     )]
-    public async Task<IActionResult> GetRecentAsync(CancellationToken cancellationToken)
+    public async Task<ResultT<RewardsDTos>> GetRecentAsync(CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetMostRecentRewardsQuery(), cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(new GetMostRecentRewardsQuery(), cancellationToken);
     }
 
     [HttpGet("top-rewards-by-count")]
@@ -139,14 +118,12 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get top rewards by count",
         Description = "Retrieves the top rewards ordered by a count parameter."
     )]
-    public async Task<IActionResult> GetTopRewards([FromQuery] int count, CancellationToken cancellationToken)
+    public async Task<ResultT<IEnumerable<RewardsWithUserDTos>>> GetTopRewards([FromQuery] int count,
+        CancellationToken cancellationToken)
     {
         var query = new GetTopRewardsQuery { TopCount = count };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("pagination")]
@@ -155,7 +132,8 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get paginated rewards",
         Description = "Retrieves rewards using pagination parameters: pageNumber and pageSize."
     )]
-    public async Task<IActionResult> GetPagedRewards([FromQuery] int pageNumber, [FromQuery] int pageSize,
+    public async Task<ResultT<PagedResult<RewardsDTos>>> GetPagedRewards([FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetPagedRewardsQuery
@@ -163,11 +141,8 @@ public class RewardsController(IMediator mediator) : ControllerBase
             PageNumber = pageNumber,
             PageSize = pageSize
         };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{rewardsId}/with-author")]
@@ -175,12 +150,9 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get reward with author",
         Description = "Retrieves a reward along with its author information."
     )]
-    public async Task<IActionResult> GetWithAuthorAsync([FromRoute] Guid rewardsId, CancellationToken cancellationToken)
+    public async Task<ResultT<IEnumerable<RewardsWithUserDTos>>> GetWithAuthorAsync([FromRoute] Guid rewardsId,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetUsersByRewardIdQuery { RewardsId = rewardsId }, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(new GetUsersByRewardIdQuery { RewardsId = rewardsId }, cancellationToken);
     }
 }
