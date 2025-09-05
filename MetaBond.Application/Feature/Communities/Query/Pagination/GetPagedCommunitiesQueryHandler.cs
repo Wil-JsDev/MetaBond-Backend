@@ -49,6 +49,15 @@ internal sealed class GetPagedCommunitiesQueryHandler(
                 return pagedResult;
             }, cancellationToken: cancellationToken);
 
+        if (!result.Items.Any())
+        {
+            logger.LogInformation("No communities were found for PageNumber={PageNumber} with PageSize={PageSize}.",
+                request.PageNumber, request.PageSize);
+
+            return ResultT<PagedResult<CommunitiesDTos>>.Failure(
+                Error.Failure("404", "No communities exist for the specified page and page size."));
+        }
+
         logger.LogInformation("Successfully retrieved {TotalItems} communities (Page {CurrentPage} of {TotalPages}).",
             result.TotalItems, result.CurrentPage, result.TotalPages);
 

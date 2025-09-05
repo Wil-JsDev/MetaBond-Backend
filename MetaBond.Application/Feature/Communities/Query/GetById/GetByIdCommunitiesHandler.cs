@@ -27,11 +27,7 @@ public class GetByIdCommunitiesHandler(
         );
 
         if (!communities.IsSuccess)
-        {
-            logger.LogError("Community with ID {CommunityId} was not found.", request.Id);
-
-            return ResultT<CommunitiesDTos>.Failure(Error.NotFound("404", $"{request.Id} not found"));
-        }
+            return communities.Error!;
 
         var communitiesDto = CommunityMapper.MapCommunitiesDTos(communities.Value);
 
