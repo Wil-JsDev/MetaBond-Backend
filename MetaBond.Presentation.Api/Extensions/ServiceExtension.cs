@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MetaBond.Presentation.Api.ExceptionHandler;
+using MetaBond.Presentation.Api.Filters;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 
@@ -43,7 +44,8 @@ public static class ServiceExtension
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = async (context, toke) =>
             {
-                await context.HttpContext.Response.WriteAsync("Request limit exceeded. Please try again later", cancellationToken: toke);
+                await context.HttpContext.Response.WriteAsync("Request limit exceeded. Please try again later",
+                    cancellationToken: toke);
             };
 
             options.AddFixedWindowLimiter("fixed", limiterOptions =>
@@ -59,6 +61,34 @@ public static class ServiceExtension
                 limiterOptions.Window = TimeSpan.FromMinutes(4);
             });
         });
+    }
+
+    public static void AddCors(this IServiceCollection services, IConfiguration configuration)
+    {
+        var allowedPort = configuration["Cors:AllowedPort"];
+
+        if (string.IsNullOrWhiteSpace(allowedPort))
+        {
+            throw new InvalidOperationException("AllowedPort must be configured in appsettings.json");
+        }
+
+        var allowedOrigin = $"http://localhost:{allowedPort}";
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("RestrictedCorsPolicy", builder =>
+            {
+                builder
+                    .WithOrigins(allowedOrigin)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+    }
+
+    public static void AddResultTFilter(this IMvcBuilder builder)
+    {
+        builder.AddMvcOptions(options => { options.Filters.Add<ResultTActionFilter>(); });
     }
 
     public static void AddException(this IServiceCollection services)
