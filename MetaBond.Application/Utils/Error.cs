@@ -1,4 +1,5 @@
-﻿using MetaBond.Domain;
+﻿using System.Text.Json.Serialization;
+using MetaBond.Domain;
 
 namespace MetaBond.Application.Utils;
 
@@ -26,6 +27,7 @@ public class Error
     /// <summary>
     /// Gets the unique code identifying the error.
     /// </summary>
+    [JsonIgnore]
     public string Code { get; }
 
     /// <summary>
@@ -36,6 +38,7 @@ public class Error
     /// <summary>
     /// Gets the type/category of the error.
     /// </summary>
+    [JsonIgnore]
     public ErrorType ErrorType { get; }
 
     /// <summary>

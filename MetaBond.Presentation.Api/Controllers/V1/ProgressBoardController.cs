@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Feature.ProgressBoard.Commands.Create;
 using MetaBond.Application.Feature.ProgressBoard.Commands.Delete;
 using MetaBond.Application.Feature.ProgressBoard.Commands.Update;
@@ -10,6 +11,9 @@ using MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
 using MetaBond.Application.Feature.ProgressBoard.Query.Pagination;
+using MetaBond.Application.Helpers;
+using MetaBond.Application.Pagination;
+using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -28,14 +32,10 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Create a new progress board",
         Description = "Creates a new progress board using the provided command data."
     )]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateProgressBoardCommand command,
+    public async Task<ResultT<ProgressBoardDTos>> CreateAsync([FromBody] CreateProgressBoardCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(command, cancellationToken);
     }
 
     [HttpPut]
@@ -44,14 +44,11 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Update a progress board",
         Description = "Updates an existing progress board with the provided data."
     )]
-    public async Task<IActionResult> UpdateAsync([FromBody] UpdateProgressBoardCommand updateProgressBoardCommand,
+    public async Task<ResultT<ProgressBoardDTos>> UpdateAsync(
+        [FromBody] UpdateProgressBoardCommand updateProgressBoardCommand,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(updateProgressBoardCommand, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(updateProgressBoardCommand, cancellationToken);
     }
 
     [HttpDelete("{id}")]
@@ -60,14 +57,11 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Delete a progress board",
         Description = "Deletes a progress board by its unique ID."
     )]
-    public async Task<IActionResult> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<Guid>> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new DeleteProgressBoardCommand { ProgressBoardId = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{id}")]
@@ -76,14 +70,11 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get a progress board by ID",
         Description = "Retrieves a progress board using its unique ID."
     )]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<ProgressBoardDTos>> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new GetByIdProgressBoardQuery { ProgressBoardId = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("count")]
@@ -92,13 +83,9 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get total count of progress boards",
         Description = "Returns the total number of progress boards available."
     )]
-    public async Task<IActionResult> GetCountAsync(CancellationToken cancellationToken)
+    public async Task<ResultT<int>> GetCountAsync(CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetCountProgressBoardQuery(), cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(new GetCountProgressBoardQuery(), cancellationToken);
     }
 
     [HttpGet("{id}/progress-entries")]
@@ -107,7 +94,8 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get progress entries of a board",
         Description = "Retrieves paginated progress entries for a specific progress board by ID."
     )]
-    public async Task<IActionResult> GetProgressEntriesAsync([FromRoute] Guid id, [FromQuery] int pageNumber,
+    public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> GetProgressEntriesAsync(
+        [FromRoute] Guid id, [FromQuery] int pageNumber,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         var query = new GetProgressBoardIdWithEntriesQuery
@@ -117,11 +105,7 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("filter/by-date")]
@@ -130,7 +114,8 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Filter progress boards by date",
         Description = "Retrieves progress boards within a specific date range using pagination."
     )]
-    public async Task<IActionResult> GetFilterDateRangeAsync([FromQuery] DateRangeType dateRange, [FromQuery] int page,
+    public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> GetFilterDateRangeAsync(
+        [FromQuery] DateRangeType dateRange, [FromQuery] int page,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         var query = new GetRangeProgressBoardQuery
@@ -140,11 +125,7 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
             DateRangeType = dateRange
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("recent-entries")]
@@ -153,15 +134,13 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get recent progress entries",
         Description = "Retrieves the most recent progress entries filtered by a date range."
     )]
-    public async Task<IActionResult> GetFilterRecentAsync([FromQuery] DateRangeFilter dateRange,
+    public async Task<ResultT<IEnumerable<ProgressBoardDTos>>> GetFilterRecentAsync(
+        [FromQuery] DateRangeFilter dateRange,
         CancellationToken cancellationToken)
     {
         var query = new GetRecentProgressBoardQuery { DateFilter = dateRange };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("pagination")]
@@ -170,7 +149,8 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get paginated progress boards",
         Description = "Retrieves progress boards using pagination parameters: pageNumber and pageSize."
     )]
-    public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,
+    public async Task<ResultT<PagedResult<ProgressBoardDTos>>> GetPagedAsync([FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetPagedProgressBoardQuery
@@ -179,26 +159,20 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{progressBoardId}/with-author")]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get progress board with author",
         Description = "Retrieves a progress board along with its author information."
     )]
-    public async Task<IActionResult> GetProgressBoardWithAuthorAsync([FromRoute] Guid progressBoardId,
+    public async Task<ResultT<IEnumerable<ProgressBoardWithUserDTos>>> GetProgressBoardWithAuthorAsync(
+        [FromRoute] Guid progressBoardId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetProgressBoardsWithAuthorQuery { ProgressBoardId = progressBoardId },
+        return await mediator.Send(new GetProgressBoardsWithAuthorQuery { ProgressBoardId = progressBoardId },
             cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
     }
 }

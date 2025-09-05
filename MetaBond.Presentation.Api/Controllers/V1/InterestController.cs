@@ -6,7 +6,9 @@ using MetaBond.Application.Feature.Interest.Query.GetById;
 using MetaBond.Application.Feature.Interest.Query.GetInterestsByName;
 using MetaBond.Application.Feature.Interest.Query.GetInterestsByUser;
 using MetaBond.Application.Feature.Interest.Query.Pagination;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
+using MetaBond.Application.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -23,11 +25,10 @@ public class InterestController(IMediator mediator) : ControllerBase
         Summary = "Create a new interest",
         Description = "Creates a new interest and returns the created resource."
     )]
-    public async Task<IActionResult> CreateInterestAsync([FromBody] CreateInterestCommand command)
+    public async Task<ResultT<InterestDTos>> CreateInterestAsync([FromBody] CreateInterestCommand command,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command);
-
-        return result.IsSuccess ? Ok(result.Value) : StatusCode(Convert.ToUInt16(result.Error!.Code), result.Error);
+        return await mediator.Send(command, cancellationToken);
     }
 
     [HttpGet("{interestId}")]
@@ -35,7 +36,7 @@ public class InterestController(IMediator mediator) : ControllerBase
         Summary = "Get interest by ID",
         Description = "Retrieves an interest by its unique identifier."
     )]
-    public async Task<IActionResult> GetInterestByIdAsync([FromRoute] Guid interestId,
+    public async Task<ResultT<InterestDTos>> GetInterestByIdAsync([FromRoute] Guid interestId,
         CancellationToken cancellationToken)
     {
         var query = new GetByIdInterestQuery
@@ -43,11 +44,7 @@ public class InterestController(IMediator mediator) : ControllerBase
             InterestId = interestId
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : StatusCode(Convert.ToUInt16(result.Error!.Code), result.Error);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("by-name")]
@@ -57,7 +54,8 @@ public class InterestController(IMediator mediator) : ControllerBase
         Description = "Retrieves a paginated list of interests matching the provided name."
     )]
     [ProducesResponseType(typeof(PagedResult<InterestDTos>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetInterestByNameAsync([FromQuery] string interestName, int pageNumber,
+    public async Task<ResultT<PagedResult<InterestWithUserDto>>> GetInterestByNameAsync([FromQuery] string interestName,
+        int pageNumber,
         int pageSize, CancellationToken cancellationToken)
     {
         GetInterestByNameQuery query = new()
@@ -67,8 +65,7 @@ public class InterestController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : StatusCode(Convert.ToUInt16(result.Error!.Code), result.Error);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("by-user/{userId}")]
@@ -77,7 +74,8 @@ public class InterestController(IMediator mediator) : ControllerBase
         Summary = "Get interests by user",
         Description = "Retrieves a paginated list of interests associated with a specific user."
     )]
-    public async Task<IActionResult> GetInterestByUserAsync([FromRoute] Guid userId, [FromQuery] int pageNumber,
+    public async Task<ResultT<PagedResult<InterestDTos>>> GetInterestByUserAsync([FromRoute] Guid userId,
+        [FromQuery] int pageNumber,
         [FromQuery] int pageSize, CancellationToken cancellationToken = default)
     {
         var query = new GetInterestByUserQuery
@@ -87,8 +85,7 @@ public class InterestController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : StatusCode(Convert.ToInt32(result.Error!.Code), result.Error);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("pagination")]
@@ -97,7 +94,7 @@ public class InterestController(IMediator mediator) : ControllerBase
         Summary = "Get paginated interests",
         Description = "Retrieves a paginated list of all interests."
     )]
-    public async Task<IActionResult> GetPagedInterestAsync(int pageNumber,
+    public async Task<ResultT<PagedResult<InterestDTos>>> GetPagedInterestAsync(int pageNumber,
         int pageSize, CancellationToken cancellationToken)
     {
         GetPagedInterestQuery query = new()
@@ -106,7 +103,6 @@ public class InterestController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : StatusCode(Convert.ToUInt16(result.Error!.Code), result.Error);
+        return await mediator.Send(query, cancellationToken);
     }
 }

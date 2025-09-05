@@ -16,11 +16,9 @@ public class ParticipationInEventTests
 {
     private readonly Mock<IMediator> _mediator = new();
 
-
     [Fact]
-    public void CreateParticipationInEvent_Tests()
+    public async Task CreateParticipationInEvent_Tests()
     {
-     
         // Arrange
         CreateParticipationInEventCommand createParticipationInEventCommand = new()
         {
@@ -32,26 +30,28 @@ public class ParticipationInEventTests
             ParticipationInEventId: Guid.NewGuid(),
             EventId: createParticipationInEventCommand.EventId
         );
-        
+
         var expectedResult = ResultT<ParticipationInEventDTos>.Success(participationInEventDTos);
-        
+
         _mediator.Setup(x => x.Send(createParticipationInEventCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var participationInEventController = new ParticipationInEventController(_mediator.Object);
 
-        //Act
-        var resultController = participationInEventController.CreateAsync(createParticipationInEventCommand, CancellationToken.None);
-        //Assert
+        // Act
+        var resultController =
+            await participationInEventController.CreateAsync(createParticipationInEventCommand, CancellationToken.None);
+
+        // Assert
         Assert.NotNull(resultController);
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal(createParticipationInEventCommand.EventId, resultController.Value.EventId);
     }
 
     [Fact]
-    public void UpdateParticipationInEvent_Tests()
+    public async Task UpdateParticipationInEvent_Tests()
     {
-        
         // Arrange
-
         UpdateParticipationInEventCommand updateParticipationInEventCommand = new()
         {
             Id = Guid.NewGuid(),
@@ -63,27 +63,27 @@ public class ParticipationInEventTests
             ParticipationInEventId: Guid.NewGuid(),
             EventId: updateParticipationInEventCommand.EventId
         );
-        
-        var expectedResult = ResultT<ParticipationInEventDTos>.Success(participationInEventDTos);
-        
-        _mediator.Setup(x => x.Send(updateParticipationInEventCommand, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);  
-        
-        var participationInEventController = new ParticipationInEventController(_mediator.Object);
-        
-        //Act
 
-        var resultController = participationInEventController.UpdateAsync(updateParticipationInEventCommand, CancellationToken.None);
+        var expectedResult = ResultT<ParticipationInEventDTos>.Success(participationInEventDTos);
+
+        _mediator.Setup(x => x.Send(updateParticipationInEventCommand, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var participationInEventController = new ParticipationInEventController(_mediator.Object);
+
+        // Act
+        var resultController =
+            await participationInEventController.UpdateAsync(updateParticipationInEventCommand, CancellationToken.None);
 
         // Assert
-        
         Assert.NotNull(resultController);
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal(updateParticipationInEventCommand.EventId, resultController.Value.EventId);
     }
 
     [Fact]
-    public void GetEventsParticipationInEvents_Tests()
+    public async Task GetEventsParticipationInEvents_Tests()
     {
-        
         // Arrange
         GetEventsQuery query = new()
         {
@@ -93,31 +93,35 @@ public class ParticipationInEventTests
         IEnumerable<EventsWithParticipationInEventDTos> eventsWithParticipationInEventDTosEnumerable =
             new List<EventsWithParticipationInEventDTos>()
             {
-               new EventsWithParticipationInEventDTos
+                new EventsWithParticipationInEventDTos
                 (
                     ParticipationInEventId: query.ParticipationInEventId,
                     Events: new List<EventsDto>()
                 )
             };
-        
-        var expectedResult = ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Success(eventsWithParticipationInEventDTosEnumerable);
-        
-        _mediator.Setup(x => x.Send(query, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var participationInEventController = new ParticipationInEventController(_mediator.Object);
-        
-        // Act
 
-        var resultController = participationInEventController.GetParticipationInEventDetailsAsync((Guid)query.ParticipationInEventId,CancellationToken.None);
+        var expectedResult =
+            ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Success(
+                eventsWithParticipationInEventDTosEnumerable);
+
+        _mediator.Setup(x => x.Send(It.IsAny<GetEventsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var participationInEventController = new ParticipationInEventController(_mediator.Object);
+
+        // Act
+        var resultController =
+            await participationInEventController.GetParticipationInEventDetailsAsync((Guid)query.ParticipationInEventId,
+                CancellationToken.None);
 
         // Assert
-        
         Assert.NotNull(resultController);
+        Assert.True(resultController.IsSuccess);
+        Assert.Single(resultController.Value);
     }
-    
+
     [Fact]
-    public void GetPagedResultParticipationInEvents_Tests()
+    public async Task GetPagedResultParticipationInEvents_Tests()
     {
         // Arrange
         GetPagedParticipationInEventQuery getPagedParticipationInEventQuery = new()
@@ -133,21 +137,22 @@ public class ParticipationInEventTests
             TotalItems = 1,
             TotalPages = 2
         };
-        
+
         var expectedResult = ResultT<PagedResult<ParticipationInEventDTos>>.Success(pagedResult);
-        
-        _mediator.Setup(x => x.Send(getPagedParticipationInEventQuery, It.IsAny<CancellationToken>()))
+
+        _mediator.Setup(x => x.Send(It.IsAny<GetPagedParticipationInEventQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var participationInEventController = new ParticipationInEventController(_mediator.Object);
 
         // Act
+        var resultController = await participationInEventController.GetPagedAsync(
+            getPagedParticipationInEventQuery.PageNumber, getPagedParticipationInEventQuery.PageSize,
+            CancellationToken.None);
 
-        var resultController = participationInEventController.GetPagedAsync(getPagedParticipationInEventQuery.PageNumber, getPagedParticipationInEventQuery.PageSize, CancellationToken.None);
-        
         // Assert
-        
         Assert.NotNull(resultController);
-        
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal(1, resultController.Value.CurrentPage);
     }
 }

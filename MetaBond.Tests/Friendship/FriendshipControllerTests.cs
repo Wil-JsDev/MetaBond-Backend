@@ -18,7 +18,7 @@ public class FriendshipControllerTests
     private readonly Mock<IMediator> _mediator = new();
 
     [Fact]
-    public void CreateFriendship_Tests()
+    public async Task CreateFriendship_Tests()
     {
         //Arrange
         CreateFriendshipCommand createFriendshipCommand = new()
@@ -28,100 +28,89 @@ public class FriendshipControllerTests
             AddresseeId = Guid.NewGuid()
         };
 
-        FriendshipDTos friendshipDTos = new
-        (
+        FriendshipDTos friendshipDTos = new(
             FriendshipId: Guid.NewGuid(),
             Status: createFriendshipCommand.Status,
             RequesterId: createFriendshipCommand.RequesterId,
-            AddresseeId: createFriendshipCommand.RequesterId,
+            AddresseeId: createFriendshipCommand.AddresseeId,
             CreatedAt: DateTime.UtcNow
         );
-        
+
         var expectedResult = ResultT<FriendshipDTos>.Success(friendshipDTos);
-        
+
         _mediator.Setup(m => m.Send(createFriendshipCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var friendshipController = new FriendshipController(_mediator.Object);
-        
-        //Act
 
-        var resultController = friendshipController.CreateAsync(createFriendshipCommand, CancellationToken.None);
+        //Act
+        var result = await friendshipController.CreateAsync(createFriendshipCommand, CancellationToken.None);
 
         //Assert
-        Assert.True(resultController != null);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(friendshipDTos, result.Value);
     }
 
     [Fact]
-    public void UpdateFriendship_Tests()
+    public async Task UpdateFriendship_Tests()
     {
         // Arrange
-
         UpdateFriendshipCommand updateFriendshipCommand = new()
         {
             Id = Guid.NewGuid(),
             Status = Status.Accepted
         };
-        
-        UpdateFriendshipDTos friendshipDTos = new
-        (
-           StatusFriendship:  updateFriendshipCommand.Status
+
+        UpdateFriendshipDTos friendshipDTos = new(
+            StatusFriendship: updateFriendshipCommand.Status
         );
 
         var expectedResult = ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);
-        
+
         _mediator.Setup(m => m.Send(updateFriendshipCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var friendshipController = new FriendshipController(_mediator.Object);
 
         // Act
-
-        var resultController = friendshipController.UpdateAsync(updateFriendshipCommand, CancellationToken.None);
+        var result = await friendshipController.UpdateAsync(updateFriendshipCommand, CancellationToken.None);
 
         // Assert
-        Assert.NotSame(expectedResult, resultController);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(friendshipDTos, result.Value);
     }
 
     [Fact]
-    public void DeleteFriendship_Tests()
+    public async Task DeleteFriendship_Tests()
     {
         // Arrange
-        DeleteFriendshipCommand deleteFriendshipCommand = new()
-        {
-            Id = Guid.NewGuid()
-        };
-        
-        var expectedResult = ResultT<Guid>.Success(deleteFriendshipCommand.Id);
-        
-        _mediator.Setup(m => m.Send(deleteFriendshipCommand, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var friendshipController = new FriendshipController(_mediator.Object);
-        
-        // Act
+        var friendshipId = Guid.NewGuid();
 
-        var resultController = friendshipController.DeleteAsync(deleteFriendshipCommand.Id, CancellationToken.None);
+        var expectedResult = ResultT<Guid>.Success(friendshipId);
+
+        _mediator.Setup(m =>
+                m.Send(It.Is<DeleteFriendshipCommand>(cmd => cmd.Id == friendshipId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var friendshipController = new FriendshipController(_mediator.Object);
+
+        // Act
+        var result = await friendshipController.DeleteAsync(friendshipId, CancellationToken.None);
 
         // Assert
-
-        Assert.True(resultController != null);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(friendshipId, result.Value);
     }
 
     [Fact]
-    public void GetCreatedAfterFriendship_Tests()
+    public async Task GetCreatedAfterFriendship_Tests()
     {
         //Arrange
-
-        GetCreatedAfterFriendshipQuery getCreatedAfterFriendshipQuery = new()
-        {
-            DateRange = DateRangeType.Today
-        };
+        var dateRange = DateRangeType.Today;
 
         IEnumerable<FriendshipDTos> friendshipDTosEnumerable = new List<FriendshipDTos>()
         {
-            new  FriendshipDTos
-            (
+            new FriendshipDTos(
                 FriendshipId: Guid.NewGuid(),
                 Status: Status.Accepted,
                 RequesterId: Guid.NewGuid(),
@@ -129,38 +118,32 @@ public class FriendshipControllerTests
                 CreatedAt: DateTime.UtcNow
             )
         };
-        
+
         var expectedResult = ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
 
-        _mediator.Setup(m => m.Send(It.IsAny<GetCreatedAfterFriendshipQuery>(), It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.Is<GetCreatedAfterFriendshipQuery>(q => q.DateRange == dateRange),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
-        var friendshipController = new FriendshipController(_mediator.Object);
-        
-        //Act
 
-        var resultController = friendshipController.GetAfterCreatedAsync(DateRangeType.Today,CancellationToken.None);
+        var friendshipController = new FriendshipController(_mediator.Object);
+
+        //Act
+        var result = await friendshipController.GetAfterCreatedAsync(dateRange, CancellationToken.None);
 
         //Assert
-        Assert.NotNull(resultController);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(friendshipDTosEnumerable, result.Value);
     }
 
-
     [Fact]
-    public void GetBeforeFriendship_Tests()
+    public async Task GetBeforeFriendship_Tests()
     {
-        
         // Arrange
-
-        GetCreatedBeforeFriendshipQuery createdBeforeFriendshipQuery = new()
-        {
-            PastDateRangeType = PastDateRangeType.BeforeToday
-        };
+        var pastDateRange = PastDateRangeType.BeforeToday;
 
         IEnumerable<FriendshipDTos> friendshipDTosEnumerable = new List<FriendshipDTos>()
         {
-            new  FriendshipDTos
-            (
+            new FriendshipDTos(
                 FriendshipId: Guid.NewGuid(),
                 Status: Status.Accepted,
                 RequesterId: Guid.NewGuid(),
@@ -168,44 +151,47 @@ public class FriendshipControllerTests
                 CreatedAt: DateTime.UtcNow
             )
         };
-        
-        var expectedResult = ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
-        
-        var friendshipController = new FriendshipController(_mediator.Object);
-        
-        // Act
 
-        var resultController = friendshipController.GetBeforeCreatedAsync(PastDateRangeType.BeforeToday, CancellationToken.None);
+        var expectedResult = ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
+
+        _mediator.Setup(m => m.Send(It.Is<GetCreatedBeforeFriendshipQuery>(q => q.PastDateRangeType == pastDateRange),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var friendshipController = new FriendshipController(_mediator.Object);
+
+        // Act
+        var result = await friendshipController.GetBeforeCreatedAsync(pastDateRange, CancellationToken.None);
 
         // Assert
-        
-        Assert.NotNull(resultController);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(friendshipDTosEnumerable, result.Value);
     }
 
     [Fact]
-    public void GetCountByStatusFriendship_Tests()
+    public async Task GetCountByStatusFriendship_Tests()
     {
         // Arrange
-        
+        var status = Status.Accepted;
         GetCountByStatusFriendshipQuery friendshipQuery = new()
         {
-            Status = Status.Accepted
+            Status = status
         };
 
-        
         int value = 1;
         var expectedResult = ResultT<int>.Success(value);
-        
-        _mediator.Setup(m => m.Send(friendshipQuery, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var friendshipController = new FriendshipController(_mediator.Object);
-        
-        // Act
 
-        var resultController = friendshipController.FilterByStatus(Status.Accepted,CancellationToken.None);
+        _mediator.Setup(m => m.Send(It.Is<GetCountByStatusFriendshipQuery>(q => q.Status == status),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var friendshipController = new FriendshipController(_mediator.Object);
+
+        // Act
+        var result = await friendshipController.FilterByStatus(status, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultController);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(value, result.Value);
     }
 }

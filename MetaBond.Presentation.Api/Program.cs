@@ -16,7 +16,10 @@ try
     });
 
     // Add services to the container.
-    builder.Services.AddControllers();
+    builder.Services
+        .AddControllers()
+        .AddResultTFilter();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.RateLimiting();
@@ -28,6 +31,7 @@ try
     builder.Services.AddApplicationLayer();
     builder.Services.AddSwaggerExtension();
     builder.Services.AddVersioning();
+    builder.Services.AddCors(builder.Configuration);
 
     var app = builder.Build();
 

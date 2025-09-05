@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Feature.Posts.Commands.Create;
 using MetaBond.Application.Feature.Posts.Commands.Delete;
 using MetaBond.Application.Feature.Posts.Query.GetById;
@@ -9,6 +10,9 @@ using MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
 using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
 using MetaBond.Application.Feature.Posts.Query.GetPostWithAuthor;
 using MetaBond.Application.Feature.Posts.Query.Pagination;
+using MetaBond.Application.Helpers;
+using MetaBond.Application.Pagination;
+using MetaBond.Application.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -26,14 +30,10 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Create a new post",
         Description = "Creates a new post using form data."
     )]
-    public async Task<IActionResult> AddPostsAsync([FromForm] CreatePostsCommand createPostsCommand,
+    public async Task<ResultT<PostsDTos>> AddPostsAsync([FromForm] CreatePostsCommand createPostsCommand,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(createPostsCommand, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(createPostsCommand, cancellationToken);
     }
 
     [HttpDelete("{id}")]
@@ -42,14 +42,11 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Delete a post",
         Description = "Deletes a post identified by its ID."
     )]
-    public async Task<IActionResult> DeletePostsAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<Guid>> DeletePostsAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new DeletePostsCommand { PostsId = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{id}")]
@@ -58,14 +55,11 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get a post by ID",
         Description = "Retrieves a post by its unique ID."
     )]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<PostsDTos>> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new GetByIdPostsQuery { PostsId = id };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("communities/{communitiesId}/recent-posts")]
@@ -74,23 +68,17 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get recent posts in a community",
         Description = "Retrieves the most recent posts in a specific community. Specify topCount to limit results."
     )]
-    public async Task<IActionResult> GetRecentPostsAsync([FromRoute] Guid communitiesId, [FromQuery] int topCount,
+    public async Task<ResultT<IEnumerable<PostsDTos>>> GetRecentPostsAsync([FromRoute] Guid communitiesId,
+        [FromQuery] int topCount,
         CancellationToken cancellationToken)
     {
-        if (topCount <= 0)
-            return BadRequest("The topCount parameter must be greater than zero.");
-
         var query = new GetFilterRecentPostsQuery
         {
             CommunitiesId = communitiesId,
             TopCount = topCount
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("communities/{communitiesId}/recent-posts-top10")]
@@ -99,15 +87,12 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get top 10 recent posts in a community",
         Description = "Retrieves the 10 most recent posts for a specific community."
     )]
-    public async Task<IActionResult> GetRecentTop10Posts([FromRoute] Guid communitiesId,
+    public async Task<ResultT<IEnumerable<PostsDTos>>> GetRecentTop10Posts([FromRoute] Guid communitiesId,
         CancellationToken cancellationToken)
     {
         var query = new GetFilterTop10Query { CommunitiesId = communitiesId };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{postsId}/details/communities")]
@@ -116,14 +101,12 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get post details with communities",
         Description = "Retrieves detailed information of a post along with the communities it belongs to."
     )]
-    public async Task<IActionResult> GetDetailsPosts([FromRoute] Guid postsId, CancellationToken cancellationToken)
+    public async Task<ResultT<IEnumerable<PostsWithCommunitiesDTos>>> GetDetailsPosts([FromRoute] Guid postsId,
+        CancellationToken cancellationToken)
     {
         var query = new GetPostsByIdCommunitiesQuery { PostsId = postsId };
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("communities/{communitiesId}/search/title")]
@@ -132,7 +115,8 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Filter posts by title",
         Description = "Retrieves posts in a community filtered by title keyword."
     )]
-    public async Task<IActionResult> FilterByTitleAsync([FromRoute] Guid communitiesId, [FromQuery] string title,
+    public async Task<ResultT<IEnumerable<PostsDTos>>> FilterByTitleAsync([FromRoute] Guid communitiesId,
+        [FromQuery] string title,
         CancellationToken cancellationToken)
     {
         var query = new GetFilterTitlePostsQuery
@@ -141,11 +125,7 @@ public class PostsController(IMediator mediator) : ControllerBase
             Title = title
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("pagination")]
@@ -154,7 +134,8 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get paginated posts",
         Description = "Retrieves posts using pagination parameters: pageNumber and pageSize."
     )]
-    public async Task<IActionResult> GetPagedResultAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,
+    public async Task<ResultT<PagedResult<PostsDTos>>> GetPagedResultAsync([FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetPagedPostsQuery
@@ -163,11 +144,7 @@ public class PostsController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{postsId}/with-author")]
@@ -175,13 +152,9 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get post with author info",
         Description = "Retrieves a post along with its author details."
     )]
-    public async Task<IActionResult> GetPostsWithAuthorAsync([FromRoute] Guid postsId,
+    public async Task<ResultT<IEnumerable<PostsWithUserDTos>>> GetPostsWithAuthorAsync([FromRoute] Guid postsId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetPostWithAuthorQuery { PostsId = postsId }, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(new GetPostWithAuthorQuery { PostsId = postsId }, cancellationToken);
     }
 }
