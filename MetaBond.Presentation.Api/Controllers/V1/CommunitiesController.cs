@@ -78,11 +78,18 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
         Summary = "Search communities by category",
         Description = "Retrieves a list of communities filtered by a specific category."
     )]
-    public async Task<ResultT<IEnumerable<CommunitiesDTos>>> FilterByCategoryAsync([FromRoute] string category,
+    public async Task<ResultT<PagedResult<CommunitiesDTos>>> GetCommunitiesByCategoryIdAsync([FromRoute] Guid categoryId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new FilterCommunitiesQuery { Category = category };
-        
+        var query = new GetCommunitiesByCategoryIdQuery
+        {
+            CategoryId = categoryId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
         return await mediator.Send(query, cancellationToken);
     }
 
