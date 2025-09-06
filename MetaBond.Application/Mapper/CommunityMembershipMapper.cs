@@ -32,7 +32,6 @@ public static class CommunityMembershipMapper
         (
             CommunitiesId: communityMembership.Community!.Id,
             Name: communityMembership.Community!.Name,
-            Category: communityMembership.Community!.Category,
             CreatedAt: communityMembership.Community!.CreateAt
         );
     }

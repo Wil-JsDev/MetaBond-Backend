@@ -30,7 +30,6 @@ internal sealed class CreateCommunitiesCommandHandler(
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 Description = request.Description,
-                Category = request.Category
             };
 
             await communitiesRepository.CreateAsync(communities, cancellationToken);

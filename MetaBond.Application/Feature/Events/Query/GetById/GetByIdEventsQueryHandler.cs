@@ -7,37 +7,36 @@ using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Events.Query.GetById
+namespace MetaBond.Application.Feature.Events.Query.GetById;
+
+internal sealed class GetByIdEventsQueryHandler(
+    IEventsRepository eventsRepository,
+    IDistributedCache decoratedCache,
+    ILogger<GetByIdEventsQueryHandler> logger)
+    : IQueryHandler<GetByIdEventsQuery, EventsDto>
 {
-    internal sealed class GetByIdEventsQueryHandler(
-        IEventsRepository eventsRepository,
-        IDistributedCache decoratedCache,
-        ILogger<GetByIdEventsQueryHandler> logger)
-        : IQueryHandler<GetByIdEventsQuery, EventsDto>
+    public async Task<ResultT<EventsDto>> Handle(
+        GetByIdEventsQuery request,
+        CancellationToken cancellationToken)
     {
-        public async Task<ResultT<EventsDto>> Handle(
-            GetByIdEventsQuery request,
-            CancellationToken cancellationToken)
+        var events = await EntityHelper.GetEntityByIdAsync
+        (
+            eventsRepository.GetByIdAsync,
+            request.Id,
+            "Events",
+            logger
+        );
+        if (!events.IsSuccess)
         {
-            var events = await EntityHelper.GetEntityByIdAsync
-            (
-                eventsRepository.GetByIdAsync,
-                request.Id,
-                "Events",
-                logger
-            );
-            if (!events.IsSuccess)
-            {
-                logger.LogError("Events with ID {EventId} not found.", request.Id);
+            logger.LogError("Events with ID {EventId} not found.", request.Id);
 
-                return ResultT<EventsDto>.Failure(events.Error!);
-            }
-
-            var eventsDto = EventsMapper.EventsToDto(events.Value);
-
-            logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Value.Id);
-
-            return ResultT<EventsDto>.Success(eventsDto);
+            return ResultT<EventsDto>.Failure(events.Error!);
         }
+
+        var eventsDto = EventsMapper.EventsToDto(events.Value);
+
+        logger.LogInformation("Event with ID {Id} retrieved successfully.", events.Value.Id);
+
+        return ResultT<EventsDto>.Success(eventsDto);
     }
 }

@@ -34,7 +34,6 @@ internal sealed class GetPagedCommunitiesQueryHandler(
                 var dtoItems = communitiesPaged.Items!.Select(c => new CommunitiesDTos(
                     CommunitiesId: c.Id,
                     Name: c.Name,
-                    Category: c.Category,
                     CreatedAt: c.CreateAt
                 )).ToList();
 

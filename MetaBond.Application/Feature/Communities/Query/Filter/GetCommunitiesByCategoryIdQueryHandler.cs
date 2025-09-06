@@ -10,10 +10,10 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Communities.Query.Filter;
 
-internal sealed class FilterCommunitiesQueryHandler(
+internal sealed class GetCommunitiesByCategoryIdQueryHandler(
     ICommunitiesRepository communitiesRepository,
     IDistributedCache decoratedCache,
-    ILogger<FilterCommunitiesQueryHandler> logger)
+    ILogger<GetCommunitiesByCategoryIdQueryHandler> logger)
     : IQueryHandler<GetCommunitiesByCategoryIdQuery, PagedResult<CommunitiesDTos>>
 {
     public async Task<ResultT<PagedResult<CommunitiesDTos>>> Handle(GetCommunitiesByCategoryIdQuery request,
