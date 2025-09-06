@@ -282,8 +282,8 @@ public class EventsControllerTests
                 DateTime.UtcNow.AddMonths(-2),
                 new List<CommunitySummaryDto>
                 {
-                    new("Group about ASP.NET Core", "Technology", DateTime.UtcNow.AddMonths(-5)),
-                    new("Blazor Community", "Web Development", DateTime.UtcNow.AddMonths(-4))
+                    new("Group about ASP.NET Core", DateTime.UtcNow.AddMonths(-5)),
+                    new("Blazor Community", DateTime.UtcNow.AddMonths(-4))
                 }
             )
         };
