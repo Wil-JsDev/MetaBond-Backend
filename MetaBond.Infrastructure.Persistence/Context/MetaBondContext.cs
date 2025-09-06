@@ -39,6 +39,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
         public DbSet<CommunityMembership> CommunityMembership { get; set; }
 
+        public DbSet<InterestCategory> InterestCategories { get; set; }
+
+        public DbSet<CommunityCategory> CommunityCategories { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -100,6 +104,12 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<EmailConfirmationToken>()
                 .ToTable("EmailConfirmationTokens");
+
+            modelBuilder.Entity<InterestCategory>()
+                .ToTable("InterestCategories");
+
+            modelBuilder.Entity<CommunityCategory>()
+                .ToTable("CommunityCategories");
 
             #endregion
 
@@ -166,6 +176,14 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<UserInterest>()
                 .HasKey(uc => new { uc.UserId, uc.InterestId });
+
+            modelBuilder.Entity<InterestCategory>()
+                .HasKey(ic => ic.Id)
+                .HasName("PkInterestCategories");
+
+            modelBuilder.Entity<CommunityCategory>()
+                .HasKey(cc => cc.Id)
+                .HasName("PkCommunityCategories");
 
             #endregion
 
@@ -304,6 +322,20 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .HasConstraintName("FkRewardsUserId")
                 .IsRequired();
 
+            modelBuilder.Entity<CommunityCategory>()
+                .HasMany(cm => cm.Communities)
+                .WithOne(cc => cc.CommunityCategory)
+                .HasForeignKey(cc => cc.CommunityCategoryId)
+                .HasConstraintName("FkCommunityCategoryId")
+                .IsRequired();
+
+            modelBuilder.Entity<InterestCategory>()
+                .HasMany(ci => ci.Interest)
+                .WithOne(ic => ic.InterestCategory)
+                .HasForeignKey(ic => ic.InterestCategoryId)
+                .HasConstraintName("FkInterestCategoryId")
+                .IsRequired();
+
             #endregion
 
             #region Communities
@@ -317,10 +349,6 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 x.Property(c => c.Description)
                     .IsRequired()
                     .HasMaxLength(maxLength: 250);
-
-                x.Property(c => c.Category)
-                    .HasMaxLength(25)
-                    .IsRequired();
             });
 
             #endregion
@@ -466,6 +494,29 @@ namespace MetaBond.Infrastructure.Persistence.Context
             });
 
             #endregion
+            
+            #region Community Category
+            
+            modelBuilder.Entity<CommunityCategory>(entity =>
+            {
+                entity.Property(e => e.Name)
+                    .HasMaxLength(30)
+                    .IsRequired();
+            });
+            
+            #endregion
+
+            #region Interest Category
+
+            modelBuilder.Entity<InterestCategory>(entity =>
+            {
+                entity.Property(e => e.Name)
+                    .HasMaxLength(30)
+                    .IsRequired();
+            });
+
+            #endregion
+
         }
     }
 }

@@ -7,7 +7,7 @@ public sealed class Communities : BaseModel
 {
     public string? Description { get; set; }
 
-    public string? Category { get; set; }
+    public Guid? CommunityCategoryId { get; set; }
 
     public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 
@@ -16,6 +16,8 @@ public sealed class Communities : BaseModel
     public ICollection<Posts>? Posts { get; set; }
 
     public ICollection<CommunityMembership>? CommunityMemberships { get; set; }
+
+    public CommunityCategory? CommunityCategory { get; set; }
 
     [JsonIgnore] public ICollection<Events>? Events { get; set; }
 }
