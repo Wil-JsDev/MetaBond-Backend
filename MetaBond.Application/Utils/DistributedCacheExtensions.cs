@@ -17,9 +17,8 @@ public static class DistributedCacheExtensions
         Func<Task<T>> factory,
         DistributedCacheEntryOptions cacheOptions = null!,
         CancellationToken cancellationToken = default
-        )
+    )
     {
-        
         var cachedData = await cache.GetStringAsync(key, cancellationToken);
 
         if (cachedData != null)
@@ -27,9 +26,9 @@ public static class DistributedCacheExtensions
             Console.WriteLine($" Cache HIT for key: {key}");
             return JsonSerializer.Deserialize<T>(cachedData)!;
         }
-        
+
         Console.WriteLine($" Cache MISS for key: {key}");
-        
+
         var data = await factory();
 
         await cache.SetStringAsync(
@@ -37,10 +36,10 @@ public static class DistributedCacheExtensions
             JsonSerializer.Serialize(data),
             cacheOptions ?? DefaultExpiration,
             cancellationToken
-            );
-        
+        );
+
         Console.WriteLine($" Cached data under key: {key}");
-        
+
         return data;
     }
 }

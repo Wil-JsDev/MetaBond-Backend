@@ -64,6 +64,8 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             var query = await _metaBondContext.Set<Rewards>()
                                               .AsNoTracking() 
                                               .OrderByDescending(x => x.PointAwarded)
+                                              .Include(r => r.User)
+                                              .AsSplitQuery()
                                               .Take(topCount)
                                               .ToListAsync(cancellationToken);
 

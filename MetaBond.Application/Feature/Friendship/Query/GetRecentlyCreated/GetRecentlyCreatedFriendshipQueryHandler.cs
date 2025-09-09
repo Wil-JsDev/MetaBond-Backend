@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,43 +15,44 @@ internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
     : IQueryHandler<GetRecentlyCreatedFriendshipQuery, IEnumerable<FriendshipDTos>>
 {
     public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
-        GetRecentlyCreatedFriendshipQuery request, 
+        GetRecentlyCreatedFriendshipQuery request,
         CancellationToken cancellationToken)
     {
-        if (request != null)
+        if (request.Limit <= 0)
         {
-            string cacheKey = $"GetRecentlyCreatedFriendship-{request.Limit}";
-            var friendshipRecently = await decoratedCache.GetOrCreateAsync(
-                cacheKey,
-                async () => await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, cancellationToken), 
-                cancellationToken: cancellationToken);
+            logger.LogError("Invalid limit: {Limit}", request.Limit);
 
-            IEnumerable<Domain.Models.Friendship> friendships = friendshipRecently.ToList();
-            if ( !friendships.Any())
-            {
-                logger.LogError("No recent friendships found for the given limit: {Limit}", request.Limit);
-
-                return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "No recent friendships found."));
-            }
-
-            var friendshipDTos = friendships.Select(x => new FriendshipDTos
-            (
-                FriendshipId: x.Id,
-                Status: x.Status,
-                RequesterId: x.RequesterId,
-                AddresseeId: x.AddresseeId,
-                CreatedAt: x.CreateAdt
-            ));
-
-            IEnumerable<FriendshipDTos> value = friendshipDTos.ToList();
-            logger.LogInformation("Successfully retrieved {Count} recent friendships with limit: {Limit}", 
-                value.Count(), request.Limit);
-
-            return ResultT<IEnumerable<FriendshipDTos>>.Success(value);
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(
+                Error.Failure("400", "Invalid limit. Limit must be greater than zero."));
         }
 
-        logger.LogError("Request is null. Failed to retrieve recent friendships.");
+        string cacheKey = $"GetRecentlyCreatedFriendship-{request.Limit}";
+        var friendshipRecently = await decoratedCache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var recentFriendship =
+                    await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, cancellationToken);
 
-        return ResultT<IEnumerable<FriendshipDTos>>.Failure(Error.Failure("400", "Invalid request: The request cannot be null."));
+                var friendshipDTos = recentFriendship.Select(FriendshipMapper.MapFriendshipDTos).ToList();
+
+                return friendshipDTos;
+            },
+            cancellationToken: cancellationToken);
+
+        if (!friendshipRecently.Any())
+        {
+            logger.LogError("No recent friendships found for the given limit: {Limit}", request.Limit);
+
+            return ResultT<IEnumerable<FriendshipDTos>>.Failure(
+                Error.Failure("400", "No recent friendships found."));
+        }
+
+
+        IEnumerable<FriendshipDTos> value = friendshipRecently.ToList();
+        logger.LogInformation("Successfully retrieved {Count} recent friendships with limit: {Limit}",
+            value.Count(), request.Limit);
+
+        return ResultT<IEnumerable<FriendshipDTos>>.Success(value);
     }
 }

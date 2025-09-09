@@ -4,7 +4,8 @@ public static class EmailTemplates
 {
     public static string GetPasswordRecoveryEmailHtml(string to, string verificationCode)
     {
-        var digits = string.Join(Environment.NewLine, verificationCode.Select(c => $"<div class=\"code-digit\">{c}</div>"));
+        var digits = string.Join(Environment.NewLine,
+            verificationCode.Select(c => $"<div class=\"code-digit\">{c}</div>"));
         return @$"
 			<!DOCTYPE html>
 			<html lang=""es"">
@@ -357,11 +358,13 @@ public static class EmailTemplates
 			</html>
             ";
     }
+
     public static string ConfirmAccountEmailHtml(string verificationCode)
     {
-	    var digits = string.Join(Environment.NewLine, verificationCode.Select(c => $"<div class=\"code-digit\">{c}</div>"));
+        var digits = string.Join(Environment.NewLine,
+            verificationCode.Select(c => $"<div class=\"code-digit\">{c}</div>"));
 
-	    return @$"<!DOCTYPE html>
+        return @$"<!DOCTYPE html>
 		<html lang=""es"">
 
 		<head>

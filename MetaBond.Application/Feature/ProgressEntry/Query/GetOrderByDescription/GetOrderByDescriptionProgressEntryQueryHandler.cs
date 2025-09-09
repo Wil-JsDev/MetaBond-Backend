@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -15,40 +16,49 @@ internal sealed class GetOrderByDescriptionProgressEntryQueryHandler(
     : IQueryHandler<GetOrderByDescriptionProgressEntryQuery, IEnumerable<ProgressEntryWithDescriptionDTos>>
 {
     public async Task<ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>> Handle(
-        GetOrderByDescriptionProgressEntryQuery request, 
+        GetOrderByDescriptionProgressEntryQuery request,
         CancellationToken cancellationToken)
     {
-        var progressBoard = await progressEntryRepository.GetByIdAsync(request.ProgressBoardId);
-        if (progressBoard == null)
-        {
-            logger.LogError($"No progress board found with id: {request.ProgressBoardId}");
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
 
-            return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Failure(Error.NotFound("404","No progress board found"));
-        }
+        if (!progressBoard.IsSuccess)
+            return progressBoard.Error!;
 
-
-        var progressEntries = await decoratedCache.GetOrCreateAsync(
+        var result = await decoratedCache.GetOrCreateAsync(
             $"order-by-description-progress-entry-{request.ProgressBoardId}",
-            async () => await progressEntryRepository.GetOrderByDescriptionAsync(request.ProgressBoardId,
-                cancellationToken), 
+            async () =>
+            {
+                var progressEntries = await progressEntryRepository.GetOrderByDescriptionAsync(request.ProgressBoardId,
+                    cancellationToken);
+
+                var descriptionDTos = progressEntries.Select(x =>
+                    new ProgressEntryWithDescriptionDTos
+                    (
+                        Description: x.Description
+                    ));
+
+                return descriptionDTos;
+            },
             cancellationToken: cancellationToken);
-        
-        IEnumerable<Domain.Models.ProgressEntry> enumerable = progressEntries.ToList();
-        if (!enumerable.Any())
+
+        var progressEntryWithDescriptionDTosEnumerable = result.ToList();
+        if (!progressEntryWithDescriptionDTosEnumerable.Any())
         {
             logger.LogError("No progress entries found when ordering by description.");
 
-            return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Failure(Error.Failure("400", "No progress entries found for the given description order."));
+            return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Failure(Error.Failure("400",
+                "No progress entries found for the given description order."));
         }
 
-        IEnumerable<ProgressEntryWithDescriptionDTos> descriptionDTos = enumerable.Select(x => new ProgressEntryWithDescriptionDTos
-        (
-            Description: x.Description
-        ));
+        logger.LogInformation("Successfully retrieved {Count} progress entries ordered by description.",
+            progressEntryWithDescriptionDTosEnumerable.Count());
 
-        IEnumerable<ProgressEntryWithDescriptionDTos> value = descriptionDTos.ToList();
-        logger.LogInformation("Successfully retrieved {Count} progress entries ordered by description.", value.Count());
-
-        return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Success(value);
+        return ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>.Success(
+            progressEntryWithDescriptionDTosEnumerable);
     }
 }

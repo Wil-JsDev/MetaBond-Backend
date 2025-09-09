@@ -21,7 +21,7 @@ public class PostsControllerTests
     private readonly Mock<IMediator> _mediator = new();
 
     [Fact]
-    public void CreatePost_Tests()
+    public async Task CreatePost_Tests()
     {
         // Arrange
         var command = new CreatePostsCommand
@@ -41,76 +41,63 @@ public class PostsControllerTests
             },
             CreatedById = Guid.NewGuid()
         };
-        
-        var imageUrl = "https://cdn.fakeapp.com/images/test-image.png";
+
         var postsDTos = new PostsDTos(
-            PostsId:  Guid.NewGuid(),
+            PostsId: Guid.NewGuid(),
             Title: command.Title,
             Content: command.Content,
-            ImageUrl: imageUrl,
+            ImageUrl: "https://cdn.fakeapp.com/images/test-image.png",
             CreatedById: command.CreatedById,
             CommunitiesId: command.CommunitiesId,
             CreatedAt: DateTime.UtcNow
         );
-        
+
         var expectedResult = ResultT<PostsDTos>.Success(postsDTos);
-        
+
         _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var postsController = new PostsController(_mediator.Object);
 
         // Act
+        var resultController = await postsController.AddPostsAsync(command, CancellationToken.None);
 
-        var resultController = postsController.AddPostsAsync(command, CancellationToken.None);
-        
         // Assert
-        
         Assert.NotNull(resultController);
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal(command.Title, resultController.Value.Title);
     }
 
     [Fact]
-    public void DeletePosts_Tests()
+    public async Task DeletePosts_Tests()
     {
-        
         // Arrange
+        var postId = Guid.NewGuid();
+        var expectedResult = ResultT<Guid>.Success(postId);
 
-        DeletePostsCommand deletePostsCommand = new()
-        {
-            PostsId = Guid.NewGuid()
-        };
-        
-        var expectedResult = ResultT<Guid>.Success(Guid.NewGuid());        
-
-        _mediator.Setup(x => x.Send(deletePostsCommand, It.IsAny<CancellationToken>()))
+        _mediator.Setup(x => x.Send(It.IsAny<DeletePostsCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-            
-        var postsController = new PostsController(_mediator.Object);
-        
-        // Act
 
-        var resultController = postsController.DeletePostsAsync(deletePostsCommand.PostsId, CancellationToken.None);
+        var postsController = new PostsController(_mediator.Object);
+
+        // Act
+        var resultController = await postsController.DeletePostsAsync(postId, CancellationToken.None);
 
         // Assert
-
         Assert.NotNull(resultController);
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal(postId, resultController.Value);
     }
 
     [Fact]
-    public void GetPostsByIdCommunities_Tests()
+    public async Task GetPostsByIdCommunities_Tests()
     {
-        
         // Arrange
-        var communitiesQuery = new GetPostsByIdCommunitiesQuery()
+        var postId = Guid.NewGuid();
+        var communitiesDTosEnumerable = new List<PostsWithCommunitiesDTos>
         {
-            PostsId = Guid.NewGuid()
-        };
-
-        IEnumerable<PostsWithCommunitiesDTos> communitiesDTosEnumerable = new List<PostsWithCommunitiesDTos>()
-        {
-            new PostsWithCommunitiesDTos
-            (
-                PostsId: Guid.NewGuid(),
+            new PostsWithCommunitiesDTos(
+                PostsId: postId,
                 Title: "Tests Title",
                 Content: "Tests Content",
                 ImageUrl: "",
@@ -118,98 +105,90 @@ public class PostsControllerTests
                 CreatedAt: DateTime.UtcNow
             )
         };
-        
-        var expectedResult = ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(communitiesDTosEnumerable);
-        
-        _mediator.Setup(x => x.Send(communitiesQuery, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var postsController = new PostsController(_mediator.Object);
-        
-        // Act
 
-        var resultController = postsController.GetDetailsPosts(communitiesQuery.PostsId, CancellationToken.None);
+        var expectedResult = ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(communitiesDTosEnumerable);
+
+        _mediator.Setup(x => x.Send(It.IsAny<GetPostsByIdCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var postsController = new PostsController(_mediator.Object);
+
+        // Act
+        var resultController = await postsController.GetDetailsPosts(postId, CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
+        Assert.True(resultController.IsSuccess);
+        Assert.Single(resultController.Value);
     }
 
     [Fact]
-    public void GetFilterTitlePosts_Tests()
+    public async Task GetFilterTitlePosts_Tests()
     {
-        
         // Arrange
-
-        GetFilterTitlePostsQuery getFilterTitlePostsQuery = new()
+        var communityId = Guid.NewGuid();
+        var postsDTosEnumerable = new List<PostsDTos>
         {
-            CommunitiesId = Guid.NewGuid(),
-            Title = "Tests Title"
-        };
-
-        IEnumerable<PostsDTos> postsDTosEnumerable = new List<PostsDTos>()
-        {
-            new PostsDTos
-            (
-                    PostsId:  Guid.NewGuid(),
-                    Title: "Tests Title",
-                    Content: "Tests Content",
-                    ImageUrl: "Url",
-                    CreatedById:  Guid.NewGuid(),
-                    CommunitiesId: Guid.NewGuid(),
-                    CreatedAt: DateTime.UtcNow
+            new PostsDTos(
+                PostsId: Guid.NewGuid(),
+                Title: "Tests Title",
+                Content: "Tests Content",
+                ImageUrl: "Url",
+                CreatedById: Guid.NewGuid(),
+                CommunitiesId: communityId,
+                CreatedAt: DateTime.UtcNow
             )
         };
-        
+
         var expectedResult = ResultT<IEnumerable<PostsDTos>>.Success(postsDTosEnumerable);
 
+        _mediator.Setup(x => x.Send(It.IsAny<GetFilterTitlePostsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
         var postsController = new PostsController(_mediator.Object);
-        
+
         // Act
-    
-        var resultController = postsController.FilterByTitleAsync(getFilterTitlePostsQuery.CommunitiesId,getFilterTitlePostsQuery.Title, CancellationToken.None);
+        var resultController =
+            await postsController.FilterByTitleAsync(communityId, "Tests Title", CancellationToken.None);
 
         // Assert
-        
         Assert.NotNull(resultController);
-        
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal("Tests Title", resultController.Value.First().Title);
     }
 
     [Fact]
-    public void GetPagedPosts_Tests()
+    public async Task GetPagedPosts_Tests()
     {
-        
         // Arrange
-
-        GetPagedPostsQuery pagedPostsQuery = new()
+        var pagedPostsQuery = new GetPagedPostsQuery
         {
             PageNumber = 1,
             PageSize = 10
         };
 
-
-        PagedResult<PostsDTos> pagedResult = new()
+        var pagedResult = new PagedResult<PostsDTos>
         {
             CurrentPage = 2,
             Items = new List<PostsDTos>(),
             TotalItems = 2,
             TotalPages = 2
         };
-        
+
         var expectedResult = ResultT<PagedResult<PostsDTos>>.Success(pagedResult);
-        
-        _mediator.Setup(x => x.Send(pagedPostsQuery, It.IsAny<CancellationToken>()))
+
+        _mediator.Setup(x => x.Send(It.IsAny<GetPagedPostsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var postsController = new PostsController(_mediator.Object);
-        
-        // Act
 
-        var resultController = postsController.GetPagedResultAsync(pagedPostsQuery.PageNumber, pagedPostsQuery.PageSize,CancellationToken.None);
+        // Act
+        var resultController = await postsController.GetPagedResultAsync(pagedPostsQuery.PageNumber,
+            pagedPostsQuery.PageSize, CancellationToken.None);
 
         // Assert
-        
         Assert.NotNull(resultController);
-        
+        Assert.True(resultController.IsSuccess);
+        Assert.Equal(2, resultController.Value.CurrentPage);
     }
-    
 }

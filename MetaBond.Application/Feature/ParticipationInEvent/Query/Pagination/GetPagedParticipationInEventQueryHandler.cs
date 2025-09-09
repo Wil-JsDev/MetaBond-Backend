@@ -1,6 +1,8 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -15,50 +17,65 @@ internal sealed class GetPagedParticipationInEventQueryHandler(
     : IQueryHandler<GetPagedParticipationInEventQuery, PagedResult<ParticipationInEventDTos>>
 {
     public async Task<ResultT<PagedResult<ParticipationInEventDTos>>> Handle(
-        GetPagedParticipationInEventQuery request, 
+        GetPagedParticipationInEventQuery request,
         CancellationToken cancellationToken)
     {
-        if (request != null)
+        if (request is null)
         {
-            string cacheKey = $"get-participation-in-event-paged-{request.PageNumber}-size-{request.PageSize}";
-            var participationInEvent = await decoratedCache.GetOrCreateAsync(
-                cacheKey,
-                async () => await repository.GetPagedParticipationInEventAsync(
-                    request.PageNumber, 
-                    request.PageSize,
-                    cancellationToken), 
-                cancellationToken: cancellationToken);
+            logger.LogError("The request is null.");
 
-            var dtoItems = participationInEvent.Items!.Select(p => new ParticipationInEventDTos
-            (
-                ParticipationInEventId: p.Id,
-                EventId: p.EventId
-            )).ToList();
-
-            if (!dtoItems.Any())
-            {
-                logger.LogWarning("No participation found for the given page: {PageNumber}, size: {PageSize}.", 
-                    request.PageNumber, request.PageSize);
-
-                return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.NotFound("400", "No participation found"));
-            }
-
-            PagedResult<ParticipationInEventDTos> result = new()
-            {
-                TotalItems = participationInEvent.TotalItems,
-                CurrentPage = participationInEvent.CurrentPage,
-                TotalPages = participationInEvent.TotalPages,
-                Items = dtoItems
-            };
-
-            logger.LogInformation("Successfully retrieved {TotalItems} participation for page {PageNumber} of {TotalPages}.",
-                participationInEvent.TotalItems, request.PageNumber, participationInEvent.TotalPages);
-
-
-            return ResultT<PagedResult<ParticipationInEventDTos>>.Success(result);
+            return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.Failure("400",
+                "The request is null"));
         }
-        logger.LogError("Invalid request: The provided query parameters are null.");
 
-        return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.Failure("400", "Bad request: Invalid query parameters"));
+        var paginationValidationResult = PaginationHelper.ValidatePagination<ParticipationInEventDTos>(
+            request.PageNumber,
+            request.PageSize,
+            logger);
+
+        if (!paginationValidationResult.IsSuccess)
+            return paginationValidationResult.Error!;
+
+        string cacheKey = $"get-participation-in-event-paged-{request.PageNumber}-size-{request.PageSize}";
+        var result = await decoratedCache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var participationInEvent = await repository.GetPagedParticipationInEventAsync(
+                    request.PageNumber,
+                    request.PageSize,
+                    cancellationToken);
+
+                var dtoItems = participationInEvent.Items!
+                    .Select(ParticipationInEventMapper.ParticipationInEventToDto)
+                    .ToList();
+
+                PagedResult<ParticipationInEventDTos> result = new()
+                {
+                    TotalItems = participationInEvent.TotalItems,
+                    CurrentPage = participationInEvent.CurrentPage,
+                    TotalPages = participationInEvent.TotalPages,
+                    Items = dtoItems
+                };
+
+                return result;
+            },
+            cancellationToken: cancellationToken);
+
+
+        if (!result.Items!.Any())
+        {
+            logger.LogWarning("No participation found for the given page: {PageNumber}, size: {PageSize}.",
+                request.PageNumber, request.PageSize);
+
+            return ResultT<PagedResult<ParticipationInEventDTos>>.Failure(Error.NotFound("400",
+                "No participation found"));
+        }
+
+        logger.LogInformation(
+            "Successfully retrieved {TotalItems} participation for page {PageNumber} of {TotalPages}.",
+            result.TotalItems, request.PageNumber, result.TotalPages);
+
+        return ResultT<PagedResult<ParticipationInEventDTos>>.Success(result);
     }
 }

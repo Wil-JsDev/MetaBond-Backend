@@ -15,8 +15,6 @@ using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Presentation.Api.Controllers.V1;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using CancellationToken = System.Threading.CancellationToken;
@@ -28,7 +26,7 @@ public class EventsControllerTests
     private readonly Mock<IMediator> _mediator = new();
 
     [Fact]
-    public void CreateEvents_Tests()
+    public async Task CreateEvents_Tests()
     {
         //Arrange
         CreateEventsCommand createEventsCommand = new()
@@ -48,49 +46,47 @@ public class EventsControllerTests
             CreatedAt: DateTime.Now,
             CommunitiesId: createEventsCommand.CommunitiesId
         );
-        
+
         var expectedResult = ResultT<EventsDto>.Success(eventsDto);
-        
+
         _mediator.Setup(m => m.Send(createEventsCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var eventsController = new EventsController(_mediator.Object);
+
         //Act
-        var resultController = eventsController.CreateAsync(createEventsCommand,CancellationToken.None);
-        
+        var result = await eventsController.CreateAsync(createEventsCommand, CancellationToken.None);
+
         //Assert
-        Assert.IsType<Task<IActionResult>>(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDto, result.Value);
     }
 
     [Fact]
-    public void DeleteEvents_Tests()
+    public async Task DeleteEvents_Tests()
     {
         //Arrange
-        DeleteEventsCommand deleteEventsCommand = new()
-        {
-            Id = Guid.NewGuid()
-        };
-        
-        var resultId = Guid.NewGuid();
+        var id = Guid.NewGuid();
+        var expectedResult = ResultT<Guid>.Success(id);
 
-        var expectedResult = ResultT<Guid>.Success(resultId);
-        
-        _mediator.Setup(m => m.Send(deleteEventsCommand, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(resultId);
-        
+        _mediator.Setup(m => m.Send(It.Is<DeleteEventsCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
         var eventsController = new EventsController(_mediator.Object);
-        
+
         // Act
-        var resultController = eventsController.DeleteAsync(deleteEventsCommand.Id, CancellationToken.None);
+        var result = await eventsController.DeleteAsync(id, CancellationToken.None);
 
         //Assert
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(id, result.Value);
     }
 
     [Fact]
-    public void UpdateEvents_Tests()
+    public async Task UpdateEvents_Tests()
     {
-        
         //Arrange
         UpdateEventsCommand eventsCommand = new()
         {
@@ -98,42 +94,39 @@ public class EventsControllerTests
             Description = "Description",
             Title = "Title update"
         };
-        
+
         EventsDto eventsDto = new
         (
-            Id: Guid.NewGuid(),
+            Id: eventsCommand.Id,
             Description: eventsCommand.Description,
             Title: eventsCommand.Title,
-            DateAndTime: DateTime.Now, 
+            DateAndTime: DateTime.Now,
             CreatedAt: DateTime.Now,
             CommunitiesId: Guid.NewGuid()
         );
-        
+
         var expectedResult = ResultT<EventsDto>.Success(eventsDto);
-        
+
         _mediator.Setup(m => m.Send(eventsCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
-        var eventsController = new EventsController(_mediator.Object);
-        
-        //Act
 
-        var resultController = eventsController.UpdateAsync(eventsCommand, CancellationToken.None);
+        var eventsController = new EventsController(_mediator.Object);
+
+        //Act
+        var result = await eventsController.UpdateAsync(eventsCommand, CancellationToken.None);
 
         //Assert
-        
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDto, result.Value);
     }
 
     [Fact]
-    public void FilterByDateRangeEvents_Tests()
+    public async Task FilterByDateRangeEvents_Tests()
     {
         // Arrange
-        FilterByDateRangeEventsQuery filterByDateRangeEventsQuery = new()
-        {
-            CommunitiesId = Guid.NewGuid(),
-            DateRangeFilter = DateRangeFilter.LastDay
-        };
+        var communitiesId = Guid.NewGuid();
+        var dateRangeFilter = DateRangeFilter.LastDay;
 
         IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
         {
@@ -144,42 +137,41 @@ public class EventsControllerTests
                 Title: "Event",
                 DateAndTime: DateTime.Now,
                 CreatedAt: DateTime.UtcNow,
-                CommunitiesId: Guid.NewGuid()
+                CommunitiesId: communitiesId
             )
         };
 
         var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
-        
-        _mediator.Setup(m => m.Send(filterByDateRangeEventsQuery, It.IsAny<CancellationToken>()))
+
+        _mediator.Setup(m => m.Send(It.Is<FilterByDateRangeEventsQuery>(q =>
+                    q.CommunitiesId == communitiesId && q.DateRangeFilter == dateRangeFilter),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var eventsController = new EventsController(_mediator.Object);
-        
+
         //Act 
-        var resultController = eventsController.FilterByRangeAsync(Guid.NewGuid(), DateRangeFilter.LastDay, CancellationToken.None);
-        
+        var result = await eventsController.FilterByRangeAsync(communitiesId, dateRangeFilter, CancellationToken.None);
+
         //Assert
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDtosList, result.Value);
     }
 
     [Fact]
-    public void FilterByTitleEvents_Tests()
+    public async Task FilterByTitleEvents_Tests()
     {
-        
         //Arrange
-        FilterByTitleEventsQuery eventsQuery = new()
-        {
-            Title = "New Title"   
-        };
-        
-        
+        var title = "New Title";
+
         IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
         {
             new EventsDto
             (
                 Id: Guid.NewGuid(),
                 Description: "New Event",
-                Title: "Event",
+                Title: title,
                 DateAndTime: DateTime.Now,
                 CreatedAt: DateTime.UtcNow,
                 CommunitiesId: Guid.NewGuid()
@@ -187,107 +179,100 @@ public class EventsControllerTests
         };
 
         var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
-        
-        _mediator.Setup(m => m.Send(eventsQuery, It.IsAny<CancellationToken>()))
+
+        _mediator.Setup(m =>
+                m.Send(It.Is<FilterByTitleEventsQuery>(q => q.Title == title), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var eventsController = new EventsController(_mediator.Object);
-        
+
         //Act
-        
-        var resultController = eventsController.FilterByTitleAsync(eventsQuery.Title, CancellationToken.None);
-        
+        var result = await eventsController.FilterByTitleAsync(title, CancellationToken.None);
+
         //Assert
-        Assert.IsType<Task<IActionResult>>(resultController);
+        Assert.IsType<OkObjectResult>(result);
+        var okResult = result as OkObjectResult;
+        Assert.NotNull(okResult);
+        Assert.Equal(eventsDtosList, okResult.Value);
     }
 
     [Fact]
-    public void FilterByTitleCommunityIdEvents_Tests()
+    public async Task FilterByTitleCommunityIdEvents_Tests()
     {
-        
         //Arrange
-        
-        GetEventsByTitleAndCommunityIdQuery eventsByTitleAndCommunityIdQuery = new()
-        {
-            CommunitiesId = Guid.NewGuid(),
-            Title = "New"
-        };
-        
+        var communityId = Guid.NewGuid();
+        var title = "New";
+
         IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
         {
             new EventsDto
             (
                 Id: Guid.NewGuid(),
                 Description: "New Event",
-                Title: "Event",
+                Title: title,
                 DateAndTime: DateTime.Now,
                 CreatedAt: DateTime.UtcNow,
-                CommunitiesId: Guid.NewGuid()
+                CommunitiesId: communityId
             )
         };
-        
-        var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
-        
-        _mediator.Setup(m => m.Send(eventsByTitleAndCommunityIdQuery, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var eventsController = new EventsController(_mediator.Object);
-        
-        //Act
 
-        var resultController = eventsController.GetEventsByTitleAndCommunityIdAsync(eventsByTitleAndCommunityIdQuery.CommunitiesId,eventsByTitleAndCommunityIdQuery.Title, CancellationToken.None);
+        var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
+
+        _mediator.Setup(m => m.Send(It.Is<GetEventsByTitleAndCommunityIdQuery>(q =>
+                q.CommunitiesId == communityId && q.Title == title), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var eventsController = new EventsController(_mediator.Object);
+
+        //Act
+        var result =
+            await eventsController.GetEventsByTitleAndCommunityIdAsync(communityId, title, CancellationToken.None);
 
         // Assert
-        
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDtosList, result.Value);
     }
 
     [Fact]
-    public void GetByIdEvents_Tests()
+    public async Task GetByIdEvents_Tests()
     {
         //Arrange
-        GetByIdEventsQuery eventsQuery = new GetByIdEventsQuery()
-        {
-            Id = Guid.NewGuid()
-        };
+        var id = Guid.NewGuid();
 
         EventsDto eventsDto = new
         (
-                  
-            Id: eventsQuery.Id,
+            Id: id,
             Description: "New Event",
             Title: "Event",
             DateAndTime: DateTime.Now,
             CreatedAt: DateTime.UtcNow,
-            CommunitiesId: Guid.NewGuid()  
+            CommunitiesId: Guid.NewGuid()
         );
-        
+
         var expectedResult = ResultT<EventsDto>.Success(eventsDto);
-        
-        _mediator.Setup(m => m.Send(eventsQuery, It.IsAny<CancellationToken>()))
+
+        _mediator.Setup(m => m.Send(It.Is<GetByIdEventsQuery>(q => q.Id == id), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
+
         var eventsController = new EventsController(_mediator.Object);
-        
+
         //Act
-        
-        var resultController = eventsController.GetByIdAsync(eventsQuery.Id, CancellationToken.None);
-        
+        var result = await eventsController.GetByIdAsync(id, CancellationToken.None);
+
         //Assert
-        Assert.NotNull(resultController);
-        
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDto, result.Value);
     }
 
     [Fact]
-    public void GetEventsDetails_Tests()
+    public async Task GetEventsDetails_Tests()
     {
         //Arrange
-        GetEventsDetailsQuery eventsDetailsQuery = new()
-        {
-            Id = Guid.NewGuid()
-        };
+        var eventId = Guid.NewGuid();
 
-        IEnumerable<CommunitiesDTos> communitiesDTosEnumerable = new List<CommunitiesDTos>
+        IEnumerable<CommunitiesEventsDTos> communitiesDTosEnumerable = new List<CommunitiesEventsDTos>
         {
             new(
                 Guid.NewGuid(),
@@ -297,53 +282,38 @@ public class EventsControllerTests
                 DateTime.UtcNow.AddMonths(-2),
                 new List<CommunitySummaryDto>
                 {
-                    new("Group about ASP.NET Core", "Technology", DateTime.UtcNow.AddMonths(-5)),
-                    new("Blazor Community", "Web Development", DateTime.UtcNow.AddMonths(-4))
+                    new("Group about ASP.NET Core", DateTime.UtcNow.AddMonths(-5)),
+                    new("Blazor Community", DateTime.UtcNow.AddMonths(-4))
                 }
-            ),
-            new(
-                Guid.NewGuid(),
-                "Community of AI Enthusiasts",
-                "AI Innovators",
-                DateTime.UtcNow.AddDays(-20),
-                DateTime.UtcNow.AddMonths(-6),
-                new List<CommunitySummaryDto>
-                {
-                    new("Research in Machine Learning", "Data Science", DateTime.UtcNow.AddYears(-1)),
-                    new("Real-world AI Applications", "Technology", DateTime.UtcNow.AddMonths(-3))
-                }
-            ),
+            )
         };
-        
-        var expectedResult = ResultT<IEnumerable<CommunitiesDTos>>.Success(communitiesDTosEnumerable);
-        
-        _mediator.Setup(m => m.Send(eventsDetailsQuery, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var eventsController = new EventsController(_mediator.Object);
-        
-        //Act
 
-        var resultController = eventsController.GetEventsWithCommunitiesAsync(eventsDetailsQuery.Id, CancellationToken.None);
-        
+        var expectedResult = ResultT<IEnumerable<CommunitiesEventsDTos>>.Success(communitiesDTosEnumerable);
+
+        _mediator.Setup(m => m.Send(It.Is<GetEventsDetailsQuery>(q => q.Id == eventId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var eventsController = new EventsController(_mediator.Object);
+
+        //Act
+        var result = await eventsController.GetEventsWithCommunitiesAsync(eventId, CancellationToken.None);
+
         //Assert
-        Assert.IsType<Task<IActionResult>>(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(communitiesDTosEnumerable, result.Value);
     }
 
     [Fact]
-    public void GetEventsWithParticipationInEvents_Tests()
+    public async Task GetEventsWithParticipationInEvents_Tests()
     {
-        
         //Arrange
-        GetEventsWithParticipationInEventQuery eventQuery = new()
-        {
-            EventsId = Guid.NewGuid()
-        };
+        var eventId = Guid.NewGuid();
 
         IEnumerable<EventsWithParticipationInEventsDTos> enumerable = new List<EventsWithParticipationInEventsDTos>
         {
             new(
-                Guid.NewGuid(),
+                eventId,
                 "Annual Tech Conference",
                 "TechCon 2025",
                 DateTime.UtcNow.AddMonths(2),
@@ -353,47 +323,32 @@ public class EventsControllerTests
                     new(Guid.NewGuid(), Guid.NewGuid())
                 },
                 DateTime.UtcNow.AddMonths(-1)
-            ),
-            new(
-                Guid.NewGuid(),
-                "AI and Machine Learning Summit",
-                "AI Summit 2025",
-                DateTime.UtcNow.AddMonths(3),
-                new List<ParticipationInEventBasicDTos>
-                {
-                    new(Guid.NewGuid(), Guid.NewGuid()),
-                    new(Guid.NewGuid(), Guid.NewGuid())
-                },
-                DateTime.UtcNow.AddMonths(-2)
             )
         };
-        
-        var expectedResult = ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Success(enumerable);
-        
-        _mediator.Setup(m => m.Send(eventQuery, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var eventsController = new EventsController(_mediator.Object);
-        
-        //Act
 
-        var resultController = eventsController.GetEventsWithParticipationInEventAsync((Guid)eventQuery.EventsId,CancellationToken.None);
+        var expectedResult = ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Success(enumerable);
+
+        _mediator.Setup(m => m.Send(It.Is<GetEventsWithParticipationInEventQuery>(q => q.EventsId == eventId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var eventsController = new EventsController(_mediator.Object);
+
+        //Act
+        var result = await eventsController.GetEventsWithParticipationInEventAsync(eventId, CancellationToken.None);
 
         //Assert
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(enumerable, result.Value);
     }
 
     [Fact]
-    public void GetOrderByIdAscEvents_Tests()
+    public async Task GetOrderByIdAscEvents_Tests()
     {
-        
         //Arrange
+        var order = "Asc";
 
-        GetOrderByIdEventsQuery eventsQuery = new()
-        {
-            Order = "Asc"
-        };
-        
         IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
         {
             new EventsDto
@@ -404,65 +359,73 @@ public class EventsControllerTests
                 DateAndTime: DateTime.UtcNow,
                 CreatedAt: DateTime.UtcNow,
                 CommunitiesId: Guid.NewGuid()
-            ),
-            new EventsDto
-            (
-                Id: Guid.NewGuid(),
-                Description: "New Event 2",
-                Title: "Event 2",
-                DateAndTime: DateTime.UtcNow,
-                CreatedAt: DateTime.UtcNow,
-                CommunitiesId: Guid.NewGuid()
             )
         };
-        
+
         var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
 
-        _mediator.Setup(m => m.Send(eventsQuery, It.IsAny<CancellationToken>()))
+        _mediator.Setup(m =>
+                m.Send(It.Is<GetOrderByIdEventsQuery>(q => q.Order == order), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
-        var eventsController = new EventsController(_mediator.Object);
-        
-        //Act
 
-        var resultController = eventsController.OrderByIdAsync(eventsQuery.Order, CancellationToken.None);
+        var eventsController = new EventsController(_mediator.Object);
+
+        //Act
+        var result = await eventsController.OrderByIdAsync(order, CancellationToken.None);
 
         //Assert
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDtosList, result.Value);
     }
 
     [Fact]
-    public void GetPagedEvents_Tests()
+    public async Task GetPagedEvents_Tests()
     {
         //Arrange
-        GetPagedEventsQuery eventsQuery = new()
-        {
-            PageNumber = 1,
-            PageSize = 10
-        };
+        int pageNumber = 1;
+        int pageSize = 10;
 
         PagedResult<EventsDto> eventsDTosList = new()
         {
-            CurrentPage = 1,
-            TotalPages = 10,
-            TotalItems = 10,
-            Items = new List<EventsDto>()
+            CurrentPage = pageNumber,
+            TotalPages = 1,
+            TotalItems = 2,
+            Items = new List<EventsDto>
+            {
+                new EventsDto(
+                    Id: Guid.NewGuid(),
+                    Description: "Event 1",
+                    Title: "Event 1",
+                    DateAndTime: DateTime.UtcNow,
+                    CreatedAt: DateTime.UtcNow,
+                    CommunitiesId: Guid.NewGuid()
+                ),
+                new EventsDto(
+                    Id: Guid.NewGuid(),
+                    Description: "Event 2",
+                    Title: "Event 2",
+                    DateAndTime: DateTime.UtcNow,
+                    CreatedAt: DateTime.UtcNow,
+                    CommunitiesId: Guid.NewGuid()
+                )
+            }
         };
-        
+
         var expectedResult = ResultT<PagedResult<EventsDto>>.Success(eventsDTosList);
 
-        _mediator.Setup(m => m.Send(eventsQuery, It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.Is<GetPagedEventsQuery>(q =>
+                q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var eventsController = new EventsController(_mediator.Object);
-        
-        // Act
 
-        var resultController = eventsController.GetPagedAsync(eventsQuery.PageNumber, eventsQuery.PageSize, CancellationToken.None);
+        // Act
+        var result = await eventsController.GetPagedAsync(pageNumber, pageSize, CancellationToken.None);
 
         //Assert
-        Assert.NotNull(resultController);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDTosList, result.Value);
     }
-    
-    
 }

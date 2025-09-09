@@ -1,4 +1,5 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -8,30 +9,35 @@ namespace MetaBond.Application.Feature.ProgressEntry.Query.GetCountByBoard;
 
 internal sealed class GetCountByBoardIdQueryHandler(
     IProgressEntryRepository progressEntryRepository,
-    IDistributedCache decoratedCache,
+    IProgressBoardRepository progressBoardRepository,
     ILogger<GetCountByBoardIdQueryHandler> logger)
     : IQueryHandler<GetCountByBoardIdQuery, int>
 {
     public async Task<ResultT<int>> Handle(
-        GetCountByBoardIdQuery request, 
+        GetCountByBoardIdQuery request,
         CancellationToken cancellationToken)
     {
-
-        if (request != null)
+        var progressBoard = await EntityHelper.GetEntityByIdAsync(
+            progressBoardRepository.GetByIdAsync,
+            request.ProgressBoardId,
+            "ProgressBoard",
+            logger
+        );
+        if (!progressBoard.IsSuccess)
         {
-            var countBoard = await decoratedCache.GetOrCreateAsync(
-                $"count-entries-by-board-{request.ProgressBoardId}",
-                async () => await progressEntryRepository.CountEntriesByBoardIdAsync(request.ProgressBoardId, cancellationToken), 
-                cancellationToken: cancellationToken);
-            
-            logger.LogInformation("Successfully retrieved the count of progress entries for ProgressBoardId: {BoardId}. Count: {Count}", 
-                request.ProgressBoardId, countBoard);
+            logger.LogError($"No progress board found with id: {request.ProgressBoardId}");
 
-            return ResultT<int>.Success(countBoard);
+            return ResultT<int>.Failure(Error.NotFound("404",
+                "No progress board found"));
         }
 
-        logger.LogError("Invalid request: The request object is null.");
+        var countBoard = await progressEntryRepository.CountEntriesByBoardIdAsync(request.ProgressBoardId,
+            cancellationToken);
 
-        return ResultT<int>.Failure(Error.Failure("400", "Invalid request."));
+        logger.LogInformation(
+            "Successfully retrieved the count of progress entries for ProgressBoardId: {BoardId}. Count: {Count}",
+            request.ProgressBoardId, countBoard);
+
+        return ResultT<int>.Success(countBoard);
     }
 }

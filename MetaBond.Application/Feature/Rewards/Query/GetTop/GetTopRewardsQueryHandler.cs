@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -11,44 +12,39 @@ internal sealed class GetTopRewardsQueryHandler(
     IRewardsRepository rewardsRepository,
     IDistributedCache decoratedCache,
     ILogger<GetTopRewardsQueryHandler> logger)
-    : IQueryHandler<GetTopRewardsQuery, IEnumerable<RewardsDTos>>
+    : IQueryHandler<GetTopRewardsQuery, IEnumerable<RewardsWithUserDTos>>
 {
-    public async Task<ResultT<IEnumerable<RewardsDTos>>> Handle(
-        GetTopRewardsQuery request, 
+    public async Task<ResultT<IEnumerable<RewardsWithUserDTos>>> Handle(
+        GetTopRewardsQuery request,
         CancellationToken cancellationToken)
     {
-
-        if (request != null)
+        if (request.TopCount <= 0)
         {
-            var rewardsList = await decoratedCache.GetOrCreateAsync(
-                $"rewards-get-top-by-points-{request.TopCount}",
-                async () =>
-                    await rewardsRepository.GetTopRewardsByPointsAsync(request.TopCount, cancellationToken), 
-                cancellationToken: cancellationToken);
-            
-            IEnumerable<Domain.Models.Rewards> rewardsEnumerable = rewardsList.ToList();
-            if (!rewardsEnumerable.Any())
-            {
-                logger.LogError("No top rewards found");
+            logger.LogError("Invalid top count: {TopCount}.", request.TopCount);
 
-                return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400","The list is empty"));
-            }
-
-            IEnumerable<RewardsDTos> rewardsDTos = rewardsEnumerable.Select(x => new RewardsDTos
-            (
-                RewardsId: x.Id,
-                UserId: x.UserId,
-                Description: x.Description,
-                PointAwarded: x.PointAwarded,
-                DateAwarded:  x.DateAwarded
-            ));
-
-            logger.LogInformation("Successfully retrieved {Count} top rewards.", rewardsEnumerable.Count());
-
-            return ResultT<IEnumerable<RewardsDTos>>.Success(rewardsDTos);
+            return ResultT<IEnumerable<RewardsWithUserDTos>>.Failure(Error.Failure("400", "Invalid top count"));
         }
-        logger.LogError("Received a null request for fetching top rewards.");
 
-        return ResultT<IEnumerable<RewardsDTos>>.Failure(Error.Failure("400","Invalid request"));
+        var result = await decoratedCache.GetOrCreateAsync(
+            $"rewards-get-top-by-points-{request.TopCount}",
+            async () =>
+            {
+                var rewards = await rewardsRepository.GetTopRewardsByPointsAsync(request.TopCount, cancellationToken);
+
+                return rewards.Select(RewardsMapper.RewardsWithUserToDto);
+            },
+            cancellationToken: cancellationToken);
+
+        var rewardsDTosEnumerable = result.ToList();
+        if (!rewardsDTosEnumerable.Any())
+        {
+            logger.LogError("No top rewards found");
+
+            return ResultT<IEnumerable<RewardsWithUserDTos>>.Failure(Error.Failure("400", "The list is empty"));
+        }
+
+        logger.LogInformation("Successfully retrieved {Count} top rewards.", rewardsDTosEnumerable.Count());
+
+        return ResultT<IEnumerable<RewardsWithUserDTos>>.Success(rewardsDTosEnumerable);
     }
 }

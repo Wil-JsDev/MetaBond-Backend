@@ -19,20 +19,17 @@ public class ProgressEntryControllerTests
     private readonly Mock<IMediator> _mediator = new();
 
     [Fact]
-    public void CreateProgressEntry_Test()
+    public async Task CreateProgressEntry_Test()
     {
-        
         // Arrange
-
-        CreateProgressEntryCommand command = new()
+        var command = new CreateProgressEntryCommand
         {
             Description = "Description",
             ProgressBoardId = Guid.NewGuid(),
             UserId = Guid.NewGuid()
         };
 
-        ProgressEntryDTos progressEntryDTos = new
-        (
+        var dto = new ProgressEntryDTos(
             ProgressEntryId: Guid.NewGuid(),
             ProgressBoardId: command.ProgressBoardId,
             UserId: command.UserId,
@@ -40,221 +37,158 @@ public class ProgressEntryControllerTests
             CreatedAt: DateTime.UtcNow,
             UpdateAt: DateTime.UtcNow
         );
-        
-        var expectedResult = ResultT<ProgressEntryDTos>.Success(progressEntryDTos);
-        
-        _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
+
+        var expectedResult = ResultT<ProgressEntryDTos>.Success(dto);
+
+        _mediator
+            .Setup(m => m.Send(It.Is<CreateProgressEntryCommand>(c =>
+                    c.ProgressBoardId == command.ProgressBoardId && c.UserId == command.UserId),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var progressBoardController = new ProgressEntriesController(_mediator.Object);
+        var controller = new ProgressEntriesController(_mediator.Object);
 
         // Act
-
-        var resultController = progressBoardController.CreateAsync(command, CancellationToken.None);
-
-        // Assert
-        
-        Assert.NotNull(resultController);
-        
-    }
-
-
-    [Fact]
-    public void DeleteProgressEntry_Test()
-    {
-        
-        // Arrange
-
-        DeleteProgressEntryCommand command = new()
-        {
-            Id = Guid.NewGuid()
-        };
-        
-        var expectedResult = ResultT<Guid>.Success(command.Id);
-        
-        _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-        
-        var progressEntries = new ProgressEntriesController(_mediator.Object);
-
-        
-        // Act
-
-        var resultController = progressEntries.DeleteAsync(command.Id, CancellationToken.None);
+        var result = await controller.CreateAsync(command, CancellationToken.None);
 
         // Assert
-
-        Assert.NotNull(resultController);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(dto.ProgressEntryId, result.Value.ProgressEntryId);
+        _mediator.Verify(m => m.Send(It.IsAny<CreateProgressEntryCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public void UpdateProgressEntry_Test()
+    public async Task UpdateProgressEntry_Test()
     {
-        
         // Arrange
-
-        UpdateProgressEntryCommand command = new()
+        var command = new UpdateProgressEntryCommand
         {
             ProgressEntryId = Guid.NewGuid(),
-            Description = "New description"
+            Description = "Updated description"
         };
-        
-        ProgressEntryDTos progressEntryDTos = new
-        (
+
+        var dto = new ProgressEntryDTos(
             ProgressEntryId: command.ProgressEntryId,
             ProgressBoardId: Guid.NewGuid(),
-            UserId: Guid.NewGuid(), 
+            UserId: Guid.NewGuid(),
             Description: command.Description,
             CreatedAt: DateTime.UtcNow,
             UpdateAt: DateTime.UtcNow
         );
-        
-        var expectedResult = ResultT<ProgressEntryDTos>.Success(progressEntryDTos);
-        
-        _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);  
-        
-        var progressBoardController = new ProgressEntriesController(_mediator.Object);
-        
-        // Act
 
-        var resultController = progressBoardController.UpdateAsync(command, CancellationToken.None);
+        var expectedResult = ResultT<ProgressEntryDTos>.Success(dto);
+
+        _mediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        var controller = new ProgressEntriesController(_mediator.Object);
+
+        // Act
+        var result = await controller.UpdateAsync(command, CancellationToken.None);
 
         // Assert
-        
-        Assert.NotNull(resultController);
-        
+        Assert.True(result.IsSuccess);
+        Assert.Equal(command.ProgressEntryId, result.Value.ProgressEntryId);
+        _mediator.Verify(m => m.Send(command, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public void GetProgressEntryWithBoard_Test()
+    public async Task DeleteProgressEntry_Test()
     {
-        
         // Arrange
+        var id = Guid.NewGuid();
+        var command = new DeleteProgressEntryCommand { Id = id };
 
-        GetProgressEntryWithBoardByIdQuery query = new()
-        {
-            ProgressEntryId = Guid.NewGuid()
-        };
+        var expectedResult = ResultT<Guid>.Success(id);
 
-        IEnumerable<ProgressEntryWithProgressBoardDTos> withProgressBoardDTosEnumerable =
-            new List<ProgressEntryWithProgressBoardDTos>()
-            {
-                new ProgressEntryWithProgressBoardDTos
-                (
-                    ProgressEntryId: query.ProgressEntryId,
-                    UserId: Guid.NewGuid(), 
-                    ProgressBoard: new ProgressBoardSummaryDTos
-                    (
-                        ProgressBoardId: Guid.NewGuid(),
-                        UserId:  Guid.NewGuid(),
-                        CommunitiesId: Guid.NewGuid(),
-                        CreatedAt: DateTime.UtcNow,
-                        ModifiedAt: DateTime.UtcNow
-                    ),
-                    Description: "Description",
-                    CreatedAt: DateTime.UtcNow,
-                    UpdateAt: DateTime.UtcNow
-                )
-            };
-        
-        var expectedResult = ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>.Success(withProgressBoardDTosEnumerable);
-
-        _mediator.Setup(x => x.Send(query, It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.IsAny<DeleteProgressEntryCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
-        
-        var progressEntriesController = new ProgressEntriesController(_mediator.Object);
-        
-        // Act
 
-        var resultController = progressEntriesController.GetProgressEntryWithBoard(query.ProgressEntryId,CancellationToken.None);
+        var controller = new ProgressEntriesController(_mediator.Object);
+
+        // Act
+        var result = await controller.DeleteAsync(id, CancellationToken.None);
 
         // Assert
-        
-        Assert.NotNull(resultController);
-        
+        Assert.True(result.IsSuccess);
+        Assert.Equal(id, result.Value);
+        _mediator.Verify(m => m.Send(It.Is<DeleteProgressEntryCommand>(c => c.Id == id), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public void GetRecentProgressEntry_Test()
+    public async Task GetRecentProgressEntry_Test()
     {
-        
         // Arrange
-        GetRecentEntriesQuery query = new()
-        {
-            ProgressBoardId = Guid.NewGuid(),
-            TopCount = 50
-        };
+        var progressBoardId = Guid.NewGuid();
+        var topCount = 5;
 
-        IEnumerable<ProgressEntryDTos> progressEntryDTosEnumerable = new List<ProgressEntryDTos>()
-        {
-            new ProgressEntryDTos
-            (
-                ProgressEntryId: Guid.NewGuid(),
-                ProgressBoardId: query.ProgressBoardId,
-                UserId: Guid.NewGuid(), 
-                Description: "new description",
-                CreatedAt: DateTime.UtcNow,
-                UpdateAt: DateTime.UtcNow
-            )
-        };
-        
-        var expectedResult = ResultT<IEnumerable<ProgressEntryDTos>>.Success(progressEntryDTosEnumerable);
-        
-        _mediator.Setup(x => x.Send(query, It.IsAny<CancellationToken>()))
+        var dto = new ProgressEntryDTos(
+            ProgressEntryId: Guid.NewGuid(),
+            ProgressBoardId: progressBoardId,
+            UserId: Guid.NewGuid(),
+            Description: "Recent entry",
+            CreatedAt: DateTime.UtcNow,
+            UpdateAt: DateTime.UtcNow
+        );
+
+        var expectedResult = ResultT<IEnumerable<ProgressEntryDTos>>.Success(new[] { dto });
+
+        _mediator.Setup(m => m.Send(
+                It.Is<GetRecentEntriesQuery>(q => q.ProgressBoardId == progressBoardId && q.TopCount == topCount),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var progressEntriesController = new ProgressEntriesController(_mediator.Object);
-        
-        // Act
+        var controller = new ProgressEntriesController(_mediator.Object);
 
-        var resultController = progressEntriesController.GetFilterByRecentAsync(query.ProgressBoardId, query.TopCount, CancellationToken.None);
+        // Act
+        var result = await controller.GetFilterByRecentAsync(progressBoardId, topCount, CancellationToken.None);
 
         // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value);
+        Assert.Equal(progressBoardId, result.Value.First().ProgressBoardId);
 
-        Assert.NotNull(resultController);
-        
+        _mediator.Verify(m => m.Send(
+            It.Is<GetRecentEntriesQuery>(q => q.ProgressBoardId == progressBoardId && q.TopCount == topCount),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
+
     [Fact]
-    public void GetProgressEntryByDateRange_Test()
+    public async Task GetProgressEntryByDateRange_Test()
     {
-        
         // Arrange
+        var progressBoardId = Guid.NewGuid();
 
-        GetEntriesByDateRangeQuery query = new()
-        {
-            ProgressBoardId = Guid.NewGuid(),
-            Range = DateRangeType.Month
-        };
-        
-        IEnumerable<ProgressEntryDTos> progressEntryDTosEnumerable = new List<ProgressEntryDTos>()
-        {
-            new ProgressEntryDTos
-            (
-                ProgressEntryId: Guid.NewGuid(),
-                ProgressBoardId: query.ProgressBoardId,
-                UserId: Guid.NewGuid(),
-                Description: "new description",
-                CreatedAt: DateTime.UtcNow,
-                UpdateAt: DateTime.UtcNow
-            )
-        };
+        var dto = new ProgressEntryDTos(
+            ProgressEntryId: Guid.NewGuid(),
+            ProgressBoardId: progressBoardId,
+            UserId: Guid.NewGuid(),
+            Description: "Monthly entry",
+            CreatedAt: DateTime.UtcNow,
+            UpdateAt: DateTime.UtcNow
+        );
 
-        var expectedResult = ResultT<IEnumerable<ProgressEntryDTos>>.Success(progressEntryDTosEnumerable);
+        var expectedResult = ResultT<IEnumerable<ProgressEntryDTos>>.Success(new[] { dto });
 
-        _mediator.Setup(m => m.Send(query, It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(
+                It.Is<GetEntriesByDateRangeQuery>(q =>
+                    q.ProgressBoardId == progressBoardId &&
+                    q.Range == DateRangeType.Month),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var progressEntriesController = new ProgressEntriesController(_mediator.Object);
-        
-        // Act
+        var controller = new ProgressEntriesController(_mediator.Object);
 
-        var resultController = progressEntriesController.GetDateRangeAsync(query.ProgressBoardId,DateRangeType.Month,CancellationToken.None);
+        // Act
+        var result = await controller.GetDateRangeAsync(progressBoardId, DateRangeType.Month, CancellationToken.None);
 
         // Assert
-        
-        Assert.NotNull(resultController);
-
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value);
     }
 }

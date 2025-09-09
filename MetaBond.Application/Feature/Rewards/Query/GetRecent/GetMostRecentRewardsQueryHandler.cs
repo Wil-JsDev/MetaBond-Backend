@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,32 +15,26 @@ internal sealed class GetMostRecentRewardsQueryHandler(
     : IQueryHandler<GetMostRecentRewardsQuery, RewardsDTos>
 {
     public async Task<ResultT<RewardsDTos>> Handle(
-        GetMostRecentRewardsQuery request, 
+        GetMostRecentRewardsQuery request,
         CancellationToken cancellationToken)
     {
-        var rewardRecent = await decoratedCache.GetOrCreateAsync(
+        var rewardDto = await decoratedCache.GetOrCreateAsync(
             "rewards-get-most-recent",
-            async () => await rewardsRepository.GetMostRecentRewardAsync(cancellationToken), 
+            async () =>
+            {
+                var reward = await rewardsRepository.GetMostRecentRewardAsync(cancellationToken);
+                return RewardsMapper.ToDto(reward);
+            },
             cancellationToken: cancellationToken);
-        
-        if (rewardRecent != null)
+
+        if (rewardDto is null)
         {
-            logger.LogInformation("Most recent reward found with ID: {RewardsId}", rewardRecent.Id);
-
-            RewardsDTos rewardsDTos = new
-            (
-                RewardsId: rewardRecent.Id,
-                UserId: rewardRecent.UserId,
-                Description: rewardRecent.Description,
-                PointAwarded: rewardRecent.PointAwarded,
-                DateAwarded: rewardRecent.DateAwarded
-            );
-                
-            return ResultT<RewardsDTos>.Success(rewardsDTos);
-
+            logger.LogWarning("No recent rewards found.");
+            return ResultT<RewardsDTos>.Failure(Error.Failure("400", "No rewards available"));
         }
-        logger.LogWarning("No recent rewards found.");
 
-        return ResultT<RewardsDTos>.Failure(Error.Failure("400", "No rewards available"));
+        logger.LogInformation("Most recent reward found with ID: {RewardsId}", rewardDto.RewardsId);
+
+        return ResultT<RewardsDTos>.Success(rewardDto);
     }
 }

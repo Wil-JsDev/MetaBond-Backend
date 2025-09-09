@@ -17,15 +17,24 @@ public interface ICommunitiesRepository : IGenericRepository<Communities>
     /// <param name="pageZize">The size of the page (number of items).</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A paginated result of communities.</returns>
-    Task<PagedResult<Communities>> GetPagedCommunitiesAsync(int pageNumber, int pageZize, CancellationToken cancellationToken);
+    Task<PagedResult<Communities>> GetPagedCommunitiesAsync(int pageNumber, int pageZize,
+        CancellationToken cancellationToken);
 
     /// <summary>
-    /// Retrieves communities that match the specified filter predicate.
+    /// Retrieves a paginated list of communities that belong to the specified category.
     /// </summary>
-    /// <param name="predicate">Filter function to apply to communities.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>A collection of communities matching the filter.</returns>
-    Task<IEnumerable<Communities>> GetByFilterAsync(Func<Communities, bool> predicate, CancellationToken cancellationToken);
+    /// <param name="numberPaged">The page number to retrieve (1-based).</param>
+    /// <param name="pageSize">The number of communities to include per page.</param>
+    /// <param name="categoryId"></param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A <see cref="PagedResult{Communities}"/> containing the communities for the given category,
+    /// along with pagination metadata.
+    /// </returns>
+    Task<PagedResult<Communities>> GetPagedCommunitiesByCategoryIdAsync(int numberPaged, int pageSize,
+        Guid categoryId,
+        CancellationToken cancellationToken);
+
 
     /// <summary>
     /// Retrieves posts and events associated with a specific community.
@@ -33,7 +42,8 @@ public interface ICommunitiesRepository : IGenericRepository<Communities>
     /// <param name="communitieId">The ID of the community.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of communities including their posts and events.</returns>
-    Task<IEnumerable<Communities>> GetPostsAndEventsByCommunityIdAsync(Guid communitieId, CancellationToken cancellationToken);
+    Task<IEnumerable<Communities>> GetPostsAndEventsByCommunityIdAsync(Guid communitieId,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Validates whether any community satisfies the given condition.

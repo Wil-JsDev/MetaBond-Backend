@@ -46,10 +46,9 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Category")
+                    b.Property<Guid?>("CommunityCategoryId")
                         .IsRequired()
-                        .HasMaxLength(25)
-                        .HasColumnType("character varying(25)");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("timestamp with time zone");
@@ -67,51 +66,60 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("PkCommunities");
 
+                    b.HasIndex("CommunityCategoryId");
+
                     b.ToTable("Communities", (string)null);
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.CommunityManager", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CommunityId")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
+
+                    b.Property<DateTime?>("UpdateAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id")
-                        .HasName("PkCommunityManager");
+                        .HasName("PkCommunityCategories");
 
-                    b.HasIndex("CommunityId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CommunityManagers", (string)null);
+                    b.ToTable("CommunityCategories", (string)null);
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.CommunityUser", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityMembership", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CommunityId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
-                    b.HasKey("Id")
-                        .HasName("PkCommunityUser");
+                    b.Property<DateTime?>("LeftOnUtc")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
+
+                    b.HasKey("UserId", "CommunityId");
 
                     b.HasIndex("CommunityId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CommunityUsers", (string)null);
+                    b.ToTable("CommunityMemberships", (string)null);
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.EmailConfirmationToken", b =>
@@ -230,6 +238,10 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("InterestCategoryId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(25)
@@ -238,38 +250,32 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("PkInterest");
 
+                    b.HasIndex("InterestCategoryId");
+
                     b.ToTable("Interests", (string)null);
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.Moderator", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.InterestCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
-                    b.HasIndex("UserId");
+                    b.Property<DateTime?>("UpdateAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.ToTable("Moderators", (string)null);
-                });
+                    b.HasKey("Id")
+                        .HasName("PkInterestCategories");
 
-            modelBuilder.Entity("MetaBond.Domain.Models.ModeratorCommunity", b =>
-                {
-                    b.Property<Guid>("ModeratorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CommunitiesId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("ModeratorId", "CommunitiesId");
-
-                    b.HasIndex("CommunitiesId");
-
-                    b.ToTable("ModeratorCommunity", (string)null);
+                    b.ToTable("InterestCategories", (string)null);
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
@@ -419,6 +425,40 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.ToTable("Rewards", (string)null);
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.Roles", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
+
+                    b.HasKey("Id")
+                        .HasName("PkRoles");
+
+                    b.ToTable("Roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d290f1ee-6c54-4b01-90e6-d701748f0851"),
+                            Description = "Default role for standard users",
+                            Name = "User"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a4b8c2f-3d1e-4b6f-a1c2-9f3e2d7a6c1b"),
+                            Description = "Administrator with full permissions",
+                            Name = "Admin"
+                        });
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -453,11 +493,17 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid?>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Username")
                         .HasColumnType("text");
 
                     b.HasKey("Id")
                         .HasName("PkUser");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users", (string)null);
                 });
@@ -480,51 +526,41 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MetaBond.Domain.Models.Admin", b =>
                 {
                     b.HasOne("MetaBond.Domain.Models.User", "User")
-                        .WithMany("AdminRoles")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FkAdminsUserId");
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.CommunityManager", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.Communities", b =>
                 {
-                    b.HasOne("MetaBond.Domain.Models.Communities", "Community")
-                        .WithMany("CommunityManagers")
-                        .HasForeignKey("CommunityId")
+                    b.HasOne("MetaBond.Domain.Models.CommunityCategory", "CommunityCategory")
+                        .WithMany("Communities")
+                        .HasForeignKey("CommunityCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FKCommunityManagerCommunity");
+                        .HasConstraintName("FkCommunityCategoryId");
 
-                    b.HasOne("MetaBond.Domain.Models.User", "User")
-                        .WithMany("CommunityManagerRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FkCommunityManagersUserId");
-
-                    b.Navigation("Community");
-
-                    b.Navigation("User");
+                    b.Navigation("CommunityCategory");
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.CommunityUser", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityMembership", b =>
                 {
                     b.HasOne("MetaBond.Domain.Models.Communities", "Community")
-                        .WithMany("CommunityUsers")
+                        .WithMany("CommunityMemberships")
                         .HasForeignKey("CommunityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FkCommunitiesId");
+                        .HasConstraintName("FkCommunityMembershipsCommunityId");
 
                     b.HasOne("MetaBond.Domain.Models.User", "User")
                         .WithMany("CommunityMemberships")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FkCommunityUsersUserId");
+                        .HasConstraintName("FkCommunityMembershipsUserId");
 
                     b.Navigation("Community");
 
@@ -597,35 +633,16 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("Requester");
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.Moderator", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.Interest", b =>
                 {
-                    b.HasOne("MetaBond.Domain.Models.User", "User")
-                        .WithMany("ModeratorRoles")
-                        .HasForeignKey("UserId")
+                    b.HasOne("MetaBond.Domain.Models.InterestCategory", "InterestCategory")
+                        .WithMany("Interest")
+                        .HasForeignKey("InterestCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FkModeratorsUserId");
+                        .HasConstraintName("FkInterestCategoryId");
 
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("MetaBond.Domain.Models.ModeratorCommunity", b =>
-                {
-                    b.HasOne("MetaBond.Domain.Models.Communities", "Community")
-                        .WithMany("ModeratorCommunities")
-                        .HasForeignKey("CommunitiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MetaBond.Domain.Models.Moderator", "Moderator")
-                        .WithMany("ModeratorCommunities")
-                        .HasForeignKey("ModeratorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Community");
-
-                    b.Navigation("Moderator");
+                    b.Navigation("InterestCategory");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.Posts", b =>
@@ -703,6 +720,18 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.User", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.Roles", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkUserRolesId");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.UserInterest", b =>
                 {
                     b.HasOne("MetaBond.Domain.Models.Interest", "Interest")
@@ -726,17 +755,18 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MetaBond.Domain.Models.Communities", b =>
                 {
-                    b.Navigation("CommunityManagers");
-
-                    b.Navigation("CommunityUsers");
+                    b.Navigation("CommunityMemberships");
 
                     b.Navigation("Events");
-
-                    b.Navigation("ModeratorCommunities");
 
                     b.Navigation("Posts");
 
                     b.Navigation("ProgressBoard");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityCategory", b =>
+                {
+                    b.Navigation("Communities");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.Events", b =>
@@ -749,9 +779,9 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("UserInterests");
                 });
 
-            modelBuilder.Entity("MetaBond.Domain.Models.Moderator", b =>
+            modelBuilder.Entity("MetaBond.Domain.Models.InterestCategory", b =>
                 {
-                    b.Navigation("ModeratorCommunities");
+                    b.Navigation("Interest");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
@@ -764,19 +794,18 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("ProgressEntries");
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.Roles", b =>
+                {
+                    b.Navigation("Users");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.User", b =>
                 {
-                    b.Navigation("AdminRoles");
-
-                    b.Navigation("CommunityManagerRoles");
-
                     b.Navigation("CommunityMemberships");
 
                     b.Navigation("EmailConfirmationTokens");
 
                     b.Navigation("Interests");
-
-                    b.Navigation("ModeratorRoles");
 
                     b.Navigation("Posts");
 

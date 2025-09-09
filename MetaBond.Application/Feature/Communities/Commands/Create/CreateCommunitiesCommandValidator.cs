@@ -14,9 +14,7 @@ public class CreateCommunitiesCommandValidator : AbstractValidator<CreateCommuni
             .NotEmpty().WithMessage("The description is required and cannot be empty or null.")
             .MaximumLength(255).WithMessage("The description must not exceed 255 characters.");
 
-        RuleFor(x => x.Category)
-            .NotEmpty().WithMessage("The category is required and cannot be empty or null.")
-            .MaximumLength(25).WithMessage("The category must not exceed 25 characters.");
-
+        RuleFor(x => x.CategoryId)
+            .NotEmpty().WithMessage("The category is required and cannot be empty or null.");
     }
 }

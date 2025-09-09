@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Feature.Friendship.Commands.Create;
 using MetaBond.Application.Feature.Friendship.Commands.Delete;
 using MetaBond.Application.Feature.Friendship.Commands.Update;
@@ -12,9 +13,13 @@ using MetaBond.Application.Feature.Friendship.Query.GetFriendshipWithUser;
 using MetaBond.Application.Feature.Friendship.Query.GetOrderById;
 using MetaBond.Application.Feature.Friendship.Query.GetRecentlyCreated;
 using MetaBond.Application.Feature.Friendship.Query.Pagination;
+using MetaBond.Application.Helpers;
+using MetaBond.Application.Pagination;
+using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
@@ -25,134 +30,148 @@ public class FriendshipController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateFriendshipCommand friendshipCommand,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Create a new friendship",
+        Description = "Creates a new friendship using the provided command data."
+    )]
+    public async Task<ResultT<FriendshipDTos>> CreateAsync([FromBody] CreateFriendshipCommand friendshipCommand,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(friendshipCommand,cancellationToken);
-        if(!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result);
+        return await mediator.Send(friendshipCommand, cancellationToken);
     }
 
     [HttpGet("{id}")]
     [DisableRateLimiting]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get friendship by ID",
+        Description = "Retrieves a specific friendship by its unique identifier."
+    )]
+    public async Task<ResultT<FriendshipDTos>> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var query = new GetByIdFriendshipQuery { Id = id };
 
-        var result = await mediator.Send(query,cancellationToken);
-        if(!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpDelete("{id}")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> DeleteAsync([FromRoute] Guid id,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Delete a friendship by ID",
+        Description = "Deletes the friendship identified by the given ID."
+    )]
+    public async Task<ResultT<Guid>> DeleteAsync([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var query = new DeleteFriendshipCommand {Id = id};
+        var query = new DeleteFriendshipCommand { Id = id };
 
-        var result = await mediator.Send(query,cancellationToken);
-        if(!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpPut]
     [DisableRateLimiting]
-    public async Task<IActionResult> UpdateAsync([FromBody] UpdateFriendshipCommand updateFriendshipCommand,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Update a friendship",
+        Description = "Updates an existing friendship using the provided command data."
+    )]
+    public async Task<ResultT<UpdateFriendshipDTos>> UpdateAsync(
+        [FromBody] UpdateFriendshipCommand updateFriendshipCommand,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(updateFriendshipCommand,cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(updateFriendshipCommand, cancellationToken);
     }
 
     [HttpGet("count/status/{status}")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> FilterByStatus([FromRoute] Status status,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Count friendships by status",
+        Description = "Returns the count of friendships with the specified status."
+    )]
+    public async Task<ResultT<int>> FilterByStatus([FromRoute] Status status, CancellationToken cancellationToken)
     {
-        var query = new GetCountByStatusFriendshipQuery {Status = status};
+        var query = new GetCountByStatusFriendshipQuery { Status = status };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if (!result.IsSuccess)
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
-
 
     [HttpGet("after-created")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> GetAfterCreatedAsync([FromQuery] DateRangeType dateRange,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get friendships created after a date",
+        Description = "Retrieves friendships created after the specified date range."
+    )]
+    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetAfterCreatedAsync([FromQuery] DateRangeType dateRange,
+        CancellationToken cancellationToken)
     {
-        var query = new GetCreatedAfterFriendshipQuery {DateRange = dateRange};
-            
-        var result = await mediator.Send(query,cancellationToken);
-        if (!result.IsSuccess) 
-            return NotFound(result.Error);
+        var query = new GetCreatedAfterFriendshipQuery { DateRange = dateRange };
 
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("before-created")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> GetBeforeCreatedAsync([FromQuery] PastDateRangeType pastDateRange,CancellationToken cancellationToken )
+    [SwaggerOperation(
+        Summary = "Get friendships created before a date",
+        Description = "Retrieves friendships created before the specified past date range."
+    )]
+    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetBeforeCreatedAsync(
+        [FromQuery] PastDateRangeType pastDateRange,
+        CancellationToken cancellationToken)
     {
-        var query = new GetCreatedBeforeFriendshipQuery { PastDateRangeType = pastDateRange};
+        var query = new GetCreatedBeforeFriendshipQuery { PastDateRangeType = pastDateRange };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if(!result.IsSuccess) 
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("filter-status")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> GetFilterByStatus([FromQuery] Status status,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Filter friendships by status",
+        Description = "Retrieves friendships filtered by the specified status."
+    )]
+    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetFilterByStatus([FromQuery] Status status,
+        CancellationToken cancellationToken)
     {
-        var query = new FilterByStatusFriendshipQuery { Status = status};
+        var query = new FilterByStatusFriendshipQuery { Status = status };
 
-        var result = await mediator.Send(query,cancellationToken);
-        if(!result.IsSuccess) 
-            return NotFound(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("order-by-id")]
     [DisableRateLimiting]
-    public async Task<IActionResult> OrderbyIdAscOrDescAsync([FromQuery] string sort,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Order friendships by ID",
+        Description = "Retrieves friendships ordered ascending or descending by ID."
+    )]
+    public async Task<ResultT<IEnumerable<FriendshipDTos>>> OrderbyIdAscOrDescAsync([FromQuery] string sort,
+        CancellationToken cancellationToken)
     {
         var query = new GetOrderByIdFriendshipQuery { Sort = sort };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if(!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("recent-created/{limit}")]
     [DisableRateLimiting]
-    public async Task<IActionResult> GetRecentCreatedAsync([FromRoute] int limit,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get recently created friendships",
+        Description = "Retrieves the most recently created friendships up to the specified limit."
+    )]
+    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetRecentCreatedAsync([FromRoute] int limit,
+        CancellationToken cancellationToken)
     {
         var query = new GetRecentlyCreatedFriendshipQuery { Limit = limit };
 
-        var result = await mediator.Send(query, cancellationToken);
-        if(!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("pagination")]
     [EnableRateLimiting("fixed")]
-    public async Task<IActionResult> GetPagedAsync([FromQuery] int pageNumber, [FromQuery] int pageSize,CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get paginated friendships",
+        Description = "Retrieves a paginated list of friendships based on the specified page number and size."
+    )]
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> GetPagedAsync([FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
         var query = new GetPagedFriendshipQuery
         {
@@ -160,20 +179,18 @@ public class FriendshipController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await mediator.Send(query,cancellationToken);
-        if (!result.IsSuccess) 
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("{friendshipId}/with-users")]
-    public async Task<IActionResult> GetWithUsersAsync(Guid friendshipId, CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get friendship with users",
+        Description = "Retrieves the friendship along with the associated users."
+    )]
+    public async Task<ResultT<IEnumerable<FriendshipWithUserDTos>>> GetWithUsersAsync([FromRoute] Guid friendshipId,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetFriendshipWithUsersQuery {FriendshipId = friendshipId}, cancellationToken);
-        if(!result.IsSuccess)
-            return NotFound(result.Error);
-        
-        return Ok(result.Value);
+        return await mediator.Send(new GetFriendshipWithUsersQuery { FriendshipId = friendshipId },
+            cancellationToken);
     }
 }

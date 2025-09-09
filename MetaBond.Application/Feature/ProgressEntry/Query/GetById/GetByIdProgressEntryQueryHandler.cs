@@ -1,6 +1,8 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressEntry;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -9,36 +11,30 @@ namespace MetaBond.Application.Feature.ProgressEntry.Query.GetById;
 
 internal sealed class GetByIdProgressEntryQueryHandler(
     IProgressEntryRepository progressEntryRepository,
-    IDistributedCache decoratedCache,
     ILogger<GetByIdProgressEntryQueryHandler> logger)
     : IQueryHandler<GetByIdProgressEntryQuery, ProgressEntryDTos>
 {
-    public async Task<ResultT<ProgressEntryDTos>> Handle(GetByIdProgressEntryQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<ProgressEntryDTos>> Handle(GetByIdProgressEntryQuery request,
+        CancellationToken cancellationToken)
     {
-        var progressEntry = await decoratedCache.GetOrCreateAsync(
-            $"progress-entry-get-by-id-{request.ProgressEntryId}",
-            async () => await progressEntryRepository.GetByIdAsync(request.ProgressEntryId), 
-            cancellationToken: cancellationToken);
-        
-        if (progressEntry != null)
+        var progressEntry = await EntityHelper.GetEntityByIdAsync
+        (
+            progressEntryRepository.GetByIdAsync,
+            request.ProgressEntryId,
+            "ProgressEntry",
+            logger
+        );
+        if (progressEntry.IsSuccess)
         {
-            ProgressEntryDTos entryDTos = new
-            (
-                ProgressEntryId: progressEntry.Id,
-                ProgressBoardId: progressEntry.ProgressBoardId,
-                UserId:  progressEntry.UserId,
-                Description: progressEntry.Description,
-                CreatedAt: progressEntry.CreatedAt,
-                UpdateAt: progressEntry.UpdateAt
-            );
+            var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry.Value);
 
-            logger.LogInformation("Progress entry with ID {Id} retrieved successfully.", progressEntry.Id);
+            logger.LogInformation("Progress entry with ID {Id} retrieved successfully.", progressEntry.Value.Id);
 
-            return ResultT<ProgressEntryDTos>.Success(entryDTos);
+            return ResultT<ProgressEntryDTos>.Success(progressEntryDto);
         }
 
         logger.LogError("Progress entry with ID {Id} not found.", request.ProgressEntryId);
 
-        return ResultT<ProgressEntryDTos>.Failure(Error.NotFound("400",$"{request.ProgressEntryId} not found"));
+        return ResultT<ProgressEntryDTos>.Failure(Error.NotFound("400", $"{request.ProgressEntryId} not found"));
     }
 }

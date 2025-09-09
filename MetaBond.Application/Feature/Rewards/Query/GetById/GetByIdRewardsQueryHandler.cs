@@ -1,6 +1,8 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Rewards;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -9,30 +11,23 @@ namespace MetaBond.Application.Feature.Rewards.Query.GetById;
 
 internal sealed class GetByIdRewardsQueryHandler(
     IRewardsRepository rewardsRepository,
-    IDistributedCache decoratedCache,
     ILogger<GetByIdRewardsQueryHandler> logger)
     : IQueryHandler<GetByIdRewardsQuery, RewardsDTos>
 {
     public async Task<ResultT<RewardsDTos>> Handle(
-        GetByIdRewardsQuery request, 
+        GetByIdRewardsQuery request,
         CancellationToken cancellationToken)
     {
-        
-        var reward = await decoratedCache.GetOrCreateAsync(
-            $"rewards-{request.RewardsId}",
-            async () => await rewardsRepository.GetByIdAsync(request.RewardsId), 
-            cancellationToken: cancellationToken);
+        var reward = await EntityHelper.GetEntityByIdAsync(
+            rewardsRepository.GetByIdAsync,
+            request.RewardsId,
+            "Rewards",
+            logger
+        );
 
-        if (reward != null)
+        if (reward.IsSuccess)
         {
-            RewardsDTos rewardsDTos = new
-            (
-                RewardsId: reward.Id,
-                UserId: reward.UserId,
-                Description: reward.Description,
-                PointAwarded: reward.PointAwarded,
-                DateAwarded: reward.DateAwarded
-            );
+            var rewardsDTos = RewardsMapper.ToDto(reward.Value);
 
             logger.LogInformation("Reward with ID: {RewardsId} found.", request.RewardsId);
 

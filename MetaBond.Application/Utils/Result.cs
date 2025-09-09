@@ -21,7 +21,7 @@ public class Result
     /// <summary>
     /// Initializes a successful result.
     /// </summary>
-    protected Result() 
+    protected Result()
     {
         IsSuccess = true;
         Error = default;
@@ -59,7 +59,6 @@ public class Result
     public static Result Failure(Error error) =>
         new(error);
 }
-
 
 /// <summary>
 /// Represents the outcome of an operation that can either succeed with a value of type <typeparamref name="TValue"/> 
