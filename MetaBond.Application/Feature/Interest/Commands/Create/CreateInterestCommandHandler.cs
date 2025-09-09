@@ -1,5 +1,7 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Interest;
+using MetaBond.Application.Helpers;
+using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
@@ -9,6 +11,7 @@ namespace MetaBond.Application.Feature.Interest.Commands.Create;
 
 internal sealed class CreateInterestCommandHandler(
     ILogger<CreateInterestCommandHandler> logger,
+    IInterestCategoryRepository interestCategoryRepository,
     IInterestRepository interestRepository
 ) : ICommandHandler<CreateInterestCommand, InterestDTos>
 {
@@ -23,10 +26,20 @@ internal sealed class CreateInterestCommandHandler(
                 Error.Conflict("400", $"Interest with name '{request.Name!}' already exists."));
         }
 
+        var interestCategory = await EntityHelper.GetEntityByIdAsync(
+            interestCategoryRepository.GetByIdAsync,
+            request.InterestCategoryId ?? Guid.Empty,
+            "Interest Category",
+            logger
+        );
+
+        if (!interestCategory.IsSuccess) return ResultT<InterestDTos>.Failure(interestCategory.Error!);
+
         Domain.Models.Interest interest = new()
         {
             Id = Guid.NewGuid(),
-            Name = request.Name!
+            Name = request.Name!,
+            InterestCategoryId = request.InterestCategoryId
         };
 
         await interestRepository.CreateAsync(interest, cancellationToken);

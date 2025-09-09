@@ -12,5 +12,8 @@ public class CreateInterestValidator : AbstractValidator<CreateInterestCommand>
             .MaximumLength(50).WithMessage("Interest name must not exceed 100 characters.")
             .Matches(@"^[a-zA-Z\s]+$") // only letters and spaces
             .WithMessage("Interest name can only contain letters and spaces.");
+
+        RuleFor(x => x.InterestCategoryId)
+            .NotEmpty().WithMessage("Interest category id is required.");
     }
 }
