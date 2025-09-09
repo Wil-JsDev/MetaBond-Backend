@@ -19,8 +19,8 @@ public static class TokenGenerator
         do
         {
             rng.GetBytes(bytes);
-            
-            number = BitConverter.ToInt32(bytes, 0) & int.MaxValue; 
+
+            number = BitConverter.ToInt32(bytes, 0) & int.MaxValue;
         } while (number < min || number >= max);
 
         return number.ToString();
