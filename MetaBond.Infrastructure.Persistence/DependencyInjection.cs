@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddTransient<IUserInterestRepository, UserInterestRepository>();
         services.AddTransient<IRoleRepository, RoleRepository>();
         services.AddTransient<ICommunityMembershipRepository, CommunityMembershipRepository>();
+        services.AddTransient<ICommunityCategoryRepository, CommunityCategoryRepository>();
+        services.AddTransient<IInterestCategoryRepository, InterestCategoryRepository>();
 
         #endregion
     }
