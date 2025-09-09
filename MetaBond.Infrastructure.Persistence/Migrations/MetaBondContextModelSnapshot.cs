@@ -46,10 +46,9 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Category")
+                    b.Property<Guid?>("CommunityCategoryId")
                         .IsRequired()
-                        .HasMaxLength(25)
-                        .HasColumnType("character varying(25)");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("timestamp with time zone");
@@ -67,7 +66,32 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("PkCommunities");
 
+                    b.HasIndex("CommunityCategoryId");
+
                     b.ToTable("Communities", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
+
+                    b.Property<DateTime?>("UpdateAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id")
+                        .HasName("PkCommunityCategories");
+
+                    b.ToTable("CommunityCategories", (string)null);
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.CommunityMembership", b =>
@@ -214,6 +238,10 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("InterestCategoryId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(25)
@@ -222,7 +250,32 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("PkInterest");
 
+                    b.HasIndex("InterestCategoryId");
+
                     b.ToTable("Interests", (string)null);
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.InterestCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
+
+                    b.Property<DateTime?>("UpdateAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id")
+                        .HasName("PkInterestCategories");
+
+                    b.ToTable("InterestCategories", (string)null);
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>
@@ -481,6 +534,18 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.Communities", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.CommunityCategory", "CommunityCategory")
+                        .WithMany("Communities")
+                        .HasForeignKey("CommunityCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkCommunityCategoryId");
+
+                    b.Navigation("CommunityCategory");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.CommunityMembership", b =>
                 {
                     b.HasOne("MetaBond.Domain.Models.Communities", "Community")
@@ -566,6 +631,18 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("Addressee");
 
                     b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.Interest", b =>
+                {
+                    b.HasOne("MetaBond.Domain.Models.InterestCategory", "InterestCategory")
+                        .WithMany("Interest")
+                        .HasForeignKey("InterestCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkInterestCategoryId");
+
+                    b.Navigation("InterestCategory");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.Posts", b =>
@@ -687,6 +764,11 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                     b.Navigation("ProgressBoard");
                 });
 
+            modelBuilder.Entity("MetaBond.Domain.Models.CommunityCategory", b =>
+                {
+                    b.Navigation("Communities");
+                });
+
             modelBuilder.Entity("MetaBond.Domain.Models.Events", b =>
                 {
                     b.Navigation("EventParticipations");
@@ -695,6 +777,11 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MetaBond.Domain.Models.Interest", b =>
                 {
                     b.Navigation("UserInterests");
+                });
+
+            modelBuilder.Entity("MetaBond.Domain.Models.InterestCategory", b =>
+                {
+                    b.Navigation("Interest");
                 });
 
             modelBuilder.Entity("MetaBond.Domain.Models.ParticipationInEvent", b =>

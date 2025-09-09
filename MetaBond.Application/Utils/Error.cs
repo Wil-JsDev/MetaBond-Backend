@@ -15,8 +15,8 @@ public class Error
     /// <param name="description">A human-readable description of the error.</param>
     /// <param name="errorType">The type/category of the error.</param>
     private Error(
-        string code, 
-        string description, 
+        string code,
+        string description,
         ErrorType errorType)
     {
         Code = code;
@@ -47,7 +47,7 @@ public class Error
     /// <param name="code">The code identifying the error.</param>
     /// <param name="description">A description of the failure.</param>
     /// <returns>An instance of <see cref="Error"/> representing a failure.</returns>
-    public static Error Failure(string code, string description) => 
+    public static Error Failure(string code, string description) =>
         new Error(code, description, ErrorType.Failure);
 
     /// <summary>
@@ -58,7 +58,7 @@ public class Error
     /// <returns>An instance of <see cref="Error"/> representing a not found error.</returns>
     public static Error NotFound(string code, string description) =>
         new Error(code, description, ErrorType.NotFound);
-    
+
     /// <summary>
     /// Creates a conflict error, typically used when a resource already exists or there is a data conflict.
     /// </summary>

@@ -22,7 +22,10 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class CommunityMembershipController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    [SwaggerOperation(Description = "Allows a user to join a specific community.")]
+    [SwaggerOperation(
+        Summary = "Join a community",
+        Description = "Allows a user to join a specific community."
+    )]
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
     public async Task<ResultT<CommunityMembershipDto>> JoinCommunityAsync(
@@ -33,7 +36,10 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("role")]
-    [SwaggerOperation(Description = "Updates the role of a user within a community.")]
+    [SwaggerOperation(
+        Summary = "Update user role in a community",
+        Description = "Updates the role of a user within a community."
+    )]
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
     public async Task<ResultT<string>> UpdateRoleAsync([FromQuery] Guid communityId, [FromQuery] Guid userId,
@@ -50,7 +56,10 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("leave")]
-    [SwaggerOperation(Description = "Allows a user to leave a community.")]
+    [SwaggerOperation(
+        Summary = "Leave a community",
+        Description = "Allows a user to leave a community."
+    )]
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
     public async Task<ResultT<LeaveCommunityDto>> LeaveCommunityAsync([FromQuery] Guid communityId,
@@ -68,11 +77,17 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
 
     [HttpGet("community/{communityId}")]
     [EnableRateLimiting("fixed")]
-    [SwaggerOperation(Description = "Retrieves a paginated list of members from a specific community.")]
+    [SwaggerOperation(
+        Summary = "Get community members",
+        Description = "Retrieves a paginated list of members from a specific community."
+    )]
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<ResultT<PagedResult<CommunityMembersDto>>> GetCommunityMemberAsync([FromRoute] Guid communityId,
-        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<CommunityMembersDto>>> GetCommunityMemberAsync(
+        [FromRoute] Guid communityId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
         var query = new GetCommunityMemberQuery
         {
@@ -86,12 +101,17 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
 
     [HttpGet("users/{userId}")]
     [EnableRateLimiting("fixed")]
-    [SwaggerOperation(Description = "Retrieves a paginated list of communities that a specific user belongs to.")]
+    [SwaggerOperation(
+        Summary = "Get user communities",
+        Description = "Retrieves a paginated list of communities that a specific user belongs to."
+    )]
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<ResultT<PagedResult<CommunitiesDTos>>> GetCommunityAsync([FromRoute] Guid userId,
+    public async Task<ResultT<PagedResult<CommunitiesDTos>>> GetCommunityAsync(
+        [FromRoute] Guid userId,
         [FromQuery] int pageNumber,
-        [FromQuery] int pageSize, CancellationToken cancellationToken)
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
         var query = new GetUserCommunitiesQuery
         {

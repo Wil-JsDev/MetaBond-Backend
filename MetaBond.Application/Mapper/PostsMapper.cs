@@ -54,7 +54,6 @@ public static class PostsMapper
                 {
                     new CommunitySummaryDto(
                         Description: x.Communities.Description,
-                        Category: x.Communities.Category,
                         CreatedAt: x.Communities.CreateAt
                     )
                 }

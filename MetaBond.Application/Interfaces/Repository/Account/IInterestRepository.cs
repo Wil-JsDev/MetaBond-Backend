@@ -38,5 +38,25 @@ public interface IInterestRepository : IGenericRepository<Interest>
     Task<PagedResult<Interest>> GetInterestsByUserAsync(Guid userId, int pageNumber, int pageSize,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Checks if an interest with the specified name exists in the database.
+    /// </summary>
+    /// <param name="interestName">The name of the interest to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>True if the interest exists; otherwise, false.</returns>
     Task<bool> InterestExistsAsync(string interestName, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Retrieves a paginated list of interests that belong to the specified interest category.
+    /// </summary>
+    /// <param name="interestCategoryId">The ID of the interest category.</param>
+    /// <param name="pageNumber">The page number to retrieve (1-based).</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A paged result containing the interests for the given category.</returns>
+    Task<PagedResult<Interest>> GetPagedInterestByInterestCategoryIdAsync(
+        Guid interestCategoryId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
 }

@@ -13,8 +13,18 @@ public static class CommunityMapper
         (
             CommunitiesId: communities.Id,
             Name: communities.Name,
-            Category: communities.Category,
-            CreatedAt: communities.CreateAt
+            CreatedAt: communities.CreateAt,
+            CategoryId: communities.CommunityCategoryId ?? Guid.Empty
+        );
+    }
+
+    public static CommunitiesByCategoryDto MapCommunityByCategoryDto(Communities communities)
+    {
+        return new CommunitiesByCategoryDto
+        (
+            communities.Id,
+            communities.Name,
+            communities.CreateAt
         );
     }
 
@@ -27,7 +37,6 @@ public static class CommunityMapper
         return new PostsAndEventsDTos(
             CommunitiesId: community.Id,
             Name: community.Name,
-            Category: community.Category,
             CreatedAt: community.CreateAt,
             Posts: postDtos,
             Events: eventDtos
@@ -47,7 +56,6 @@ public static class CommunityMapper
                 {
                     new CommunitySummaryDto(
                         Description: e.Communities.Description,
-                        Category: e.Communities.Category,
                         CreatedAt: e.Communities.CreateAt
                     )
                 }

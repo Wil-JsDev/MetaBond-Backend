@@ -58,7 +58,8 @@ internal class GetPagedPostsQueryHandler(
             logger.LogError("No posts found for the requested page: {PageNumber}, PageSize: {PageSize}",
                 request.PageNumber, request.PageSize);
 
-            return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("400", ""));
+            return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("404",
+                "No posts found for the requested page."));
         }
 
         logger.LogInformation("Retrieved {TotalItems} posts for page {CurrentPage} of {TotalPages}.",
