@@ -3,6 +3,7 @@ using MediatR;
 using MetaBond.Application.DTOs.Interest;
 using MetaBond.Application.Feature.Interest.Commands.Create;
 using MetaBond.Application.Feature.Interest.Query.GetById;
+using MetaBond.Application.Feature.Interest.Query.GetInterestByCategory;
 using MetaBond.Application.Feature.Interest.Query.GetInterestsByName;
 using MetaBond.Application.Feature.Interest.Query.GetInterestsByUser;
 using MetaBond.Application.Feature.Interest.Query.Pagination;
@@ -99,6 +100,29 @@ public class InterestController(IMediator mediator) : ControllerBase
     {
         GetPagedInterestQuery query = new()
         {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return await mediator.Send(query, cancellationToken);
+    }
+
+    [HttpGet("interest-category/{interestCategoryId}")]
+    [EnableRateLimiting("fixed")]
+    [SwaggerOperation(
+        Summary = "Get interests by category",
+        Description = "Retrieves a paginated list of interests associated with a specific category."
+    )]
+    public async Task<ResultT<PagedResult<InterestDTos>>> GetPagedInterestByInterestCategoryAsync(
+        Guid interestCategoryId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken
+    )
+    {
+        var query = new GetInterestByCategoryIdQuery()
+        {
+            InterestCategoryId = interestCategoryId,
             PageNumber = pageNumber,
             PageSize = pageSize
         };

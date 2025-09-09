@@ -4,8 +4,8 @@ using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Feature.Communities.Commands.Create;
 using MetaBond.Application.Feature.Communities.Commands.Delete;
 using MetaBond.Application.Feature.Communities.Commands.Update;
-using MetaBond.Application.Feature.Communities.Query.Filter;
 using MetaBond.Application.Feature.Communities.Query.GetById;
+using MetaBond.Application.Feature.Communities.Query.GetCommunitiesByCategory;
 using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
 using MetaBond.Application.Feature.Communities.Query.Pagination;
 using MetaBond.Application.Helpers;
@@ -72,13 +72,14 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
         return await mediator.Send(query, cancellationToken);
     }
 
-    [HttpGet("search/category/{category}")]
+    [HttpGet("search/category/{categoryId}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Search communities by category",
         Description = "Retrieves a list of communities filtered by a specific category."
     )]
-    public async Task<ResultT<PagedResult<CommunitiesDTos>>> GetCommunitiesByCategoryIdAsync([FromRoute] Guid categoryId,
+    public async Task<ResultT<PagedResult<CommunitiesByCategoryDto>>> GetCommunitiesByCategoryIdAsync(
+        [FromRoute] Guid categoryId,
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,
         CancellationToken cancellationToken)
