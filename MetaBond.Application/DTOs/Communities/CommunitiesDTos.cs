@@ -4,5 +4,6 @@ public sealed record CommunitiesDTos
 (
     Guid CommunitiesId,
     string? Name,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    Guid CategoryId
 );

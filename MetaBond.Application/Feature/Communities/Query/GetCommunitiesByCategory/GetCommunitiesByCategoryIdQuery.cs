@@ -4,7 +4,7 @@ using MetaBond.Application.Pagination;
 
 namespace MetaBond.Application.Feature.Communities.Query.Filter;
 
-public sealed class GetCommunitiesByCategoryIdQuery : IQuery<PagedResult<CommunitiesDTos>>
+public sealed class GetCommunitiesByCategoryIdQuery : IQuery<PagedResult<CommunitiesByCategoryDto>>
 {
     public Guid CategoryId { get; set; }
     

@@ -14,12 +14,12 @@ internal sealed class GetCommunitiesByCategoryIdQueryHandler(
     ICommunitiesRepository communitiesRepository,
     IDistributedCache decoratedCache,
     ILogger<GetCommunitiesByCategoryIdQueryHandler> logger)
-    : IQueryHandler<GetCommunitiesByCategoryIdQuery, PagedResult<CommunitiesDTos>>
+    : IQueryHandler<GetCommunitiesByCategoryIdQuery, PagedResult<CommunitiesByCategoryDto>>
 {
-    public async Task<ResultT<PagedResult<CommunitiesDTos>>> Handle(GetCommunitiesByCategoryIdQuery request,
+    public async Task<ResultT<PagedResult<CommunitiesByCategoryDto>>> Handle(GetCommunitiesByCategoryIdQuery request,
         CancellationToken cancellationToken)
     {
-        var validationPaginationResult = PaginationHelper.ValidatePagination<CommunitiesDTos>(
+        var validationPaginationResult = PaginationHelper.ValidatePagination<CommunitiesByCategoryDto>(
             request.PageNumber,
             request.PageSize,
             logger
@@ -38,9 +38,9 @@ internal sealed class GetCommunitiesByCategoryIdQueryHandler(
                     request.CategoryId,
                     cancellationToken: cancellationToken);
 
-                var dTos = communities.Items!.Select(CommunityMapper.MapCommunitiesDTos);
+                var dTos = communities.Items!.Select(CommunityMapper.MapCommunityByCategoryDto);
 
-                PagedResult<CommunitiesDTos> pagedResult = new()
+                PagedResult<CommunitiesByCategoryDto> pagedResult = new()
                 {
                     TotalItems = communities.TotalItems,
                     CurrentPage = communities.CurrentPage,
@@ -61,7 +61,7 @@ internal sealed class GetCommunitiesByCategoryIdQueryHandler(
                 request
             );
 
-            return ResultT<PagedResult<CommunitiesDTos>>.Failure(
+            return ResultT<PagedResult<CommunitiesByCategoryDto>>.Failure(
                 Error.Failure("400", $"No communities found for CategoryId '{request.CategoryId}'.")
             );
         }
@@ -73,6 +73,6 @@ internal sealed class GetCommunitiesByCategoryIdQueryHandler(
             request
         );
 
-        return ResultT<PagedResult<CommunitiesDTos>>.Success(communitiesCategoryDto);
+        return ResultT<PagedResult<CommunitiesByCategoryDto>>.Success(communitiesCategoryDto);
     }
 }
