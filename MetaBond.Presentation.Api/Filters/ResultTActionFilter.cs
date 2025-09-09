@@ -23,7 +23,7 @@ public class ResultTActionFilter(ILogger<ResultTActionFilter> logger) : IAsyncAc
             if (valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(ResultT<>))
             {
                 dynamic resultT = objectResult.Value;
-                
+
                 if (!resultT.IsSuccess)
                 {
                     // Extract HTTP status code from the error
@@ -37,7 +37,7 @@ public class ResultTActionFilter(ILogger<ResultTActionFilter> logger) : IAsyncAc
                     // Create standardized error response
                     var errorResponse = new
                     {
-                        code = resultT.Error?.Code,
+                        // code = resultT.Error?.Code,
                         description = resultT.Error?.Description
                     };
 
@@ -72,7 +72,7 @@ public class ResultTActionFilter(ILogger<ResultTActionFilter> logger) : IAsyncAc
             // Validate that the code is within valid HTTP status code range
             return statusCode >= 100 && statusCode <= 599 ? statusCode : StatusCodes.Status500InternalServerError;
         }
-        
+
         return StatusCodes.Status500InternalServerError;
     }
 }
