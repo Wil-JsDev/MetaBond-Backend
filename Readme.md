@@ -150,27 +150,6 @@ matching.
 - `DELETE /api/v1/communities/{id}` - Delete community
 - `GET /api/v1/communities/category/{categoryId}` - Get communities by category
 
-### Events
-
-- `GET /api/v1/events` - Get paginated events
-- `POST /api/v1/events` - Create new event
-- `GET /api/v1/events/{id}` - Get event by ID
-- `PUT /api/v1/events/{id}` - Update event
-- `DELETE /api/v1/events/{id}` - Delete event
-
-### Categories
-
-- `GET /api/v1/community-categories` - Get community categories
-- `POST /api/v1/community-categories` - Create community category
-- `GET /api/v1/interest-categories` - Get interest categories
-- `POST /api/v1/interest-categories` - Create interest category
-
-### Interests
-
-- `GET /api/v1/interests` - Get user interests
-- `POST /api/v1/interests` - Create user interest
-- `GET /api/v1/interests/category/{categoryId}` - Get interests by category
-
 *For complete API documentation, visit `/swagger` when running the application.*
 
 ## 🧪 Testing
@@ -208,21 +187,6 @@ MetaBond-Backend/
 ├── 🐳 docker-compose.yml                 # Docker configuration
 ├── 📄 .env.template                      # Environment variables template
 └── 📖 ARCHITECTURE.md                    # Detailed architecture documentation
-```
-
-## 🌍 Environment Configuration
-
-Copy `.env.template` to `.env` and configure:
-
-```env
-# Database Configuration
-CONNECTION_STRING=Server=localhost;Database=MetaBondDB;Trusted_Connection=true;
-
-# API Configuration
-ASPNETCORE_ENVIRONMENT=Development
-ASPNETCORE_URLS=https://localhost:7001;http://localhost:7000
-
-# Additional configurations...
 ```
 
 ## 🚀 Deployment
