@@ -11,7 +11,7 @@ public class EmailConfirmationTokenService(
     IEmailConfirmationTokenRepository emailConfirmationTokenRepository,
     IUserRepository userRepository,
     ILogger<EmailConfirmationTokenService> logger
-    ): IEmailConfirmationTokenService
+) : IEmailConfirmationTokenService
 {
     public async Task<ResultT<string>> GenerateTokenAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -19,14 +19,14 @@ public class EmailConfirmationTokenService(
         if (user == null)
         {
             logger.LogWarning("GenerateTokenAsync: User with ID '{UserId}' not found.", userId);
-            
+
             return ResultT<string>.Failure(Error.NotFound("404", "User not found"));
         }
-        
+
         if (user.IsEmailConfirmed)
         {
             logger.LogWarning("GenerateTokenAsync: Email already confirmed for user ID '{UserId}'.", userId);
-            
+
             return ResultT<string>.Failure(Error.Failure("409", "Email already confirmed."));
         }
 
@@ -38,15 +38,17 @@ public class EmailConfirmationTokenService(
             Code = token,
             ExpiresAt = DateTime.UtcNow.AddHours(1)
         };
-        
-       await emailConfirmationTokenRepository.CreateToken(confirmationToken,cancellationToken);
-       
-       logger.LogInformation("GenerateTokenAsync: Confirmation token created successfully for user ID '{UserId}'.", userId);
-       
+
+        await emailConfirmationTokenRepository.CreateToken(confirmationToken, cancellationToken);
+
+        logger.LogInformation("GenerateTokenAsync: Confirmation token created successfully for user ID '{UserId}'.",
+            userId);
+
         return ResultT<string>.Success(token);
     }
 
-    public async Task<ResultT<EmailConfirmationTokenDTos>> GetByTokenAsync(string token, CancellationToken cancellationToken)
+    public async Task<ResultT<EmailConfirmationTokenDTos>> GetByTokenAsync(string token,
+        CancellationToken cancellationToken)
     {
         var emailConfirmationToken = await emailConfirmationTokenRepository.FindByToken(token, cancellationToken);
 
@@ -73,33 +75,37 @@ public class EmailConfirmationTokenService(
 
     public async Task<Result> DeleteAsync(Guid emailConfirmationTokenId, CancellationToken cancellationToken)
     {
-        var emailConfirmationToken = await emailConfirmationTokenRepository.GetByIdAsync(emailConfirmationTokenId, cancellationToken);
-    
+        var emailConfirmationToken =
+            await emailConfirmationTokenRepository.GetByIdAsync(emailConfirmationTokenId, cancellationToken);
+
         if (emailConfirmationToken == null)
         {
-            logger.LogWarning("DeleteAsync: No EmailConfirmationToken found with ID '{EmailConfirmationTokenId}'.", emailConfirmationTokenId);
+            logger.LogWarning("DeleteAsync: No EmailConfirmationToken found with ID '{EmailConfirmationTokenId}'.",
+                emailConfirmationTokenId);
             return Result.Failure(Error.NotFound("404", "EmailConfirmationTokenId not found"));
         }
 
         await emailConfirmationTokenRepository.DeleteToken(emailConfirmationToken, cancellationToken);
-    
-        logger.LogInformation("DeleteAsync: EmailConfirmationToken with ID '{EmailConfirmationTokenId}' deleted successfully.", emailConfirmationTokenId);
+
+        logger.LogInformation(
+            "DeleteAsync: EmailConfirmationToken with ID '{EmailConfirmationTokenId}' deleted successfully.",
+            emailConfirmationTokenId);
 
         return Result.Success();
     }
-    
+
     public async Task<Result> IsCodeAvailableAsync(string code, CancellationToken cancellationToken)
     {
         var codeIsUsed = await emailConfirmationTokenRepository.IsCodeUnusedAsync(code, cancellationToken);
         if (codeIsUsed)
         {
             logger.LogWarning("Code '{Code}' has already been used.", code);
-            
+
             return Result.Failure(Error.Conflict("409", "The code has already been used."));
         }
-        
+
         logger.LogInformation("Code '{Code}' is valid and available.", code);
-        
+
         return Result.Success();
     }
 
@@ -109,7 +115,7 @@ public class EmailConfirmationTokenService(
         if (user == null)
         {
             logger.LogWarning("ConfirmAccountAsync: User with ID '{UserId}' not found.", userId);
-            
+
             return Result.Failure(Error.NotFound("404", "User not found"));
         }
 
@@ -117,40 +123,42 @@ public class EmailConfirmationTokenService(
         if (emailConfirmationToken == null)
         {
             logger.LogWarning("ConfirmAccountAsync: Token '{Token}' not found.", token);
-            
+
             return Result.Failure(Error.NotFound("404", "Token not found"));
         }
-        
+
         if (emailConfirmationToken.UserId != userId)
         {
-            logger.LogWarning("ConfirmAccountAsync: Token '{Token}' does not belong to user '{UserId}'.", token, userId);
-            
+            logger.LogWarning("ConfirmAccountAsync: Token '{Token}' does not belong to user '{UserId}'.", token,
+                userId);
+
             return Result.Failure(Error.Failure("403", "Token does not belong to user."));
         }
-        
+
         if (emailConfirmationToken.IsUsed)
         {
             logger.LogWarning("ConfirmAccountAsync: Token '{Token}' has already been used.", token);
-            
+
             return Result.Failure(Error.Failure("400", "Token already used."));
         }
-        
+
         var isValidToken = await emailConfirmationTokenRepository.IsValidTokenAsync(token, cancellationToken);
         if (!isValidToken)
         {
-            logger.LogWarning("ConfirmAccountAsync: Token '{Token}' is invalid (either expired or already used).", token);
-            
-            return Result.Failure(Error.Failure("400", "Token is invalid. It may have expired or has already been used."));
+            logger.LogWarning("ConfirmAccountAsync: Token '{Token}' is invalid (either expired or already used).",
+                token);
+
+            return Result.Failure(Error.Failure("400",
+                "Token is invalid. It may have expired or has already been used."));
         }
 
         await emailConfirmationTokenRepository.MarkTokenAsUsedAsync(emailConfirmationToken.Code!, cancellationToken);
-        
+
         user.IsEmailConfirmed = true;
         await userRepository.UpdateAsync(user, cancellationToken);
-        
+
         logger.LogInformation("ConfirmAccountAsync: User '{UserId}' confirmed their email successfully.", userId);
-        
+
         return Result.Success();
     }
-    
 }
