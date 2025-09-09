@@ -13,7 +13,18 @@ public static class CommunityMapper
         (
             CommunitiesId: communities.Id,
             Name: communities.Name,
-            CreatedAt: communities.CreateAt
+            CreatedAt: communities.CreateAt,
+            CategoryId: communities.CommunityCategoryId ?? Guid.Empty
+        );
+    }
+
+    public static CommunitiesByCategoryDto MapCommunityByCategoryDto(Communities communities)
+    {
+        return new CommunitiesByCategoryDto
+        (
+            communities.Id,
+            communities.Name,
+            communities.CreateAt
         );
     }
 

@@ -1,4 +1,3 @@
-using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.DTOs.Interest;
 using MetaBond.Domain.Models;
 
@@ -11,7 +10,8 @@ public static class InterestMapper
         return new InterestDTos
         (
             InterestId: interest.Id,
-            Name: interest.Name
+            Name: interest.Name,
+            InterestCategoryId: interest.InterestCategoryId
         );
     }
 
