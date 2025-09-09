@@ -2,6 +2,7 @@
 using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
@@ -31,11 +32,7 @@ internal sealed class GetPagedCommunitiesQueryHandler(
                 var communitiesPaged = await communitiesRepository.GetPagedCommunitiesAsync(request.PageNumber,
                     request.PageSize, cancellationToken);
 
-                var dtoItems = communitiesPaged.Items!.Select(c => new CommunitiesDTos(
-                    CommunitiesId: c.Id,
-                    Name: c.Name,
-                    CreatedAt: c.CreateAt
-                )).ToList();
+                var dtoItems = communitiesPaged.Items!.Select(CommunityMapper.MapCommunitiesDTos).ToList();
 
                 PagedResult<CommunitiesDTos> pagedResult = new()
                 {

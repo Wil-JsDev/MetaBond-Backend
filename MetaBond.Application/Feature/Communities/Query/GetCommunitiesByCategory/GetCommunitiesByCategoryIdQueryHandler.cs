@@ -8,7 +8,7 @@ using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
-namespace MetaBond.Application.Feature.Communities.Query.Filter;
+namespace MetaBond.Application.Feature.Communities.Query.GetCommunitiesByCategory;
 
 internal sealed class GetCommunitiesByCategoryIdQueryHandler(
     ICommunitiesRepository communitiesRepository,
