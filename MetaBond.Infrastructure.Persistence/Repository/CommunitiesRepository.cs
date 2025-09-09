@@ -37,7 +37,7 @@ public class CommunitiesRepository(MetaBondContext metaBondContext)
     {
         var totalRecord = await _metaBondContext.Set<Communities>()
             .AsNoTracking()
-            .CountAsync();
+            .CountAsync(cancellationToken);
 
         var pagedCommunities = await _metaBondContext.Set<Communities>().AsNoTracking()
             .OrderBy(c => c.Id)
