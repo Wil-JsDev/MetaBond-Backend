@@ -3,8 +3,8 @@ using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Feature.Communities.Commands.Create;
 using MetaBond.Application.Feature.Communities.Commands.Delete;
 using MetaBond.Application.Feature.Communities.Commands.Update;
-using MetaBond.Application.Feature.Communities.Query.Filter;
 using MetaBond.Application.Feature.Communities.Query.GetById;
+using MetaBond.Application.Feature.Communities.Query.GetCommunitiesByCategory;
 using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
 using MetaBond.Application.Feature.Communities.Query.Pagination;
 using MetaBond.Application.Pagination;
@@ -26,14 +26,15 @@ public class CommunitiesCommandHandlerTests
         {
             Name = "Learning english",
             Description = "Learn English in 30 days",
-            Category = "Learning"
+            CategoryId = Guid.NewGuid()
         };
 
         CommunitiesDTos communitiesDTos = new
         (
             CommunitiesId: Guid.NewGuid(),
             Name: createCommunitiesCommand.Name,
-            CreatedAt: DateTime.UtcNow
+            CreatedAt: DateTime.UtcNow,
+            CategoryId: Guid.Empty
         );
 
         var expectedResult = ResultT<CommunitiesDTos>.Success(communitiesDTos);
@@ -89,7 +90,8 @@ public class CommunitiesCommandHandlerTests
         (
             CommunitiesId: communitiesCommand.Id,
             Name: communitiesCommand.Name,
-            CreatedAt: DateTime.UtcNow
+            CreatedAt: DateTime.UtcNow,
+            CategoryId: Guid.Empty
         );
 
         var expectedResult = ResultT<CommunitiesDTos>.Success(communitiesDTos);
@@ -117,7 +119,8 @@ public class CommunitiesCommandHandlerTests
         (
             CommunitiesId: id,
             Name: "New Name",
-            CreatedAt: DateTime.UtcNow
+            CreatedAt: DateTime.UtcNow,
+            CategoryId: Guid.Empty
         );
 
         var expectedResult = ResultT<CommunitiesDTos>.Success(communitiesDTos);
@@ -144,14 +147,14 @@ public class CommunitiesCommandHandlerTests
         int pageNumber = 1;
         int pageSize = 10;
 
-        var communities = new List<CommunitiesDTos>
+        var communities = new List<CommunitiesByCategoryDto>
         {
-            new CommunitiesDTos(Guid.NewGuid(), "Community 1", DateTime.UtcNow),
-            new CommunitiesDTos(Guid.NewGuid(), "Community 2", DateTime.UtcNow),
-            new CommunitiesDTos(Guid.NewGuid(), "Community 3", DateTime.UtcNow)
+            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 1", DateTime.UtcNow),
+            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 2", DateTime.UtcNow),
+            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 3", DateTime.UtcNow)
         };
 
-        var pagedResult = new PagedResult<CommunitiesDTos>
+        var pagedResult = new PagedResult<CommunitiesByCategoryDto>
         {
             TotalItems = communities.Count,
             CurrentPage = pageNumber,
@@ -159,7 +162,7 @@ public class CommunitiesCommandHandlerTests
             Items = communities
         };
 
-        var expectedResult = ResultT<PagedResult<CommunitiesDTos>>.Success(pagedResult);
+        var expectedResult = ResultT<PagedResult<CommunitiesByCategoryDto>>.Success(pagedResult);
 
         _mediatorMock.Setup(m =>
                 m.Send(It.Is<GetCommunitiesByCategoryIdQuery>(q =>
@@ -244,12 +247,14 @@ public class CommunitiesCommandHandlerTests
                 new CommunitiesDTos(
                     CommunitiesId: Guid.NewGuid(),
                     Name: "Community 1",
-                    CreatedAt: DateTime.UtcNow
+                    CreatedAt: DateTime.UtcNow,
+                    CategoryId: Guid.NewGuid()
                 ),
                 new CommunitiesDTos(
                     CommunitiesId: Guid.NewGuid(),
                     Name: "Community 2",
-                    CreatedAt: DateTime.UtcNow
+                    CreatedAt: DateTime.UtcNow,
+                    CategoryId: Guid.NewGuid()
                 )
             }
         };
