@@ -172,7 +172,8 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .HasName("PkRoles");
 
             modelBuilder.Entity<CommunityMembership>()
-                .HasKey(us => new { us.UserId, us.CommunityId });
+                .HasKey(cm => cm.Id)
+                .HasName("PkCommunityMemberships");
 
             modelBuilder.Entity<UserInterest>()
                 .HasKey(uc => new { uc.UserId, uc.InterestId });
@@ -494,16 +495,16 @@ namespace MetaBond.Infrastructure.Persistence.Context
             });
 
             #endregion
-            
+
             #region Community Category
-            
+
             modelBuilder.Entity<CommunityCategory>(entity =>
             {
                 entity.Property(e => e.Name)
                     .HasMaxLength(30)
                     .IsRequired();
             });
-            
+
             #endregion
 
             #region Interest Category
@@ -516,7 +517,6 @@ namespace MetaBond.Infrastructure.Persistence.Context
             });
 
             #endregion
-
         }
     }
 }

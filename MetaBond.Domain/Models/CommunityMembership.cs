@@ -2,6 +2,8 @@ namespace MetaBond.Domain.Models;
 
 public class CommunityMembership
 {
+    public Guid Id { get; set; }
+
     public Guid UserId { get; set; }
 
     public Guid CommunityId { get; set; }
