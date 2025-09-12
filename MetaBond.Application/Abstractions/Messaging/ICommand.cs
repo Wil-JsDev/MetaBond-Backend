@@ -1,11 +1,10 @@
 ﻿using MediatR;
 using MetaBond.Application.Utils;
 
-namespace MetaBond.Application.Abstractions.Messaging
-{
-    public interface ICommand : IRequest<Result>, IBaseCommand;
+namespace MetaBond.Application.Abstractions.Messaging;
 
-    public interface ICommand<TResponse> : IRequest<ResultT<TResponse>>, IBaseCommand;
+public interface ICommand : IRequest<Result>, IBaseCommand;
 
-    public interface IBaseCommand; 
-}
+public interface ICommand<TResponse> : IRequest<ResultT<TResponse>>, IBaseCommand;
+
+public interface IBaseCommand;

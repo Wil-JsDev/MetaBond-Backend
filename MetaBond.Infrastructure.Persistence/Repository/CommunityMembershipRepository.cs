@@ -37,9 +37,12 @@ public class CommunityMembershipRepository(MetaBondContext metaBondContext)
             .AsNoTracking()
             .Where(cm => cm.UserId == userId && cm.CommunityId == communityId)
             .FirstOrDefaultAsync(cancellationToken);
-        
+
         communityMembership!.IsActive = false;
         communityMembership.LeftOnUtc = DateTime.UtcNow;
+        communityMembership.User = null;
+        communityMembership.Community = null;
+        communityMembership.Role = null;
 
         await UpdateAsync(communityMembership, cancellationToken);
 
