@@ -1,7 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Communities;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
@@ -15,57 +17,49 @@ internal sealed class GetCommunityDetailsByIdQueryHandler(
     IDistributedCache decoratedCache,
     IPostsRepository postsRepository,
     IEventsRepository eventsRepository)
-    : IQueryHandler<GetCommunityDetailsByIdQuery, IEnumerable<PostsAndEventsDTos>>
+    : IQueryHandler<GetCommunityDetailsByIdQuery, PagedResult<PostsAndEventsDTos>>
 {
-    public async Task<ResultT<IEnumerable<PostsAndEventsDTos>>> Handle(GetCommunityDetailsByIdQuery request,
+    public async Task<ResultT<PagedResult<PostsAndEventsDTos>>> Handle(
+        GetCommunityDetailsByIdQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.PageNumber <= 0 || request.PageSize <= 0)
-        {
-            logger.LogError("Invalid page number or page size. Both must be greater than zero.");
+        var paginationValidate = PaginationHelper.ValidatePagination<PostsAndEventsDTos>
+            (request.PageNumber, request.PageSize, logger);
 
-            return ResultT<IEnumerable<PostsAndEventsDTos>>.Failure(Error.Failure("400",
-                "Page number and page size must be greater than zero."));
-        }
-
-        var community = await communitiesRepository.GetByIdAsync(request.Id);
-        if (community == null)
-        {
-            logger.LogError("Community with ID {CommunityId} was not found.", request.Id);
-
-            return ResultT<IEnumerable<PostsAndEventsDTos>>.Failure(Error.NotFound("404", "Community not found."));
-        }
+        if (!paginationValidate.IsSuccess)
+            return paginationValidate;
 
         var cacheKey = $"community-details-{request.Id}-page-{request.PageNumber}-size-{request.PageSize}";
 
         var result = await decoratedCache.GetOrCreateAsync(cacheKey, async () =>
         {
-            var postsTask = postsRepository.GetPagedPostsAsync(request.PageNumber, request.PageSize, cancellationToken);
-            var eventsTask = eventsRepository.GetPagedEventsAsync(request.PageNumber, request.PageSize, cancellationToken);
+            var pagedCommunities = await communitiesRepository.GetPostsAndEventsByCommunityIdAsync(
+                request.Id, request.PageNumber, request.PageSize, cancellationToken);
 
-            await Task.WhenAll(postsTask, eventsTask);
+            var paged = pagedCommunities.Items!.Select(c =>
+                CommunityMapper.ToDtos(c, c.Posts, c.Events));
 
-            return new List<PostsAndEventsDTos>
-            {
-                CommunityMapper.ToDtos(
-                    community,
-                    postsTask.Result.Items,
-                    eventsTask.Result.Items
-                )
-            };
+            PagedResult<PostsAndEventsDTos> pagedResult = new(
+                totalItems: pagedCommunities.TotalItems,
+                currentPage: pagedCommunities.CurrentPage,
+                items: paged,
+                pageSize: request.PageSize
+            );
+
+            return pagedResult;
         }, cancellationToken: cancellationToken);
 
-        if (!result.Any())
+        if (!result.Items.Any())
         {
             logger.LogInformation("Community with ID {CommunityId} has no posts or events.", request.Id);
 
-            return ResultT<IEnumerable<PostsAndEventsDTos>>.Failure(Error.Failure("400",
-                "Community has no posts or events."));
+            return ResultT<PagedResult<PostsAndEventsDTos>>.Failure(
+                Error.Failure("400", "Community has no posts or events."));
         }
 
-        logger.LogInformation("Retrieved {Count} posts and events for community {CommunityId}.",
-            result.Count(), request.Id);
+        logger.LogInformation("Retrieved {Count} communities with posts and events for community {CommunityId}.",
+            result.Items.Count(), request.Id);
 
-        return ResultT<IEnumerable<PostsAndEventsDTos>>.Success(result);
+        return ResultT<PagedResult<PostsAndEventsDTos>>.Success(result);
     }
 }

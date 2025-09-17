@@ -190,12 +190,12 @@ public class CommunitiesCommandHandlerTests
     [Fact]
     public async Task GetCommunitiesDetails_Tests()
     {
-        //Arrange
+        // Arrange
         var id = Guid.NewGuid();
         int pageNumber = 1;
         int pageSize = 10;
 
-        IEnumerable<PostsAndEventsDTos> postsAndEventsDTos = new List<PostsAndEventsDTos>
+        var postsAndEventsDtos = new List<PostsAndEventsDTos>
         {
             new PostsAndEventsDTos(
                 CommunitiesId: id,
@@ -213,21 +213,32 @@ public class CommunitiesCommandHandlerTests
             )
         };
 
-        var expectedResult = ResultT<IEnumerable<PostsAndEventsDTos>>.Success(postsAndEventsDTos);
+        // Creamos un PagedResult correctamente
+        PagedResult<PostsAndEventsDTos> pagedResult = new()
+        {
+            TotalItems = postsAndEventsDtos.Count,
+            CurrentPage = pageNumber,
+            TotalPages = 1,
+            Items = postsAndEventsDtos
+        };
 
-        _mediatorMock.Setup(m => m.Send(It.Is<GetCommunityDetailsByIdQuery>(q =>
-                q.Id == id && q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
+        var expectedResult = ResultT<PagedResult<PostsAndEventsDTos>>.Success(pagedResult);
+
+        _mediatorMock.Setup(m => m.Send(
+                It.Is<GetCommunityDetailsByIdQuery>(q =>
+                    q.Id == id && q.PageNumber == pageNumber && q.PageSize == pageSize),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var controller = new CommunitiesController(_mediatorMock.Object);
 
-        //Act
+        // Act
         var result = await controller.GetCommunitiesDetailsAsync(id, pageNumber, pageSize, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.Equal(postsAndEventsDTos, result.Value);
+        Assert.Equal(pagedResult, result.Value);
     }
 
     [Fact]
