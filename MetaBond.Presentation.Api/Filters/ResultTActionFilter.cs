@@ -37,7 +37,7 @@ public class ResultTActionFilter(ILogger<ResultTActionFilter> logger) : IAsyncAc
                     // Create standardized error response
                     var errorResponse = new
                     {
-                        // code = resultT.Error?.Code,
+                        code = resultT.Error?.Code,
                         description = resultT.Error?.Description
                     };
 
