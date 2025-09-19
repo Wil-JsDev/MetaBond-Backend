@@ -26,12 +26,7 @@ internal sealed class GetByIdEventsQueryHandler(
             "Events",
             logger
         );
-        if (!events.IsSuccess)
-        {
-            logger.LogError("Events with ID {EventId} not found.", request.Id);
-
-            return ResultT<EventsDto>.Failure(events.Error!);
-        }
+        if (!events.IsSuccess) return events.Error;
 
         var eventsDto = EventsMapper.EventsToDto(events.Value);
 

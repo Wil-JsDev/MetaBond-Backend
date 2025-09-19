@@ -3,8 +3,8 @@ using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
-using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
@@ -14,9 +14,9 @@ internal sealed class GetEventsWithParticipationInEventQueryHandler(
     IEventsRepository eventsRepository,
     IDistributedCache decoratedCache,
     ILogger<GetEventsWithParticipationInEventQueryHandler> logger)
-    : IQueryHandler<GetEventsWithParticipationInEventQuery, IEnumerable<EventsWithParticipationInEventsDTos>>
+    : IQueryHandler<GetEventsWithParticipationInEventQuery, PagedResult<EventsWithParticipationInEventsDTos>>
 {
-    public async Task<ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>> Handle(
+    public async Task<ResultT<PagedResult<EventsWithParticipationInEventsDTos>>> Handle(
         GetEventsWithParticipationInEventQuery request,
         CancellationToken cancellationToken)
     {
@@ -27,44 +27,45 @@ internal sealed class GetEventsWithParticipationInEventQueryHandler(
             "Events",
             logger
         );
-        if (!events.IsSuccess)
-        {
-            logger.LogError("Events with ID {EventsId} not found.", request.EventsId);
-
-            return ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Failure(events.Error!);
-        }
+        if (!events.IsSuccess) return events.Error!;
 
         var eventsWithParticipationInEvents = await decoratedCache.GetOrCreateAsync(
-            $"eventsId-{request.EventsId}",
+            $"eventsId-{request.EventsId}-participation-{request.PageNumber}-{request.PageSize}",
             async () =>
             {
                 var eventsList =
-                    await eventsRepository.GetEventsWithParticipationAsync(events.Value.Id, cancellationToken);
+                    await eventsRepository.GetEventsWithParticipationAsync(events.Value.Id,
+                        request.PageNumber,
+                        request.PageSize,
+                        cancellationToken);
 
-                var eventsEnumerable = eventsList.ToList();
+                var eventsEnumerable = eventsList.Items.ToList();
 
-                return eventsEnumerable.ToEventsWithParticipationDtos();
+                PagedResult<EventsWithParticipationInEventsDTos> pagedResult = new(
+                    currentPage: eventsList.CurrentPage,
+                    items: eventsEnumerable.ToEventsWithParticipationDtos(),
+                    totalItems: eventsList.TotalItems,
+                    pageSize: request.PageSize
+                );
+
+                return pagedResult;
             },
             cancellationToken: cancellationToken);
 
-        var withParticipationInEventsDTosEnumerable = eventsWithParticipationInEvents.ToList();
-        if (!withParticipationInEventsDTosEnumerable.Any())
+        if (eventsWithParticipationInEvents.Items != null && !eventsWithParticipationInEvents.Items.Any())
         {
             logger.LogWarning("No events found with participation. Returning an empty result.");
 
-            return ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Failure(
+            return ResultT<PagedResult<EventsWithParticipationInEventsDTos>>.Failure(
                 Error.NotFound("404", "No events with participation were found.")
             );
         }
 
-        IEnumerable<EventsWithParticipationInEventsDTos> eventsWithParticipationInEventsDTosEnumerable =
-            withParticipationInEventsDTosEnumerable.ToList();
+        if (eventsWithParticipationInEvents.Items != null)
+            logger.LogInformation("Successfully retrieved {Count} participation for Event ID: {EventId}",
+                eventsWithParticipationInEvents.Items.Count(),
+                eventsWithParticipationInEvents.Items.FirstOrDefault()?.EventsId ?? Guid.Empty);
 
-        logger.LogInformation("Successfully retrieved {Count} participation for Event ID: {EventId}",
-            eventsWithParticipationInEventsDTosEnumerable.Count(),
-            eventsWithParticipationInEventsDTosEnumerable.FirstOrDefault()?.EventsId ?? Guid.Empty);
-
-        return ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Success(
-            eventsWithParticipationInEventsDTosEnumerable);
+        return ResultT<PagedResult<EventsWithParticipationInEventsDTos>>.Success(eventsWithParticipationInEvents);
     }
 }

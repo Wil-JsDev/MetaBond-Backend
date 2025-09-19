@@ -1,7 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -12,25 +14,30 @@ internal sealed class FilterByTitleEventsQueryHandler(
     IEventsRepository eventsRepository,
     IDistributedCache decoratedCache,
     ILogger<FilterByTitleEventsQueryHandler> logger)
-    : IQueryHandler<FilterByTitleEventsQuery, IEnumerable<EventsDto>>
+    : IQueryHandler<FilterByTitleEventsQuery, PagedResult<EventsDto>>
 {
-    public async Task<ResultT<IEnumerable<EventsDto>>> Handle(FilterByTitleEventsQuery request,
+    public async Task<ResultT<PagedResult<EventsDto>>> Handle(FilterByTitleEventsQuery request,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.Title))
         {
             logger.LogError("The provided title is null or empty.");
 
-            return ResultT<IEnumerable<EventsDto>>.Failure(
+            return ResultT<PagedResult<EventsDto>>.Failure(
                 Error.Failure("400", "The title cannot be null or empty"));
         }
+
+        var validationPagination = PaginationHelper.ValidatePagination<EventsDto>(request.PageNumber,
+            request.PageSize, logger);
+
+        if (!validationPagination.IsSuccess) return validationPagination;
 
         var exists = await eventsRepository.ValidateAsync(x => x.Title == request.Title, cancellationToken);
         if (!exists)
         {
             logger.LogError("The specified event '{Title}' was not found.", request.Title);
 
-            return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<EventsDto>>.Failure(Error.NotFound("404",
                 $"The event '{request.Title}' does not exist."));
         }
 
@@ -38,24 +45,32 @@ internal sealed class FilterByTitleEventsQueryHandler(
             $"events-with-title-{request.Title}",
             async () =>
             {
-                var eventsTitle = await eventsRepository.GetFilterByTitleAsync(request.Title, cancellationToken);
+                var eventsTitle = await eventsRepository.GetFilterByTitleAsync(request.Title, request.PageNumber,
+                    request.PageSize, cancellationToken);
 
-                IEnumerable<EventsDto> eventsDtos = eventsTitle.Select(EventsMapper.EventsToDto);
+                var eventsDtos = eventsTitle.Items!.Select(EventsMapper.EventsToDto);
 
-                return eventsDtos;
+                PagedResult<EventsDto> pagedResult = new(
+                    currentPage: eventsTitle.CurrentPage,
+                    items: eventsDtos,
+                    totalItems: eventsTitle.TotalItems,
+                    pageSize: request.PageSize
+                );
+
+                return pagedResult;
             },
             cancellationToken: cancellationToken);
 
-        if (!result.Any())
+        if (!result.Items.Any())
         {
             logger.LogError("No events found for the title '{Title}'.", request.Title);
 
-            return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<EventsDto>>.Failure(Error.NotFound("404",
                 $"No events found for title '{request.Title}'"));
         }
 
         logger.LogInformation("Successfully retrieved events with title containing: {Title}", request.Title);
 
-        return ResultT<IEnumerable<EventsDto>>.Success(result);
+        return ResultT<PagedResult<EventsDto>>.Success(result);
     }
 }

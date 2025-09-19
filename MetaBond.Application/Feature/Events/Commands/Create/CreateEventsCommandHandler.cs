@@ -9,6 +9,7 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
 {
     internal sealed class CreateEventsCommandHandler(
         IEventsRepository eventsRepository,
+        ICommunitiesRepository communitiesRepository,
         ILogger<CreateEventsCommandHandler> logger)
         : ICommandHandler<CreateEventsCommand, EventsDto>
     {
@@ -16,6 +17,16 @@ namespace MetaBond.Application.Feature.Events.Commands.Create
             CreateEventsCommand request,
             CancellationToken cancellationToken)
         {
+            var exists =
+                await communitiesRepository.ValidateAsync(x => x.Id == request.CommunitiesId, cancellationToken);
+            if (!exists)
+            {
+                logger.LogError("The community with ID {Id} does not exist.", request.CommunitiesId);
+
+                return ResultT<EventsDto>.Failure(Error.NotFound("404",
+                    $"{request.CommunitiesId} not found"));
+            }
+
             Domain.Models.Events events = new()
             {
                 Id = Guid.NewGuid(),
