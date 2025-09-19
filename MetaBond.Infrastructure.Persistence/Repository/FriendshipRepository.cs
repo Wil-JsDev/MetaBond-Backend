@@ -18,98 +18,170 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         {
         }
 
-        public async Task<PagedResult<Friendship>> GetPagedFriendshipAsync(int pageNumber, int pageZize, CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> GetPagedFriendshipAsync(int pageNumber, int pageSize,
+            CancellationToken cancellationToken)
         {
             var totalRecord = await _metaBondContext.Set<Friendship>().AsNoTracking().CountAsync(cancellationToken);
 
             var pagedFriendship = await _metaBondContext.Set<Friendship>().AsNoTracking()
-                                  .OrderBy(f => f.Id)
-                                  .Skip((pageNumber - 1) * pageZize)
-                                  .Take(pageZize)
-                                  .ToListAsync(cancellationToken);
+                .OrderBy(f => f.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
 
-            var pagedResponse = new PagedResult<Friendship>(pagedFriendship,pageNumber,pageZize, totalRecord);
+            var pagedResponse = new PagedResult<Friendship>(pagedFriendship, pageNumber, pageSize, totalRecord);
             return pagedResponse;
         }
-        public async Task<IEnumerable<Friendship>> GetFilterByStatusAsync(Status status, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Friendship>()
-                                               .AsNoTracking()
-                                               .Where(f => f.Status == status)
-                                               .ToListAsync(cancellationToken);
 
-            return query;
+        public async Task<PagedResult<Friendship>> GetFilterByStatusAsync(Status status, int pageNumber, int pageSize,
+            CancellationToken cancellationToken)
+        {
+            var baseQuery = _metaBondContext.Set<Friendship>()
+                .AsNoTracking()
+                .Where(f => f.Status == status);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(f => f.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<Friendship>> GetFriendshipWithUsersAsync(Guid friendshipId,CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> GetFriendshipWithUsersAsync(Guid friendshipId,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            return await _metaBondContext.Set<Friendship>()
+            var baseQuery = _metaBondContext.Set<Friendship>()
                 .AsNoTracking()
-                .Where(us => us.Id == friendshipId)
+                .Where(us => us.Id == friendshipId);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(us => us.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Include(ad => ad.Addressee)
                 .Include(re => re.Requester)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<Friendship>> OrderByIdAscAsync(CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> OrderByIdAscAsync(int pageNumber, int pageSize
+            , CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Friendship>()
-                                        .AsNoTracking()
-                                        .OrderBy(x => x.Id)
-                                        .ToListAsync(cancellationToken);
+            var total = await _metaBondContext.Set<Friendship>().AsNoTracking().CountAsync(cancellationToken);
 
-            return query;
+            var query = await _metaBondContext.Set<Friendship>()
+                .AsNoTracking()
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<Friendship>> OrderByIdDescAsync(CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> OrderByIdDescAsync(int pageNumber, int pageSize,
+            CancellationToken cancellationToken)
         {
+            var total = await _metaBondContext.Set<Friendship>().AsNoTracking().CountAsync(cancellationToken);
+
             var query = await _metaBondContext.Set<Friendship>()
-                                              .AsNoTracking()
-                                              .OrderByDescending(x => x.Id)
-                                              .ToListAsync(cancellationToken);
-            return query;
+                .AsNoTracking()
+                .OrderByDescending(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
         public async Task<int> CountByStatusAsync(Status status, CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Friendship>()
-                                              .AsNoTracking()
-                                              .Where(x => x.Status == status)
-                                              .CountAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.Status == status)
+                .CountAsync(cancellationToken);
 
             return query;
         }
 
-        public async Task<IEnumerable<Friendship>> GetCreatedAfterAsync(DateTime date, CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> GetCreatedAfterAsync(DateTime date,
+            int pageNumber, int pageSize,
+            CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Friendship>()
-                                              .AsQueryable()
-                                              .Where(x => x.CreateAdt > date)
-                                              .ToListAsync(cancellationToken);
+            var baseQuery = _metaBondContext.Set<Friendship>()
+                .AsQueryable()
+                .Where(x => x.CreateAdt > date);
 
-            return query;
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<Friendship>> GetCreatedBeforeAsync(DateTime date, CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> GetCreatedBeforeAsync(DateTime date,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Friendship>()
-                                              .AsQueryable()
-                                              .Where(x => x.CreateAdt <= date)
-                                              .ToListAsync(cancellationToken);
-            return query;
+            var baseQuery = _metaBondContext.Set<Friendship>()
+                .AsQueryable()
+                .Where(x => x.CreateAdt <= date);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<Friendship>> GetRecentlyCreatedAsync(int limit, CancellationToken cancellationToken)
+        public async Task<PagedResult<Friendship>> GetRecentlyCreatedAsync(int limit,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
             DateTime? date = new DateTime()
-                                .AddDays(-3);
-            var query = await _metaBondContext.Set<Friendship>()
-                                              .AsNoTracking()
-                                              .Where(x => x.CreateAdt < date)
-                                              .Take(limit)
-                                              .ToListAsync(cancellationToken);
+                .AddDays(-3);
+            var baseQuery = _metaBondContext.Set<Friendship>()
+                .AsNoTracking()
+                .Where(x => x.CreateAdt < date)
+                .Take(limit);
 
-            return query;
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Friendship>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
     }
 }
