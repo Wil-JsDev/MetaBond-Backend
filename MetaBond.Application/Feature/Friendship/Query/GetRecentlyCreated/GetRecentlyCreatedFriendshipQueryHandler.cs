@@ -1,7 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Friendship;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -12,9 +14,9 @@ internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
     IFriendshipRepository friendshipRepository,
     IDistributedCache decoratedCache,
     ILogger<GetRecentlyCreatedFriendshipQueryHandler> logger)
-    : IQueryHandler<GetRecentlyCreatedFriendshipQuery, IEnumerable<FriendshipDTos>>
+    : IQueryHandler<GetRecentlyCreatedFriendshipQuery, PagedResult<FriendshipDTos>>
 {
-    public async Task<ResultT<IEnumerable<FriendshipDTos>>> Handle(
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> Handle(
         GetRecentlyCreatedFriendshipQuery request,
         CancellationToken cancellationToken)
     {
@@ -22,37 +24,50 @@ internal sealed class GetRecentlyCreatedFriendshipQueryHandler(
         {
             logger.LogError("Invalid limit: {Limit}", request.Limit);
 
-            return ResultT<IEnumerable<FriendshipDTos>>.Failure(
+            return ResultT<PagedResult<FriendshipDTos>>.Failure(
                 Error.Failure("400", "Invalid limit. Limit must be greater than zero."));
         }
 
-        string cacheKey = $"GetRecentlyCreatedFriendship-{request.Limit}";
+        var validationPagination =
+            PaginationHelper.ValidatePagination<FriendshipDTos>(request.PageNumber, request.PageSize, logger);
+
+        if (!validationPagination.IsSuccess) return validationPagination.Error!;
+
+        string cacheKey =
+            $"GetRecentlyCreatedFriendship-{request.Limit}-page-{request.PageNumber}-size-{request.PageSize}";
         var friendshipRecently = await decoratedCache.GetOrCreateAsync(
             cacheKey,
             async () =>
             {
                 var recentFriendship =
-                    await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, cancellationToken);
+                    await friendshipRepository.GetRecentlyCreatedAsync(request.Limit, request.PageNumber,
+                        request.PageSize, cancellationToken);
 
-                var friendshipDTos = recentFriendship.Select(FriendshipMapper.MapFriendshipDTos).ToList();
+                if (recentFriendship.Items == null) return null;
+                var friendshipDTos = recentFriendship.Items.Select(FriendshipMapper.MapFriendshipDTos).ToList();
 
-                return friendshipDTos;
+                PagedResult<FriendshipDTos> value = new(
+                    totalItems: recentFriendship.TotalItems,
+                    currentPage: recentFriendship.CurrentPage,
+                    items: friendshipDTos,
+                    pageSize: request.PageSize
+                );
+
+                return value;
             },
             cancellationToken: cancellationToken);
 
-        if (!friendshipRecently.Any())
+        if (!friendshipRecently.Items.Any())
         {
             logger.LogError("No recent friendships found for the given limit: {Limit}", request.Limit);
 
-            return ResultT<IEnumerable<FriendshipDTos>>.Failure(
+            return ResultT<PagedResult<FriendshipDTos>>.Failure(
                 Error.Failure("400", "No recent friendships found."));
         }
 
-
-        IEnumerable<FriendshipDTos> value = friendshipRecently.ToList();
         logger.LogInformation("Successfully retrieved {Count} recent friendships with limit: {Limit}",
-            value.Count(), request.Limit);
+            friendshipRecently.Items.Count(), request.Limit);
 
-        return ResultT<IEnumerable<FriendshipDTos>>.Success(value);
+        return ResultT<PagedResult<FriendshipDTos>>.Success(friendshipRecently);
     }
 }

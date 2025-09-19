@@ -42,7 +42,7 @@ internal sealed class GetInterestByUserQueryHandler(
                     logger.LogWarning(
                         "No interests found for UserId={UserId}, PageNumber={PageNumber}, PageSize={PageSize}.",
                         request.UserId, request.PageNumber, request.PageSize);
-                    return null; 
+                    return null;
                 }
 
                 var dtosList = paged.Items.Select(InterestMapper.ModelToDto).ToList();

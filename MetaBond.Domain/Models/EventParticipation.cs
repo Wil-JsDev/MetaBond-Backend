@@ -1,5 +1,4 @@
-﻿
-namespace MetaBond.Domain.Models
+﻿namespace MetaBond.Domain.Models
 {
     public sealed class EventParticipation
     {

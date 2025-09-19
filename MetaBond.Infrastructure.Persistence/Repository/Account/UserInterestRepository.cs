@@ -14,6 +14,7 @@ public class UserInterestRepository(MetaBondContext metaBondContext)
         await _metaBondContext.Set<UserInterest>().AddRangeAsync(userInterests, cancellationToken);
         await SaveAsync(cancellationToken);
     }
+
     public async Task<IReadOnlyCollection<UserInterest>> AssociateInterestsToUserAsync(Guid userId,
         IEnumerable<Guid> interestIds,
         CancellationToken cancellationToken)

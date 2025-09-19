@@ -1,10 +1,8 @@
-﻿
-using MetaBond.Application.DTOs.Events;
+﻿using MetaBond.Application.DTOs.Events;
 
 namespace MetaBond.Application.DTOs.Posts
 {
-    public sealed record PostsWithCommunitiesDTos
-    (
+    public sealed record PostsWithCommunitiesDTos(
         Guid PostsId,
         string? Title,
         string? Content,

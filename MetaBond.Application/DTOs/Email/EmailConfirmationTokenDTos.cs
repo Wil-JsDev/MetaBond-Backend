@@ -1,7 +1,6 @@
 namespace MetaBond.Application.DTOs.Email;
 
-public sealed record EmailConfirmationTokenDTos
-(
+public sealed record EmailConfirmationTokenDTos(
     Guid EmailConfirmationTokenId,
     Guid UserId,
     string Token,

@@ -6,7 +6,7 @@ namespace MetaBond.Application.Feature.User.Query.Pagination;
 
 public sealed class GetPagedUserQuery : IQuery<PagedResult<UserDTos>>
 {
-    public int PageNumber  { get; set; }
-    
+    public int PageNumber { get; set; }
+
     public int PageSize { get; set; }
 }

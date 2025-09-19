@@ -5,14 +5,14 @@ namespace MetaBond.Application.Interfaces.Repository.Account;
 
 public interface IUserRepository : IGenericRepository<User>
 {
-/// <summary>
+    /// <summary>
     /// Retrieves a user by their email address.
     /// </summary>
     /// <param name="email">The email address of the user.</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     /// <returns>The corresponding <see cref="User"/> if found; otherwise, null.</returns>
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
-   
+
     /// <summary>
     /// Retrieves a user by their username.
     /// </summary>
@@ -70,7 +70,7 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     /// <returns>True if the user's email is confirmed; otherwise, false.</returns>
     Task<bool> IsEmailConfirmedAsync(Guid userId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Retrieves a user by their ID along with their associated interests.
     /// </summary>
@@ -81,7 +81,7 @@ public interface IUserRepository : IGenericRepository<User>
     /// or <c>null</c> if the user is not found.
     /// </returns>
     Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Checks if an email is already in use by another user, excluding a specified user ID.
     /// </summary>
@@ -99,7 +99,7 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>True if the username is in use by another user; otherwise, false.</returns>
     Task<bool> IsUsernameInUseAsync(string username, Guid excludeUserId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Updates the password of the specified user with the provided new hashed password.
     /// </summary>

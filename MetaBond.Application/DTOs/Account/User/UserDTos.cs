@@ -1,7 +1,6 @@
 namespace MetaBond.Application.DTOs.Account.User;
 
-public sealed record UserDTos
-(
+public sealed record UserDTos(
     Guid UserId,
     string? FirstName,
     string? LastName,

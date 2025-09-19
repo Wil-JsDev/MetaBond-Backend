@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace MetaBond.Domain.Common;
 
-    public class BaseModel
-    {
-       public Guid Id { get; set; }
+public class BaseModel
+{
+    public Guid Id { get; set; }
 
-       public string? Name { get; set; }
-    }
-
+    public string? Name { get; set; }
+}

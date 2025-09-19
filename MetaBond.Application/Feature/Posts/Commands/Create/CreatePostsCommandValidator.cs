@@ -5,6 +5,7 @@ namespace MetaBond.Application.Feature.Posts.Commands.Create;
 public class CreatePostsCommandValidator : AbstractValidator<CreatePostsCommand>
 {
     private readonly string[] _allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+
     public CreatePostsCommandValidator()
     {
         RuleFor(x => x.Title)
@@ -15,14 +16,14 @@ public class CreatePostsCommandValidator : AbstractValidator<CreatePostsCommand>
             .NotEmpty().WithMessage("The content is required and cannot be empty or null.")
             .MaximumLength(150).WithMessage("The content must not exceed 150 characters.");
 
-     
+
         RuleFor(x => x.CommunitiesId)
             .NotEmpty().WithMessage("The communities id is required and cannot be empty or null.")
             .NotEqual(Guid.Empty).WithMessage("The communities ID must be a valid GUID.");
 
         RuleFor(x => x.CreatedById)
             .NotEmpty().WithMessage("The communities id is required and cannot be empty or null.");
-        
+
         RuleFor(x => x.ImageFile)
             .NotNull().WithMessage("Image file is required.")
             .Must(file => file!.Length > 0).WithMessage("Image file cannot be empty.")

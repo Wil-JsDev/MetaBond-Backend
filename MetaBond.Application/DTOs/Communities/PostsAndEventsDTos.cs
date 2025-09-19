@@ -1,7 +1,6 @@
 ﻿namespace MetaBond.Application.DTOs.Communities;
 
-public sealed record PostsAndEventsDTos
-(
+public sealed record PostsAndEventsDTos(
     Guid CommunitiesId,
     string? Name,
     DateTime CreatedAt,

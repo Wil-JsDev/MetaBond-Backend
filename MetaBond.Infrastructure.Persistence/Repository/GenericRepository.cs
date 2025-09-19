@@ -11,7 +11,6 @@ namespace MetaBond.Infrastructure.Persistence.Repository
     public class GenericRepository<TEntity> : IGenericRepository<TEntity>
         where TEntity : class
     {
-
         protected readonly MetaBondContext _metaBondContext;
 
         public GenericRepository(MetaBondContext metaBondContext)
@@ -21,7 +20,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
 
         public virtual async Task CreateAsync(TEntity entity, CancellationToken cancellationToken)
         {
-            await _metaBondContext.Set<TEntity>().AddAsync(entity,cancellationToken);
+            await _metaBondContext.Set<TEntity>().AddAsync(entity, cancellationToken);
             await SaveAsync(cancellationToken);
         }
 
@@ -31,7 +30,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             await SaveAsync(cancellationToken);
         }
 
-        public virtual async Task<IEnumerable<TEntity>> GetAll(CancellationToken cancellationToken) => 
+        public virtual async Task<IEnumerable<TEntity>> GetAll(CancellationToken cancellationToken) =>
             await _metaBondContext.Set<TEntity>().ToListAsync(cancellationToken);
 
 
@@ -48,7 +47,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             await SaveAsync(cancellationToken);
         }
 
-        public virtual async Task SaveAsync(CancellationToken cancellationToken) => 
+        public virtual async Task SaveAsync(CancellationToken cancellationToken) =>
             await _metaBondContext.SaveChangesAsync(cancellationToken);
 
         public async Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate,
@@ -56,7 +55,7 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         {
             return await _metaBondContext.Set<TEntity>()
                 .AsNoTracking()
-                .AnyAsync(predicate, cancellationToken);   
+                .AnyAsync(predicate, cancellationToken);
         }
     }
 }

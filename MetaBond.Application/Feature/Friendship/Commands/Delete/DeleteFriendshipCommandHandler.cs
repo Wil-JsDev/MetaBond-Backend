@@ -23,17 +23,10 @@ internal sealed class DeleteFriendshipCommandHandler(
 
         if (!friendship.IsSuccess) return ResultT<Guid>.Failure(friendship.Error!);
 
-        if (friendship.IsSuccess)
-        {
-            await friendshipRepository.DeleteAsync(friendship.Value, cancellationToken);
+        await friendshipRepository.DeleteAsync(friendship.Value, cancellationToken);
 
-            logger.LogInformation("Friendship with ID: {FriendshipId} deleted successfully.", friendship.Value.Id);
+        logger.LogInformation("Friendship with ID: {FriendshipId} deleted successfully.", friendship.Value.Id);
 
-            return ResultT<Guid>.Success(friendship.Value.Id);
-        }
-
-        logger.LogError("Failed to delete friendship: ID {FriendshipId} not found.", request.Id);
-
-        return ResultT<Guid>.Failure(Error.Failure("404", $"{request.Id} not found"));
+        return ResultT<Guid>.Success(friendship.Value.Id);
     }
 }

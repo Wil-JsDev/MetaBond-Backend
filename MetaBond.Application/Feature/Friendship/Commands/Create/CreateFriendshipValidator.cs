@@ -12,7 +12,7 @@ public class CreateFriendshipValidator : AbstractValidator<CreateFriendshipComma
 
         RuleFor(x => x.RequesterId)
             .NotEmpty().WithMessage("The requesterId is required and cannot be empty or null.");
-        
+
         RuleFor(x => x.AddresseeId)
             .NotEmpty().WithMessage("The addresseeId is required and cannot be empty or null.");
     }

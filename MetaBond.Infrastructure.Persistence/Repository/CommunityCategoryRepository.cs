@@ -37,7 +37,7 @@ public class CommunityCategoryRepository(MetaBondContext metaBondContext)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-        
+
         var pagedResponse = new PagedResult<CommunityCategory>(query, pageNumber, pageSize, total);
 
         return pagedResponse;

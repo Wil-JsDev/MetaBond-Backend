@@ -9,31 +9,33 @@ namespace MetaBond.Infrastructure.Persistence.Repository
     public class PostsRepository(MetaBondContext metaBondContext)
         : GenericRepository<Posts>(metaBondContext), IPostsRepository
     {
-        public async Task<PagedResult<Posts>> GetPagedPostsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+        public async Task<PagedResult<Posts>> GetPagedPostsAsync(int pageNumber, int pageSize,
+            CancellationToken cancellationToken)
         {
-            var totalRecord = await _metaBondContext.Set<Posts>().AsNoTracking().CountAsync(cancellationToken);    
+            var totalRecord = await _metaBondContext.Set<Posts>().AsNoTracking().CountAsync(cancellationToken);
 
             var pagedPosts = await _metaBondContext.Set<Posts>()
-                                                    .AsNoTracking()
-                                                    .OrderBy(x => x.Id)
-                                                    .Skip((pageNumber - 1) * pageSize)
-                                                    .Take(pageSize)
-                                                    .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
 
 
-            PagedResult<Posts> result = new (pagedPosts,pageNumber,pageSize,totalRecord);
+            PagedResult<Posts> result = new(pagedPosts, pageNumber, pageSize, totalRecord);
 
             return result;
         }
 
-        public async Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId,int topCount, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId, int topCount,
+            CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Posts>()
-                                              .AsNoTracking()
-                                              .Where(x => x.CommunitiesId == communitiesId)
-                                              .OrderByDescending(x => x.CreatedAt)
-                                              .Take(topCount)
-                                              .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.CommunitiesId == communitiesId)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(topCount)
+                .ToListAsync(cancellationToken);
 
             return query;
         }
@@ -45,41 +47,44 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                 .Where(x => x.Id == postsId)
                 .Include(posts => posts.CreatedBy)
                 .AsSplitQuery()
-                .ToListAsync(cancellationToken);;
+                .ToListAsync(cancellationToken);
+            ;
         }
 
-        public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,
+            CancellationToken cancellationToken)
         {
             var posts = await _metaBondContext.Set<Posts>()
-                                              .AsNoTracking()
-                                              .Where(x => x.CommunitiesId == communitiesId)
-                                              .OrderByDescending(x => x.CreatedAt)
-                                              .Take(10)
-                                              .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.CommunitiesId == communitiesId)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(10)
+                .ToListAsync(cancellationToken);
 
             return posts;
         }
 
-        public async Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId,string title, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title,
+            CancellationToken cancellationToken)
         {
-            
             var posts = await _metaBondContext.Set<Posts>()
-                                               .AsNoTracking()
-                                               .Where(x => x.CommunitiesId == communitiesId && x.Title == title)
-                                               .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.CommunitiesId == communitiesId && x.Title == title)
+                .ToListAsync(cancellationToken);
             return posts;
         }
 
 
-        public async Task<IEnumerable<Posts>> GetPostsByIdWithCommunitiesAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Posts>> GetPostsByIdWithCommunitiesAsync(Guid id,
+            CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<Posts>()
-                                              .AsNoTracking()
-                                              .Where(x => x.Id == id)
-                                              .Include(x => x.Communities)
-                                              .AsSplitQuery()
-                                              .ToListAsync(cancellationToken);
-                                              
+                .AsNoTracking()
+                .Where(x => x.Id == id)
+                .Include(x => x.Communities)
+                .AsSplitQuery()
+                .ToListAsync(cancellationToken);
+
             return query;
         }
     }

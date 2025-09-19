@@ -2,8 +2,7 @@
 
 namespace MetaBond.Application.DTOs.Friendship;
 
-public sealed record FriendshipDTos
-(
+public sealed record FriendshipDTos(
     Guid FriendshipId,
     Status Status,
     Guid? RequesterId,

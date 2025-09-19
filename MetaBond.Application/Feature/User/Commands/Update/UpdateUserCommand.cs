@@ -6,8 +6,8 @@ namespace MetaBond.Application.Feature.User.Commands.Update;
 public class UpdateUserCommand : ICommand<UpdateUserDTos>
 {
     public Guid UserId { get; set; }
-    
+
     public string? Username { get; set; }
-    
+
     public string? Email { get; set; }
 }

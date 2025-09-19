@@ -8,8 +8,8 @@ namespace MetaBond.Domain
 {
     public enum Status
     {
-        Pending=0, 
-        Accepted=1, 
-        Blocked=2
+        Pending = 0,
+        Accepted = 1,
+        Blocked = 2
     }
 }

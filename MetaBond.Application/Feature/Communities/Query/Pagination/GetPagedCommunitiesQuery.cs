@@ -10,4 +10,3 @@ public sealed class GetPagedCommunitiesQuery : IQuery<PagedResult<CommunitiesDTo
 
     public int PageSize { get; set; }
 }
-    

@@ -32,7 +32,8 @@ public interface IRewardsRepository : IGenericRepository<Rewards>
     /// <param name="endTime">The end of the date range.</param>
     /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
     /// <returns>A collection of rewards within the date range.</returns>
-    Task<IEnumerable<Rewards>> GetRewardsByDateRangeAsync(DateTime startTime, DateTime endTime, CancellationToken cancellationToken);
+    Task<IEnumerable<Rewards>> GetRewardsByDateRangeAsync(DateTime startTime, DateTime endTime,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Counts the total number of rewards.

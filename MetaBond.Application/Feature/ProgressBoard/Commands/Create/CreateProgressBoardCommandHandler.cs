@@ -16,19 +16,19 @@ internal sealed class CreateProgressBoardCommandHandler(
         CreateProgressBoardCommand request,
         CancellationToken cancellationToken)
     {
-            Domain.Models.ProgressBoard progressBoard = new()
-            {
-                Id = Guid.NewGuid(),
-                UserId = request.UserId,
-                CommunitiesId = request.CommunitiesId
-            };
+        Domain.Models.ProgressBoard progressBoard = new()
+        {
+            Id = Guid.NewGuid(),
+            UserId = request.UserId,
+            CommunitiesId = request.CommunitiesId
+        };
 
-            await progressBoardRepository.CreateAsync(progressBoard, cancellationToken);
+        await progressBoardRepository.CreateAsync(progressBoard, cancellationToken);
 
-            logger.LogInformation("Progress board created successfully with ID: {ProgressBoardId}", progressBoard.Id);
+        logger.LogInformation("Progress board created successfully with ID: {ProgressBoardId}", progressBoard.Id);
 
-            var progressBoardDTos = ProgressBoardMapper.ProgressBoardToDto(progressBoard);
+        var progressBoardDTos = ProgressBoardMapper.ProgressBoardToDto(progressBoard);
 
-            return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
+        return ResultT<ProgressBoardDTos>.Success(progressBoardDTos);
     }
 }

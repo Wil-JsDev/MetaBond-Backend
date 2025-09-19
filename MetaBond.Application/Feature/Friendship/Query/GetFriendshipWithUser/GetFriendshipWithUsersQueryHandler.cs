@@ -4,6 +4,7 @@ using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,9 +15,9 @@ internal sealed class GetFriendshipWithUsersQueryHandler(
     IFriendshipRepository friendshipRepository,
     ILogger<GetFriendshipWithUsersQueryHandler> logger,
     IDistributedCache decoratedCache)
-    : IQueryHandler<GetFriendshipWithUsersQuery, IEnumerable<FriendshipWithUserDTos>>
+    : IQueryHandler<GetFriendshipWithUsersQuery, PagedResult<FriendshipWithUserDTos>>
 {
-    public async Task<ResultT<IEnumerable<FriendshipWithUserDTos>>> Handle(
+    public async Task<ResultT<PagedResult<FriendshipWithUserDTos>>> Handle(
         GetFriendshipWithUsersQuery request,
         CancellationToken cancellationToken)
     {
@@ -26,30 +27,42 @@ internal sealed class GetFriendshipWithUsersQueryHandler(
                 "Friendship",
                 logger);
 
-        if (!friendship.IsSuccess) return ResultT<IEnumerable<FriendshipWithUserDTos>>.Failure(friendship.Error!);
+        if (!friendship.IsSuccess) return friendship.Error!;
 
         var getFriendshipWithUser =
-            await decoratedCache.GetOrCreateAsync($"GetFriendshipWithUsersQueryCache-{request.FriendshipId}",
+            await decoratedCache.GetOrCreateAsync(
+                $"GetFriendshipWithUsersQueryCache-{request.FriendshipId}-page-{request.PageNumber}-size-{request.PageSize}",
                 async () =>
                 {
                     var friendshipUser = await friendshipRepository.GetFriendshipWithUsersAsync(
                         (Guid)request.FriendshipId!,
+                        request.PageNumber,
+                        request.PageSize,
                         cancellationToken);
 
-                    return friendshipUser.ToFriendshipWithUserDtos().ToList();
+                    var pagedDto = friendshipUser.Items.ToFriendshipWithUserDtos().ToList();
+
+                    PagedResult<FriendshipWithUserDTos> pagedResult = new(
+                        totalItems: friendshipUser.TotalItems,
+                        currentPage: friendshipUser.CurrentPage,
+                        items: pagedDto,
+                        pageSize: request.PageSize
+                    );
+
+                    return pagedResult;
                 },
                 cancellationToken: cancellationToken);
 
-        if (!getFriendshipWithUser.Any())
+        if (!getFriendshipWithUser.Items.Any())
         {
             logger.LogWarning("No friendship with users found for ID: {FriendshipId}", request.FriendshipId);
 
-            return ResultT<IEnumerable<FriendshipWithUserDTos>>.Failure(Error.Failure("400",
+            return ResultT<PagedResult<FriendshipWithUserDTos>>.Failure(Error.Failure("400",
                 "No friendship with users found for the given ID."));
         }
 
         logger.LogInformation("Friendship with users loaded successfully for ID: {FriendshipId}", request.FriendshipId);
 
-        return ResultT<IEnumerable<FriendshipWithUserDTos>>.Success(getFriendshipWithUser);
+        return ResultT<PagedResult<FriendshipWithUserDTos>>.Success(getFriendshipWithUser);
     }
 }
