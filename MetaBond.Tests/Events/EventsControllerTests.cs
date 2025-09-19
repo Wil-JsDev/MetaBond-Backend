@@ -7,7 +7,7 @@ using MetaBond.Application.Feature.Events.Query.FilterByDateRange;
 using MetaBond.Application.Feature.Events.Query.FilterByTitle;
 using MetaBond.Application.Feature.Events.Query.FilterByTitleCommunityId;
 using MetaBond.Application.Feature.Events.Query.GetById;
-using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
+using MetaBond.Application.Feature.Events.Query.GetCommunities;
 using MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetOrderById;
 using MetaBond.Application.Feature.Events.Query.Pagination;
@@ -128,20 +128,26 @@ public class EventsControllerTests
         var communitiesId = Guid.NewGuid();
         var dateRangeFilter = DateRangeFilter.LastDay;
 
-        IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
+        PagedResult<EventsDto> eventsDtosList = new()
         {
-            new EventsDto
-            (
-                Id: Guid.NewGuid(),
-                Description: "New Event",
-                Title: "Event",
-                DateAndTime: DateTime.Now,
-                CreatedAt: DateTime.UtcNow,
-                CommunitiesId: communitiesId
-            )
+            CurrentPage = 1,
+            Items = new List<EventsDto>()
+            {
+                new EventsDto
+                (
+                    Id: Guid.NewGuid(),
+                    Description: "New Event",
+                    Title: "Event",
+                    DateAndTime: DateTime.Now,
+                    CreatedAt: DateTime.UtcNow,
+                    CommunitiesId: communitiesId
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
+        var expectedResult = ResultT<PagedResult<EventsDto>>.Success(eventsDtosList);
 
         _mediator.Setup(m => m.Send(It.Is<FilterByDateRangeEventsQuery>(q =>
                     q.CommunitiesId == communitiesId && q.DateRangeFilter == dateRangeFilter),
@@ -151,7 +157,8 @@ public class EventsControllerTests
         var eventsController = new EventsController(_mediator.Object);
 
         //Act 
-        var result = await eventsController.FilterByRangeAsync(communitiesId, dateRangeFilter, CancellationToken.None);
+        var result =
+            await eventsController.FilterByRangeAsync(communitiesId, dateRangeFilter, 1, 1, CancellationToken.None);
 
         //Assert
         Assert.NotNull(result);
@@ -165,20 +172,26 @@ public class EventsControllerTests
         //Arrange
         var title = "New Title";
 
-        IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
+        PagedResult<EventsDto> eventsDtosList = new()
         {
-            new EventsDto
-            (
-                Id: Guid.NewGuid(),
-                Description: "New Event",
-                Title: title,
-                DateAndTime: DateTime.Now,
-                CreatedAt: DateTime.UtcNow,
-                CommunitiesId: Guid.NewGuid()
-            )
+            CurrentPage = 1,
+            Items = new List<EventsDto>()
+            {
+                new EventsDto
+                (
+                    Id: Guid.NewGuid(),
+                    Description: "New Event",
+                    Title: "Title",
+                    DateAndTime: DateTime.Now,
+                    CreatedAt: DateTime.UtcNow,
+                    CommunitiesId: Guid.Empty
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
+        var expectedResult = ResultT<PagedResult<EventsDto>>.Success(eventsDtosList);
 
         _mediator.Setup(m =>
                 m.Send(It.Is<FilterByTitleEventsQuery>(q => q.Title == title), It.IsAny<CancellationToken>()))
@@ -187,13 +200,12 @@ public class EventsControllerTests
         var eventsController = new EventsController(_mediator.Object);
 
         //Act
-        var result = await eventsController.FilterByTitleAsync(title, CancellationToken.None);
+        var result = await eventsController.FilterByTitleAsync(title, 1, 1, CancellationToken.None);
 
         //Assert
-        Assert.IsType<OkObjectResult>(result);
-        var okResult = result as OkObjectResult;
-        Assert.NotNull(okResult);
-        Assert.Equal(eventsDtosList, okResult.Value);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(eventsDtosList, result.Value);
     }
 
     [Fact]
@@ -203,20 +215,26 @@ public class EventsControllerTests
         var communityId = Guid.NewGuid();
         var title = "New";
 
-        IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
+        PagedResult<EventsDto> eventsDtosList = new()
         {
-            new EventsDto
-            (
-                Id: Guid.NewGuid(),
-                Description: "New Event",
-                Title: title,
-                DateAndTime: DateTime.Now,
-                CreatedAt: DateTime.UtcNow,
-                CommunitiesId: communityId
-            )
+            CurrentPage = 1,
+            Items = new List<EventsDto>()
+            {
+                new EventsDto
+                (
+                    Id: Guid.NewGuid(),
+                    Description: "New Event",
+                    Title: "Title",
+                    DateAndTime: DateTime.Now,
+                    CreatedAt: DateTime.UtcNow,
+                    CommunitiesId: communityId
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
+        var expectedResult = ResultT<PagedResult<EventsDto>>.Success(eventsDtosList);
 
         _mediator.Setup(m => m.Send(It.Is<GetEventsByTitleAndCommunityIdQuery>(q =>
                 q.CommunitiesId == communityId && q.Title == title), It.IsAny<CancellationToken>()))
@@ -226,7 +244,8 @@ public class EventsControllerTests
 
         //Act
         var result =
-            await eventsController.GetEventsByTitleAndCommunityIdAsync(communityId, title, CancellationToken.None);
+            await eventsController.GetEventsByTitleAndCommunityIdAsync(communityId, title, 1, 1,
+                CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -272,23 +291,29 @@ public class EventsControllerTests
         //Arrange
         var eventId = Guid.NewGuid();
 
-        IEnumerable<CommunitiesEventsDTos> communitiesDTosEnumerable = new List<CommunitiesEventsDTos>
+        PagedResult<CommunitiesEventsDTos> communitiesDTosEnumerable = new()
         {
-            new(
-                Guid.NewGuid(),
-                "Community of .NET Developers",
-                ".NET Devs",
-                DateTime.UtcNow.AddDays(-10),
-                DateTime.UtcNow.AddMonths(-2),
-                new List<CommunitySummaryDto>
-                {
-                    new("Group about ASP.NET Core", DateTime.UtcNow.AddMonths(-5)),
-                    new("Blazor Community", DateTime.UtcNow.AddMonths(-4))
-                }
-            )
+            CurrentPage = 1,
+            Items = new List<CommunitiesEventsDTos>
+            {
+                new(
+                    Guid.NewGuid(),
+                    "Community of .NET Developers",
+                    ".NET Devs",
+                    DateTime.UtcNow.AddDays(-10),
+                    DateTime.UtcNow.AddMonths(-2),
+                    new List<CommunitySummaryDto>
+                    {
+                        new("Group about ASP.NET Core", DateTime.UtcNow.AddMonths(-5)),
+                        new("Blazor Community", DateTime.UtcNow.AddMonths(-4))
+                    }
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<CommunitiesEventsDTos>>.Success(communitiesDTosEnumerable);
+        var expectedResult = ResultT<PagedResult<CommunitiesEventsDTos>>.Success(communitiesDTosEnumerable);
 
         _mediator.Setup(m => m.Send(It.Is<GetEventsDetailsQuery>(q => q.Id == eventId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -296,7 +321,7 @@ public class EventsControllerTests
         var eventsController = new EventsController(_mediator.Object);
 
         //Act
-        var result = await eventsController.GetEventsWithCommunitiesAsync(eventId, CancellationToken.None);
+        var result = await eventsController.GetEventsWithCommunitiesAsync(eventId, 1, 2, CancellationToken.None);
 
         //Assert
         Assert.NotNull(result);
@@ -310,23 +335,29 @@ public class EventsControllerTests
         //Arrange
         var eventId = Guid.NewGuid();
 
-        IEnumerable<EventsWithParticipationInEventsDTos> enumerable = new List<EventsWithParticipationInEventsDTos>
+        PagedResult<EventsWithParticipationInEventsDTos> enumerable = new()
         {
-            new(
-                eventId,
-                "Annual Tech Conference",
-                "TechCon 2025",
-                DateTime.UtcNow.AddMonths(2),
-                new List<ParticipationInEventBasicDTos>
-                {
-                    new(Guid.NewGuid(), Guid.NewGuid()),
-                    new(Guid.NewGuid(), Guid.NewGuid())
-                },
-                DateTime.UtcNow.AddMonths(-1)
-            )
+            CurrentPage = 1,
+            Items = new List<EventsWithParticipationInEventsDTos>
+            {
+                new(
+                    eventId,
+                    "Annual Tech Conference",
+                    "TechCon 2025",
+                    DateTime.UtcNow.AddMonths(2),
+                    new List<ParticipationInEventBasicDTos>
+                    {
+                        new(Guid.NewGuid(), Guid.NewGuid()),
+                        new(Guid.NewGuid(), Guid.NewGuid())
+                    },
+                    DateTime.UtcNow.AddMonths(-1)
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>.Success(enumerable);
+        var expectedResult = ResultT<PagedResult<EventsWithParticipationInEventsDTos>>.Success(enumerable);
 
         _mediator.Setup(m => m.Send(It.Is<GetEventsWithParticipationInEventQuery>(q => q.EventsId == eventId),
                 It.IsAny<CancellationToken>()))
@@ -335,7 +366,8 @@ public class EventsControllerTests
         var eventsController = new EventsController(_mediator.Object);
 
         //Act
-        var result = await eventsController.GetEventsWithParticipationInEventAsync(eventId, CancellationToken.None);
+        var result =
+            await eventsController.GetEventsWithParticipationInEventAsync(eventId, 1, 2, CancellationToken.None);
 
         //Assert
         Assert.NotNull(result);
@@ -349,20 +381,26 @@ public class EventsControllerTests
         //Arrange
         var order = "Asc";
 
-        IEnumerable<EventsDto> eventsDtosList = new List<EventsDto>()
+        PagedResult<EventsDto> eventsDtosList = new PagedResult<EventsDto>()
         {
-            new EventsDto
-            (
-                Id: Guid.NewGuid(),
-                Description: "New Event",
-                Title: "Event",
-                DateAndTime: DateTime.UtcNow,
-                CreatedAt: DateTime.UtcNow,
-                CommunitiesId: Guid.NewGuid()
-            )
+            CurrentPage = 1,
+            Items = new List<EventsDto>()
+            {
+                new EventsDto
+                (
+                    Id: Guid.NewGuid(),
+                    Description: "New Event",
+                    Title: "Event",
+                    DateAndTime: DateTime.UtcNow,
+                    CreatedAt: DateTime.UtcNow,
+                    CommunitiesId: Guid.NewGuid()
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<EventsDto>>.Success(eventsDtosList);
+        var expectedResult = ResultT<PagedResult<EventsDto>>.Success(eventsDtosList);
 
         _mediator.Setup(m =>
                 m.Send(It.Is<GetOrderByIdEventsQuery>(q => q.Order == order), It.IsAny<CancellationToken>()))
@@ -371,7 +409,7 @@ public class EventsControllerTests
         var eventsController = new EventsController(_mediator.Object);
 
         //Act
-        var result = await eventsController.OrderByIdAsync(order, CancellationToken.None);
+        var result = await eventsController.OrderByIdAsync(order, 1, 2, CancellationToken.None);
 
         //Assert
         Assert.NotNull(result);
