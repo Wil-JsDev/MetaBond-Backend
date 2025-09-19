@@ -2,103 +2,175 @@
 using MetaBond.Application.Pagination;
 using MetaBond.Domain.Models;
 using MetaBond.Infrastructure.Persistence.Context;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace MetaBond.Infrastructure.Persistence.Repository
+namespace MetaBond.Infrastructure.Persistence.Repository;
+
+public class EventsRepository(MetaBondContext metaBondContext)
+    : GenericRepository<Events>(metaBondContext), IEventsRepository
 {
-    public class EventsRepository : GenericRepository<Events>, IEventsRepository
+    public async Task<PagedResult<Events>> GetPagedEventsAsync(
+        int pageNumber,
+        int pageZize,
+        CancellationToken cancellationToken)
     {
-        public EventsRepository(MetaBondContext metaBondContext) : base(metaBondContext)
-        {
-        }
+        var totalRecord = await _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
 
-        public async Task<PagedResult<Events>> GetPagedEventsAsync(
-            int pageNumber, 
-            int pageZize, 
-            CancellationToken cancellationToken)
-        {
-            var totalRecord = await _metaBondContext.Set<Events>()
-                .AsNoTracking()
-                .CountAsync(cancellationToken);
-            
-            var pagedEvents = await _metaBondContext.Set<Events>()
-                                                    .AsNoTracking()
-                                                    .OrderBy(e => e.Id)
-                                                    .Skip((pageNumber - 1) * pageZize)
-                                                    .Take(pageZize)
-                                                    .ToListAsync(cancellationToken);
+        var pagedEvents = await _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .OrderBy(e => e.Id)
+            .Skip((pageNumber - 1) * pageZize)
+            .Take(pageZize)
+            .ToListAsync(cancellationToken);
 
-            PagedResult<Events> result = new(pagedEvents,pageNumber,pageZize,totalRecord);
-            return result;
-        }
-        public async Task<IEnumerable<Events>> GetFilterByTitleAsync(string title, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                              .AsNoTracking()
-                                              .Where(e => e.Title == title)
-                                              .ToListAsync(cancellationToken);
-            return query;
-        }
-        
-        public async Task<IEnumerable<Events>> GetEventsByTitleAndCommunityIdAsync(Guid communitiesId, string title, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                .AsNoTracking()
-                .Where(e => e.CommunitiesId == communitiesId && e.Title == title)
-                .ToListAsync(cancellationToken);
-            return query;
-        }
-        
-        public async Task<IEnumerable<Events>> GetOrderByIdAscAsync(CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                         .AsNoTracking()
-                                         .OrderBy(x => x.Id)
-                                         .ToListAsync(cancellationToken);
-            return query;
-        }
+        PagedResult<Events> result = new(pagedEvents, pageNumber, pageZize, totalRecord);
+        return result;
+    }
 
-        public async Task<IEnumerable<Events>> GetOrderByIdDescAsync(CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                         .AsNoTracking()
-                                         .OrderByDescending(x => x.Id)
-                                         .ToListAsync(cancellationToken);
-            return query;
-        }
+    public async Task<PagedResult<Events>> GetFilterByTitleAsync(string title, int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var baseQuery = _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .Where(e => e.Title == title);
 
-        public async Task<IEnumerable<Events>> FilterByDateRange(Guid communitiesId,DateTime dateFilter, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                              .AsNoTracking()
-                                              .Where(x => x.CommunitiesId == communitiesId &&  x.CreateAt == dateFilter)
-                                              .ToListAsync(cancellationToken);
+        var total = await baseQuery.CountAsync(cancellationToken);
 
-            return query;
-        }
+        var query = await baseQuery
+            .OrderBy(e => e.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
 
-        public async Task<IEnumerable<Events>> GetCommunities(Guid id, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                               .AsNoTracking()
-                                               .Where(x => x.Id == id) 
-                                               .Include(x => x.Communities)
-                                               .AsSplitQuery()
-                                               .ToListAsync(cancellationToken);
-            return query;
-        }
+        var pagedResponse = new PagedResult<Events>(query, pageNumber, pageSize, total);
 
-        public async Task<IEnumerable<Events>> GetEventsWithParticipationAsync(Guid eventId, CancellationToken cancellationToken)
-        {
-            var query = await _metaBondContext.Set<Events>()
-                                               .Where(x => x.Id == eventId)     
-                                               .Include(ep => ep.EventParticipations)
-                                                    .ThenInclude(ev => ev.ParticipationInEvent)
-                                               .AsSplitQuery()
-                                               .ToListAsync(cancellationToken);
+        return pagedResponse;
+    }
 
-            return query;
-        }
+    public async Task<PagedResult<Events>> GetEventsByTitleAndCommunityIdAsync(Guid communitiesId, string title,
+        int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var baseQuery = _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .Where(e => e.CommunitiesId == communitiesId && e.Title == title);
 
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var query = await baseQuery
+            .OrderBy(e => e.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var pagedResponse = new PagedResult<Events>(query, pageNumber, pageSize, total);
+
+        return pagedResponse;
+    }
+
+    public async Task<PagedResult<Events>> GetOrderByIdAscAsync(int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var totalRecord = await _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
+
+        var pagedEvents = await _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .OrderBy(e => e.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        PagedResult<Events> result = new(pagedEvents, pageNumber, pageSize, totalRecord);
+
+        return result;
+    }
+
+    public async Task<PagedResult<Events>> GetOrderByIdDescAsync(int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var total = await _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
+
+        var query = await _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .OrderByDescending(x => x.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var pagedResponse = new PagedResult<Events>(query, pageNumber, pageSize, total);
+
+        return pagedResponse;
+    }
+
+    public async Task<PagedResult<Events>> FilterByDateRangeAsync(Guid communitiesId, DateTime dateFilter,
+        int pageNumber, int pageSize, CancellationToken cancellationToken)
+    {
+        var baseQuery = _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .Where(x => x.CommunitiesId == communitiesId && x.CreateAt == dateFilter);
+
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var query = await baseQuery
+            .OrderBy(x => x.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var pagedResult = new PagedResult<Events>(query, pageNumber, pageSize, total);
+        return pagedResult;
+    }
+
+    public async Task<PagedResult<Events>> GetCommunitiesAsync(Guid id, int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var baseQuery = _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .Where(x => x.Id == id);
+
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var query = await baseQuery
+            .OrderBy(x => x.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Include(x => x.Communities)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+
+        PagedResult<Events> result = new(query, pageNumber, pageSize, total);
+
+        return result;
+    }
+
+    public async Task<PagedResult<Events>> GetEventsWithParticipationAsync(Guid eventId,
+        int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var baseQuery = _metaBondContext.Set<Events>()
+            .AsNoTracking()
+            .Where(x => x.Id == eventId);
+
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var query = await baseQuery
+            .OrderBy(x => x.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Include(x => x.EventParticipations)!
+            .ThenInclude(x => x.ParticipationInEvent)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+
+        PagedResult<Events> result = new(query, pageNumber, pageSize, total);
+
+        return result;
     }
 }
