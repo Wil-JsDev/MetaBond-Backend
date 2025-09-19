@@ -43,7 +43,7 @@ public static class CommunityMapper
         );
     }
 
-    public static IEnumerable<CommunitiesEventsDTos> ToCommunitiesDtos(this IEnumerable<Events> events)
+    public static IEnumerable<CommunitiesEventsDTos> ToCommunitiesDtos(this IEnumerable<Events>? events)
     {
         return events.Select(e => new CommunitiesEventsDTos(
             Id: e.Id,
