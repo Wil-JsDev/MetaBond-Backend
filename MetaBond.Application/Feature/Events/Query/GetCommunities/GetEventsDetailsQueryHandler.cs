@@ -1,9 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
-using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,9 +14,9 @@ internal sealed class GetEventsDetailsQueryHandler(
     IEventsRepository eventsRepository,
     IDistributedCache decoratedCache,
     ILogger<GetEventsDetailsQueryHandler> logger)
-    : IQueryHandler<GetEventsDetailsQuery, IEnumerable<CommunitiesEventsDTos>>
+    : IQueryHandler<GetEventsDetailsQuery, PagedResult<CommunitiesEventsDTos>>
 {
-    public async Task<ResultT<IEnumerable<CommunitiesEventsDTos>>> Handle(
+    public async Task<ResultT<PagedResult<CommunitiesEventsDTos>>> Handle(
         GetEventsDetailsQuery request,
         CancellationToken cancellationToken)
     {
@@ -27,37 +27,41 @@ internal sealed class GetEventsDetailsQueryHandler(
             "Events",
             logger
         );
-        if (!events.IsSuccess)
-        {
-            logger.LogError("Events with ID {EventsId} not found.", request.Id);
-
-            return ResultT<IEnumerable<CommunitiesEventsDTos>>.Failure(events.Error!);
-        }
+        if (!events.IsSuccess) return events.Error!;
 
         var result = await decoratedCache.GetOrCreateAsync(
             $"events-{request.Id}",
             async () =>
             {
-                var communitiesEvents = await eventsRepository.GetCommunities(request.Id, cancellationToken);
+                var communitiesEvents = await eventsRepository.GetCommunitiesAsync(request.Id,
+                    request.PageNumber,
+                    request.PageSize,
+                    cancellationToken);
 
-                IEnumerable<CommunitiesEventsDTos> inEventDTos = communitiesEvents.ToCommunitiesDtos();
+                IEnumerable<CommunitiesEventsDTos> inEventDTos = communitiesEvents.Items.ToCommunitiesDtos();
 
-                return inEventDTos;
+                PagedResult<CommunitiesEventsDTos> eventsPaged = new(
+                    currentPage: communitiesEvents.CurrentPage,
+                    items: inEventDTos,
+                    totalItems: communitiesEvents.TotalItems,
+                    pageSize: request.PageSize
+                );
+
+                return eventsPaged;
             },
             cancellationToken: cancellationToken
         );
 
-        var eventsEnumerable = result.ToList();
-        if (!eventsEnumerable.Any())
+        if (result.Items != null && !result.Items.Any())
         {
             logger.LogError("No communities or participation in event found for event with ID {Id}.", request.Id);
 
-            return ResultT<IEnumerable<DTOs.Events.CommunitiesEventsDTos>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<CommunitiesEventsDTos>>.Failure(Error.NotFound("404",
                 "No communities or participation in event found for this events."));
         }
 
         logger.LogInformation("Event details with ID {Id} retrieved successfully.", request.Id);
 
-        return ResultT<IEnumerable<DTOs.Events.CommunitiesEventsDTos>>.Success(eventsEnumerable);
+        return ResultT<PagedResult<CommunitiesEventsDTos>>.Success(result);
     }
 }

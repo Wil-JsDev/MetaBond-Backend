@@ -1,7 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Events;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.Extensions.Caching.Distributed;
@@ -11,24 +13,30 @@ namespace MetaBond.Application.Feature.Events.Query.FilterByDateRange;
 
 internal sealed class FilterByDateRangeEventsQueryHandler(
     IEventsRepository eventsRepository,
+    ICommunitiesRepository communitiesRepository,
     IDistributedCache decoratedCache,
     ILogger<FilterByDateRangeEventsQueryHandler> logger)
-    : IQueryHandler<FilterByDateRangeEventsQuery, IEnumerable<EventsDto>>
+    : IQueryHandler<FilterByDateRangeEventsQuery, PagedResult<EventsDto>>
 {
-    public async Task<ResultT<IEnumerable<EventsDto>>> Handle(
+    public async Task<ResultT<PagedResult<EventsDto>>> Handle(
         FilterByDateRangeEventsQuery request,
         CancellationToken cancellationToken)
     {
-        var exists = await eventsRepository.ValidateAsync(x => x.Id == request.CommunitiesId, cancellationToken);
+        var exists = await communitiesRepository.ValidateAsync(x => x.Id == request.CommunitiesId, cancellationToken);
         if (!exists)
         {
             logger.LogError("The community with ID {Id} does not exist.", request.CommunitiesId);
 
-            return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<EventsDto>>.Failure(Error.NotFound("404",
                 $"{request.CommunitiesId} not found"));
         }
 
-        var status = FilterByDateRange(request.CommunitiesId);
+        var validationPagination =
+            PaginationHelper.ValidatePagination<EventsDto>(request.PageNumber, request.PageSize, logger);
+
+        if (!validationPagination.IsSuccess) return validationPagination;
+
+        var status = FilterByDateRange(request.CommunitiesId, request.PageNumber, request.PageSize);
         if (status.TryGetValue((request.DateRangeFilter), out var getStatusList))
         {
             string cacheKey = $"events-community-{request.CommunitiesId}-filter-{request.DateRangeFilter}";
@@ -38,66 +46,86 @@ internal sealed class FilterByDateRangeEventsQueryHandler(
                 {
                     var eventsLists = await getStatusList(cancellationToken);
 
-                    var listsEvents = eventsLists.ToList();
+                    var listsEvents = eventsLists.Items!.ToList();
+
                     IEnumerable<EventsDto> dTos = listsEvents.Select(EventsMapper.EventsToDto).ToList();
 
-                    return dTos;
+                    PagedResult<EventsDto> pagedResult = new(
+                        currentPage: eventsLists.CurrentPage,
+                        items: dTos,
+                        totalItems: eventsLists.TotalItems,
+                        pageSize: request.PageSize
+                    );
+
+                    return pagedResult;
                 },
                 cancellationToken: cancellationToken);
 
-            var eventsDtos = result.ToList();
-            if (!eventsDtos.Any())
+            if (!result.Items!.Any())
             {
                 var valuesFilter = GetValueFilter().TryGetValue((request.DateRangeFilter), out var values);
                 if (valuesFilter)
                 {
                     logger.LogInformation("No events found for the given filter");
 
-                    return ResultT<IEnumerable<EventsDto>>.Failure(Error.NotFound("404", values!));
+                    return ResultT<PagedResult<EventsDto>>.Failure(Error.NotFound("404", values!));
                 }
 
                 logger.LogError("The events list is empty due to an unknown error.");
 
-                return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "The list is empty"));
+                return ResultT<PagedResult<EventsDto>>.Failure(Error.Failure("400", "The list is empty"));
             }
 
             logger.LogInformation("Events retrieved successfully");
 
-            return ResultT<IEnumerable<EventsDto>>.Success(eventsDtos);
+            return ResultT<PagedResult<EventsDto>>.Success(result);
         }
 
         logger.LogError("No data entered for the status.");
 
-        return ResultT<IEnumerable<EventsDto>>.Failure(Error.Failure("400", "No data entered"));
+        return ResultT<PagedResult<EventsDto>>.Failure(Error.Failure("400", "No data entered"));
     }
 
     # region Private Methods
 
-    private Dictionary<Domain.DateRangeFilter, Func<CancellationToken, Task<IEnumerable<Domain.Models.Events>>>>
-        FilterByDateRange(Guid communitiesId)
+    private Dictionary<DateRangeFilter, Func<CancellationToken, Task<PagedResult<Domain.Models.Events>>>>
+        FilterByDateRange(Guid communitiesId, int pageNumber, int pageSize)
     {
-        return new Dictionary<Domain.DateRangeFilter,
-            Func<CancellationToken, Task<IEnumerable<Domain.Models.Events>>>>
+        return new Dictionary<DateRangeFilter,
+            Func<CancellationToken, Task<PagedResult<Domain.Models.Events>>>>
         {
             {
                 DateRangeFilter.LastDay,
-                async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,
-                    DateTime.UtcNow.AddDays(-1), cancellationToken)
+                async cancellationToken => await eventsRepository.FilterByDateRangeAsync(
+                    communitiesId,
+                    DateTime.UtcNow.AddDays(-1),
+                    pageNumber,
+                    pageSize,
+                    cancellationToken)
             },
             {
                 DateRangeFilter.ThreeDays,
-                async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,
-                    DateTime.UtcNow.AddDays(-3), cancellationToken)
+                async cancellationToken => await eventsRepository.FilterByDateRangeAsync(
+                    communitiesId,
+                    DateTime.UtcNow.AddDays(-3),
+                    pageNumber,
+                    pageSize,
+                    cancellationToken)
             },
             {
                 DateRangeFilter.LastWeek,
-                async cancellationToken => await eventsRepository.FilterByDateRange(communitiesId,
-                    DateTime.UtcNow.AddDays(-7), cancellationToken)
+                async cancellationToken => await eventsRepository.FilterByDateRangeAsync(
+                    communitiesId,
+                    DateTime.UtcNow.AddDays(-7),
+                    pageNumber,
+                    pageSize,
+                    cancellationToken)
             }
         };
     }
 
-    private static Dictionary<Domain.DateRangeFilter, string> GetValueFilter()
+
+    private static Dictionary<DateRangeFilter, string> GetValueFilter()
     {
         return new Dictionary<DateRangeFilter, string>
         {
