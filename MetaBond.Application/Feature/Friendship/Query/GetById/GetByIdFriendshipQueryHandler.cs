@@ -26,18 +26,11 @@ internal sealed class GetByIdFriendshipQueryHandler(
 
         if (!friendship.IsSuccess) return ResultT<FriendshipDTos>.Failure(friendship.Error!);
 
-        if (friendship.IsSuccess)
-        {
-            var friendshipDTos = FriendshipMapper.MapFriendshipDTos(friendship.Value);
+        var friendshipDTos = FriendshipMapper.MapFriendshipDTos(friendship.Value);
 
-            logger.LogInformation("Friendship retrieved successfully. ID: {FriendshipId}, Status: {Status}",
-                friendship.Value.Id, friendship.Value.Status);
+        logger.LogInformation("Friendship retrieved successfully. ID: {FriendshipId}, Status: {Status}",
+            friendship.Value.Id, friendship.Value.Status);
 
-            return ResultT<FriendshipDTos>.Success(friendshipDTos);
-        }
-
-        logger.LogError("Failed to retrieve friendship: ID {FriendshipId} not found.", request.Id);
-
-        return ResultT<FriendshipDTos>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+        return ResultT<FriendshipDTos>.Success(friendshipDTos);
     }
 }

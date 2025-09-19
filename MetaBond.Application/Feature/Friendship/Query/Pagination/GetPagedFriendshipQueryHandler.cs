@@ -40,7 +40,8 @@ internal sealed class GetPagedFriendshipQueryHandler(
                     request.PageSize,
                     cancellationToken);
 
-                var friendshipDto = resultPaged.Items!.Select(FriendshipMapper.MapFriendshipDTos);
+                if (resultPaged.Items == null) return null;
+                var friendshipDto = resultPaged.Items.Select(FriendshipMapper.MapFriendshipDTos);
 
                 PagedResult<FriendshipDTos> result = new()
                 {
@@ -54,7 +55,7 @@ internal sealed class GetPagedFriendshipQueryHandler(
             },
             cancellationToken: cancellationToken);
 
-        if (!pagedFriendship.Items!.Any())
+        if (pagedFriendship is { Items: not null } && !pagedFriendship.Items.Any())
         {
             logger.LogError("No friendships found for page {PageNumber} with page size {PageSize}.",
                 request.PageNumber, request.PageSize);
