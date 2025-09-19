@@ -6,6 +6,7 @@ using MetaBond.Application.Feature.Friendship.Commands.Update;
 using MetaBond.Application.Feature.Friendship.Query.GetCountByStatus;
 using MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAfter;
 using MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedBefore;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Presentation.Api.Controllers.V1;
@@ -108,18 +109,24 @@ public class FriendshipControllerTests
         //Arrange
         var dateRange = DateRangeType.Today;
 
-        IEnumerable<FriendshipDTos> friendshipDTosEnumerable = new List<FriendshipDTos>()
+        PagedResult<FriendshipDTos> friendshipDTosEnumerable = new()
         {
-            new FriendshipDTos(
-                FriendshipId: Guid.NewGuid(),
-                Status: Status.Accepted,
-                RequesterId: Guid.NewGuid(),
-                AddresseeId: Guid.NewGuid(),
-                CreatedAt: DateTime.UtcNow
-            )
+            CurrentPage = 1,
+            Items = new List<FriendshipDTos>()
+            {
+                new FriendshipDTos(
+                    FriendshipId: Guid.NewGuid(),
+                    Status: Status.Accepted,
+                    RequesterId: Guid.NewGuid(),
+                    AddresseeId: Guid.NewGuid(),
+                    CreatedAt: DateTime.UtcNow
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
+        var expectedResult = ResultT<PagedResult<FriendshipDTos>>.Success(friendshipDTosEnumerable);
 
         _mediator.Setup(m => m.Send(It.Is<GetCreatedAfterFriendshipQuery>(q => q.DateRange == dateRange),
                 It.IsAny<CancellationToken>()))
@@ -128,7 +135,7 @@ public class FriendshipControllerTests
         var friendshipController = new FriendshipController(_mediator.Object);
 
         //Act
-        var result = await friendshipController.GetAfterCreatedAsync(dateRange, CancellationToken.None);
+        var result = await friendshipController.GetAfterCreatedAsync(dateRange, 1, 2, CancellationToken.None);
 
         //Assert
         Assert.True(result.IsSuccess);
@@ -141,18 +148,24 @@ public class FriendshipControllerTests
         // Arrange
         var pastDateRange = PastDateRangeType.BeforeToday;
 
-        IEnumerable<FriendshipDTos> friendshipDTosEnumerable = new List<FriendshipDTos>()
+        PagedResult<FriendshipDTos> friendshipDTosEnumerable = new()
         {
-            new FriendshipDTos(
-                FriendshipId: Guid.NewGuid(),
-                Status: Status.Accepted,
-                RequesterId: Guid.NewGuid(),
-                AddresseeId: Guid.NewGuid(),
-                CreatedAt: DateTime.UtcNow
-            )
+            CurrentPage = 1,
+            Items = new List<FriendshipDTos>()
+            {
+                new FriendshipDTos(
+                    FriendshipId: Guid.NewGuid(),
+                    Status: Status.Accepted,
+                    RequesterId: Guid.NewGuid(),
+                    AddresseeId: Guid.NewGuid(),
+                    CreatedAt: DateTime.UtcNow
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<FriendshipDTos>>.Success(friendshipDTosEnumerable);
+        var expectedResult = ResultT<PagedResult<FriendshipDTos>>.Success(friendshipDTosEnumerable);
 
         _mediator.Setup(m => m.Send(It.Is<GetCreatedBeforeFriendshipQuery>(q => q.PastDateRangeType == pastDateRange),
                 It.IsAny<CancellationToken>()))
@@ -161,7 +174,7 @@ public class FriendshipControllerTests
         var friendshipController = new FriendshipController(_mediator.Object);
 
         // Act
-        var result = await friendshipController.GetBeforeCreatedAsync(pastDateRange, CancellationToken.None);
+        var result = await friendshipController.GetBeforeCreatedAsync(pastDateRange, 1, 2, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
