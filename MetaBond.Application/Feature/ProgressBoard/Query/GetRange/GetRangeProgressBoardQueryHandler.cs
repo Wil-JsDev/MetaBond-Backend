@@ -27,7 +27,7 @@ internal sealed class GetRangeProgressBoardQueryHandler(
             request.PageSize,
             logger
         );
-        
+
         if (!paginationValidationResult.IsSuccess)
             return paginationValidationResult.Error!;
 

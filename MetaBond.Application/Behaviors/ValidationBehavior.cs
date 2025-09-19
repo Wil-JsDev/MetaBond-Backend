@@ -3,11 +3,12 @@ using MediatR;
 
 namespace MetaBond.Application.Behaviors;
 
-public class ValidationBehavior <TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
-: IPipelineBehavior<TRequest, TResponse>
-where TRequest : class
+public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : class
 {
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(next);
 
@@ -15,7 +16,7 @@ where TRequest : class
         {
             var context = new ValidationContext<TRequest>(request);
             var validationResults = await Task.WhenAll(
-                validators.Select(v => 
+                validators.Select(v =>
                     v.ValidateAsync(context, cancellationToken))).ConfigureAwait(false);
             var failures = validationResults
                 .Where(v => v.Errors.Count > 0)
@@ -25,7 +26,7 @@ where TRequest : class
             if (failures.Count > 0)
                 throw new FluentValidation.ValidationException(failures);
         }
-        
+
         return await next().ConfigureAwait(false);
     }
 }

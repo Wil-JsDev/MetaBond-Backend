@@ -1,7 +1,6 @@
 namespace MetaBond.Application.DTOs.CommunityCategory;
 
-public sealed record CommunityCategoryDTos
-(
+public sealed record CommunityCategoryDTos(
     Guid CommunityCategoryId,
     string Name,
     DateTime CreatedAt,

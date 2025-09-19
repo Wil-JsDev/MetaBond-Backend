@@ -9,6 +9,5 @@ public class DeleteProgressBoardCommandValidator : AbstractValidator<DeleteProgr
         RuleFor(x => x.ProgressBoardId)
             .NotEmpty().WithMessage("The ID is required and cannot be empty or null.")
             .NotEqual(Guid.Empty).WithMessage("The ID must be a valid GUID.");
-
     }
 }

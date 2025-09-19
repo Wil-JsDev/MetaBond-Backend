@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaBond.Infrastructure.Persistence.Repository.Account;
 
-public class EmailConfirmationTokenRepository(MetaBondContext metaBondContext) :  IEmailConfirmationTokenRepository
+public class EmailConfirmationTokenRepository(MetaBondContext metaBondContext) : IEmailConfirmationTokenRepository
 {
     public async Task CreateToken(EmailConfirmationToken token, CancellationToken cancellationToken)
     {
@@ -15,18 +15,17 @@ public class EmailConfirmationTokenRepository(MetaBondContext metaBondContext) :
 
     public async Task<EmailConfirmationToken?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await metaBondContext.Set<EmailConfirmationToken>().
-            AsNoTracking().
-            FirstOrDefaultAsync(x => x.Id == id, cancellationToken: cancellationToken);
+        return await metaBondContext.Set<EmailConfirmationToken>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: cancellationToken);
     }
 
     public async Task<EmailConfirmationToken?> FindByToken(string token, CancellationToken cancellationToken)
     {
-      return await metaBondContext.Set<EmailConfirmationToken>()
-           .AsNoTracking()
-           .FirstOrDefaultAsync(e => e.Code == token, cancellationToken: cancellationToken);
+        return await metaBondContext.Set<EmailConfirmationToken>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Code == token, cancellationToken: cancellationToken);
     }
-    
+
     public async Task DeleteToken(EmailConfirmationToken token, CancellationToken cancellationToken)
     {
         metaBondContext.Set<EmailConfirmationToken>().Remove(token);
@@ -39,6 +38,7 @@ public class EmailConfirmationTokenRepository(MetaBondContext metaBondContext) :
             .AsNoTracking()
             .AnyAsync(e => e.Code == token, cancellationToken);
     }
+
     public async Task<bool> IsValidTokenAsync(string tokenCode, CancellationToken cancellationToken)
     {
         return await metaBondContext.Set<EmailConfirmationToken>()
@@ -49,14 +49,14 @@ public class EmailConfirmationTokenRepository(MetaBondContext metaBondContext) :
                     !e.IsUsed,
                 cancellationToken);
     }
-    
+
     public async Task<bool> IsCodeUnusedAsync(string code, CancellationToken cancellationToken)
     {
         return await metaBondContext.Set<EmailConfirmationToken>()
             .AsNoTracking()
-            .AnyAsync(cd =>  cd.Code == code && cd.IsUsed, cancellationToken);
+            .AnyAsync(cd => cd.Code == code && cd.IsUsed, cancellationToken);
     }
-    
+
     public async Task MarkTokenAsUsedAsync(string tokenCode, CancellationToken cancellationToken)
     {
         var token = await metaBondContext.Set<EmailConfirmationToken>()

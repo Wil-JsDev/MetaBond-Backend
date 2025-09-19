@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace MetaBond.Application.Feature.User.Commands.ForgotPassword;
 
-public  class ForgotPasswordUserCommandValidator : AbstractValidator<ForgotPasswordUserCommand>
+public class ForgotPasswordUserCommandValidator : AbstractValidator<ForgotPasswordUserCommand>
 {
     public ForgotPasswordUserCommandValidator()
     {

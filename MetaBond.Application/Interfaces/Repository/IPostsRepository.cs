@@ -26,7 +26,8 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="title">The title or keyword to filter by.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of posts matching the title in the specified community.</returns>
-    Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title, CancellationToken cancellationToken);
+    Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves a post by ID including its associated community data.
@@ -51,7 +52,8 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="topCount">The number of recent posts to retrieve.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of the most recent posts up to the specified count.</returns>
-    Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId, int topCount, CancellationToken cancellationToken);
+    Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId, int topCount,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves a post with its associated author data.

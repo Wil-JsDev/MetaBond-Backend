@@ -1,5 +1,4 @@
-﻿
-namespace MetaBond.Domain.Settings;
+﻿namespace MetaBond.Domain.Settings;
 
 public sealed class CloudinarySettings
 {

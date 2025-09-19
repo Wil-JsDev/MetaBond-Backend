@@ -26,7 +26,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
                     async () =>
                     {
                         var progressBoards = await statusFilter(cancellationToken);
-                        
+
                         var progressBoardDTos = progressBoards.Select(x => new ProgressBoardDTos
                         (
                             ProgressBoardId: x.Id,
@@ -35,7 +35,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
                             CreatedAt: x.CreatedAt,
                             UpdatedAt: x.UpdatedAt
                         ));
-                        
+
                         return progressBoardDTos;
                     },
                     cancellationToken: cancellationToken);
@@ -49,7 +49,7 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
                     return ResultT<IEnumerable<ProgressBoardDTos>>.Failure(Error.Failure("400",
                         "No progress boards found"));
                 }
-                
+
                 logger.LogInformation("Retrieved {Count} progress boards for date filter: {DateFilter}",
                     progressBoardDTosEnumerable.Count(), request.DateFilter);
 

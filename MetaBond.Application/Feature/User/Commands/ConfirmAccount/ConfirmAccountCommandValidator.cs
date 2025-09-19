@@ -8,7 +8,7 @@ public class ConfirmAccountCommandValidator : AbstractValidator<ConfirmAccountCo
     {
         RuleFor(x => x.Code).NotEmpty()
             .WithMessage("Code is required");
-        
+
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required.");
     }

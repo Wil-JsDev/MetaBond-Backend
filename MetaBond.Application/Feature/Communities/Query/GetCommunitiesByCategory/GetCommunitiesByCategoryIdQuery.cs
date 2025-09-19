@@ -7,8 +7,8 @@ namespace MetaBond.Application.Feature.Communities.Query.GetCommunitiesByCategor
 public sealed class GetCommunitiesByCategoryIdQuery : IQuery<PagedResult<CommunitiesByCategoryDto>>
 {
     public Guid CategoryId { get; set; }
-    
+
     public int PageNumber { get; set; }
-    
+
     public int PageSize { get; set; }
 }

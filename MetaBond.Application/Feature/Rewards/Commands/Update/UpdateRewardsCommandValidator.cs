@@ -9,7 +9,7 @@ public class UpdateRewardsCommandValidator : AbstractValidator<UpdateRewardsComm
         RuleFor(x => x.RewardsId)
             .NotEmpty().WithMessage("The ID is required and cannot be empty or null.")
             .NotEqual(Guid.Empty).WithMessage("The ID must be a valid GUID.");
-        
+
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("The description is required and cannot be empty or null.")
             .MaximumLength(255).WithMessage("The description must not exceed 255 characters.");

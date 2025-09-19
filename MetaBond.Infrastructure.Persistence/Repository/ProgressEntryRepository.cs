@@ -10,12 +10,12 @@ namespace MetaBond.Infrastructure.Persistence.Repository
         : GenericRepository<ProgressEntry>(metaBondContext), IProgressEntryRepository
     {
         public async Task<int> CountEntriesByBoardIdAsync(
-            Guid progressBoardId, 
+            Guid progressBoardId,
             CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<ProgressEntry>()
-                                              .AsNoTracking()
-                                              .CountAsync(x => x.ProgressBoardId == progressBoardId, cancellationToken);
+                .AsNoTracking()
+                .CountAsync(x => x.ProgressBoardId == progressBoardId, cancellationToken);
             return query;
         }
 
@@ -28,11 +28,12 @@ namespace MetaBond.Infrastructure.Persistence.Repository
                 .Include(x => x.ProgressBoard)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
-            
+
             return query;
         }
 
-        public async Task<IEnumerable<ProgressEntry>> GetProgressEntriesWithAuthorsAsync(Guid progressEntryId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ProgressEntry>> GetProgressEntriesWithAuthorsAsync(Guid progressEntryId,
+            CancellationToken cancellationToken)
         {
             return await _metaBondContext.Set<ProgressEntry>()
                 .AsNoTracking()
@@ -44,76 +45,77 @@ namespace MetaBond.Infrastructure.Persistence.Repository
 
         public async Task<IEnumerable<ProgressEntry>> GetEntriesByDateRangeAsync(
             Guid progressBoardId,
-            DateTime startTime, 
-            DateTime endTime, 
+            DateTime startTime,
+            DateTime endTime,
             CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<ProgressEntry>()
-                                               .AsNoTracking()
-                                               .Where(x => x.ProgressBoardId == progressBoardId)
-                                               .Where(x => x.CreatedAt >= startTime && x.CreatedAt <= endTime)
-                                               .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.ProgressBoardId == progressBoardId)
+                .Where(x => x.CreatedAt >= startTime && x.CreatedAt <= endTime)
+                .ToListAsync(cancellationToken);
 
             return query;
         }
 
-        public async Task<IEnumerable<ProgressEntry>> GetOrderByDescriptionAsync(Guid progressBoard,CancellationToken cancellationToken)
+        public async Task<IEnumerable<ProgressEntry>> GetOrderByDescriptionAsync(Guid progressBoard,
+            CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<ProgressEntry>()
-                                               .AsNoTracking()
-                                               .Where(x => x.ProgressBoardId == progressBoard)
-                                               .OrderBy(x => x.Description)
-                                               .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.ProgressBoardId == progressBoard)
+                .OrderBy(x => x.Description)
+                .ToListAsync(cancellationToken);
 
             return query;
         }
 
         public async Task<IEnumerable<ProgressEntry>> GetRecentEntriesAsync(
             Guid progressBoard,
-            int topCount, 
+            int topCount,
             CancellationToken cancellationToken)
         {
             var query = await _metaBondContext.Set<ProgressEntry>()
-                                               .AsNoTracking()
-                                               .Where(x => x.ProgressBoardId == progressBoard)
-                                               .OrderByDescending(x => x.CreatedAt)
-                                                .Take(topCount)
-                                               .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.ProgressBoardId == progressBoard)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(topCount)
+                .ToListAsync(cancellationToken);
 
             return query;
         }
 
-        public async Task<IEnumerable<ProgressEntry>> GetOrderByIdAsync(Guid progressBoardId,CancellationToken cancellationToken)
+        public async Task<IEnumerable<ProgressEntry>> GetOrderByIdAsync(Guid progressBoardId,
+            CancellationToken cancellationToken)
         {
-
             var query = await _metaBondContext.Set<ProgressEntry>()
-                                               .AsNoTracking()
-                                               .Where(x => x.ProgressBoardId == progressBoardId)
-                                               .OrderBy(x => x.Id)
-                                               .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(x => x.ProgressBoardId == progressBoardId)
+                .OrderBy(x => x.Id)
+                .ToListAsync(cancellationToken);
 
 
             return query;
         }
 
         public async Task<PagedResult<ProgressEntry>> GetPagedProgressEntryAsync(
-            int pageSize, 
-            int pageNumber, 
+            int pageSize,
+            int pageNumber,
             CancellationToken cancellationToken)
         {
             var totalRecord = await _metaBondContext.Set<ProgressEntry>()
-                                                   .AsNoTracking()
-                                                   .CountAsync(cancellationToken);
+                .AsNoTracking()
+                .CountAsync(cancellationToken);
 
             var getPagedProgressEntry = await _metaBondContext.Set<ProgressEntry>()
-                                                               .AsNoTracking()
-                                                               .Skip((pageNumber - 1) * pageSize)
-                                                               .Take(pageSize)
-                                                               .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
 
-            var pagedResponse = new PagedResult<ProgressEntry>(getPagedProgressEntry,pageNumber,pageSize,totalRecord);
+            var pagedResponse =
+                new PagedResult<ProgressEntry>(getPagedProgressEntry, pageNumber, pageSize, totalRecord);
             return pagedResponse;
         }
-
     }
 }
