@@ -1,7 +1,6 @@
-﻿
-namespace MetaBond.Application.DTOs.Rewards;
-public sealed record RewardsDTos
-(
+﻿namespace MetaBond.Application.DTOs.Rewards;
+
+public sealed record RewardsDTos(
     Guid? RewardsId,
     Guid UserId,
     string? Description,

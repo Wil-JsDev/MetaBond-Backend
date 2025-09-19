@@ -7,8 +7,8 @@ namespace MetaBond.Application.Feature.CommunityMembership.Query.GetUserCommunit
 public sealed class GetUserCommunitiesQuery : IQuery<PagedResult<CommunitiesDTos>>
 {
     public Guid? UserId { get; set; }
-    
+
     public int PageNumber { get; set; }
-    
+
     public int PageSize { get; set; }
 }

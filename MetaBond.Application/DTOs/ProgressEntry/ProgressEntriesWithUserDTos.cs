@@ -2,8 +2,7 @@ using MetaBond.Application.DTOs.Account.User;
 
 namespace MetaBond.Application.DTOs.ProgressEntry;
 
-public sealed record ProgressEntriesWithUserDTos
-(
+public sealed record ProgressEntriesWithUserDTos(
     Guid ProgressEntryId,
     Guid ProgressBoardId,
     UserProgressEntryDTos User,

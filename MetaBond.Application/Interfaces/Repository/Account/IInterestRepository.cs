@@ -55,7 +55,7 @@ public interface IInterestRepository : IGenericRepository<Interest>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A paged result containing the interests for the given category.</returns>
     Task<PagedResult<Interest>> GetPagedInterestByInterestCategoryIdAsync(
-        Guid interestCategoryId,
+        List<Guid> interestCategoryId,
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken);

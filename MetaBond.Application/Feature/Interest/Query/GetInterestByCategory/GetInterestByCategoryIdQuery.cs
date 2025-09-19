@@ -6,9 +6,9 @@ namespace MetaBond.Application.Feature.Interest.Query.GetInterestByCategory;
 
 public sealed class GetInterestByCategoryIdQuery : IQuery<PagedResult<InterestDTos>>
 {
-    public Guid? InterestCategoryId { get; set; }
-    
+    public List<Guid>? InterestCategoryId { get; set; }
+
     public int PageNumber { get; set; }
-    
+
     public int PageSize { get; set; }
 }

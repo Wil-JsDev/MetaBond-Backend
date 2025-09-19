@@ -24,25 +24,18 @@ internal sealed class UpdateFriendshipCommandHandler(
 
         if (!friendship.IsSuccess) return ResultT<UpdateFriendshipDTos>.Failure(friendship.Error!);
 
-        if (friendship.IsSuccess)
-        {
-            friendship.Value.Status = request.Status;
+        friendship.Value.Status = request.Status;
 
-            await friendshipRepository.UpdateAsync(friendship.Value, cancellationToken);
+        await friendshipRepository.UpdateAsync(friendship.Value, cancellationToken);
 
-            logger.LogInformation("Friendship with ID: {FriendshipId} updated successfully. New Status: {Status}",
-                friendship.Value.Id, friendship.Value.Status);
+        logger.LogInformation("Friendship with ID: {FriendshipId} updated successfully. New Status: {Status}",
+            friendship.Value.Id, friendship.Value.Status);
 
-            UpdateFriendshipDTos friendshipDTos = new
-            (
-                StatusFriendship: friendship.Value.Status
-            );
+        UpdateFriendshipDTos friendshipDTos = new
+        (
+            StatusFriendship: friendship.Value.Status
+        );
 
-            return ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);
-        }
-
-        logger.LogError("Failed to update friendship: ID {FriendshipId} not found.", request.Id);
-
-        return ResultT<UpdateFriendshipDTos>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+        return ResultT<UpdateFriendshipDTos>.Success(friendshipDTos);
     }
 }

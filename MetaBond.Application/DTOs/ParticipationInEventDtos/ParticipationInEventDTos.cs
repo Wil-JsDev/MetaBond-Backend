@@ -1,8 +1,6 @@
-﻿
-namespace MetaBond.Application.DTOs.ParticipationInEventDtos;
+﻿namespace MetaBond.Application.DTOs.ParticipationInEventDtos;
 
-public sealed record ParticipationInEventDTos
-(
+public sealed record ParticipationInEventDTos(
     Guid? ParticipationInEventId,
     Guid? EventId
 );

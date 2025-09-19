@@ -6,6 +6,6 @@ namespace MetaBond.Application.Feature.CommunityMembership.Commands.JoinCommunit
 public sealed class JoinCommunityCommand : ICommand<CommunityMembershipDto>
 {
     public Guid? CommunityId { get; set; }
-    
+
     public Guid? UserId { get; set; }
 }

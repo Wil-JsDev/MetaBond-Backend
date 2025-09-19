@@ -25,7 +25,7 @@ namespace MetaBond.Infrastructure.Shared.Service
             string imageName,
             CancellationToken cancellationToken)
         {
-            Cloudinary cloudinary = new (_cloudinary.CloudinaryUrl);
+            Cloudinary cloudinary = new(_cloudinary.CloudinaryUrl);
             ImageUploadParams image = new()
             {
                 File = new FileDescription(imageName, fileStream),
@@ -33,10 +33,9 @@ namespace MetaBond.Infrastructure.Shared.Service
                 UniqueFilename = false,
                 Overwrite = true
             };
-            
-            var uploadResult = await cloudinary.UploadAsync(image,cancellationToken);
+
+            var uploadResult = await cloudinary.UploadAsync(image, cancellationToken);
             return uploadResult.SecureUrl.ToString();
         }
-
     }
 }

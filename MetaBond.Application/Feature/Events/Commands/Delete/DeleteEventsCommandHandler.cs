@@ -21,18 +21,13 @@ namespace MetaBond.Application.Feature.Events.Commands.Delete
                 "Events",
                 logger);
 
-            if (events.IsSuccess)
-            {
-                await eventsRepository.DeleteAsync(events.Value, cancellationToken);
+            if (!events.IsSuccess) return events.Error!;
 
-                logger.LogInformation("Event with ID {EventId} was successfully deleted.", request.Id);
+            await eventsRepository.DeleteAsync(events.Value, cancellationToken);
 
-                return ResultT<Guid>.Success(request.Id);
-            }
+            logger.LogInformation("Event with ID {EventId} was successfully deleted.", request.Id);
 
-            logger.LogError("Failed to delete event. Event with ID {EventId} was not found.", request.Id);
-
-            return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+            return ResultT<Guid>.Success(request.Id);
         }
     }
 }

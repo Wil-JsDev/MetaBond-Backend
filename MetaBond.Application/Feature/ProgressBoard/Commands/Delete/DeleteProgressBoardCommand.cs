@@ -4,5 +4,5 @@ namespace MetaBond.Application.Feature.ProgressBoard.Commands.Delete;
 
 public sealed class DeleteProgressBoardCommand : ICommand<Guid>
 {
-    public Guid ProgressBoardId  { get; set; }
+    public Guid ProgressBoardId { get; set; }
 }

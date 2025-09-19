@@ -2,8 +2,7 @@ using MetaBond.Application.DTOs.Account.User;
 
 namespace MetaBond.Application.DTOs.Rewards;
 
-public sealed record RewardsWithUserDTos
-(
+public sealed record RewardsWithUserDTos(
     Guid? RewardsId,
     UserRewardsDTos User,
     string? Description,

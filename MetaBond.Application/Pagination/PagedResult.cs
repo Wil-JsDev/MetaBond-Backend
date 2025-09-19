@@ -10,7 +10,6 @@ namespace MetaBond.Application.Pagination
     {
         public PagedResult()
         {
-
         }
 
         public PagedResult(IEnumerable<T>? items, int totalItems, int currentPage, int pageSize)
@@ -28,6 +27,5 @@ namespace MetaBond.Application.Pagination
         public int TotalPages { get; set; }
 
         public int CurrentPage { get; set; }
-
     }
 }

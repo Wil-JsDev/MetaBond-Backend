@@ -22,23 +22,16 @@ internal sealed class UpdateEventsCommandHandler(
             "Events",
             logger);
 
-        if (!events.IsSuccess) return ResultT<EventsDto>.Failure(events.Error!);
+        if (!events.IsSuccess) return events.Error!;
 
-        if (events != null)
-        {
-            events.Value.Description = request.Description;
-            events.Value.Title = request.Title;
-            await eventsRepository.UpdateAsync(events.Value, cancellationToken);
+        events.Value.Description = request.Description;
+        events.Value.Title = request.Title;
+        await eventsRepository.UpdateAsync(events.Value, cancellationToken);
 
-            logger.LogInformation("Event with ID {EventId} was successfully updated.", request.Id);
+        logger.LogInformation("Event with ID {EventId} was successfully updated.", request.Id);
 
-            var eventsDto = EventsMapper.EventsToDto(events.Value);
+        var eventsDto = EventsMapper.EventsToDto(events.Value);
 
-            return ResultT<EventsDto>.Success(eventsDto);
-        }
-
-        logger.LogError("Failed to update event. Event with ID {EventId} was not found.", request.Id);
-
-        return ResultT<EventsDto>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+        return ResultT<EventsDto>.Success(eventsDto);
     }
 }

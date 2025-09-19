@@ -15,7 +15,8 @@ public interface IProgressBoardRepository : IGenericRepository<ProgressBoard>
     /// <param name="pageSize">The number of items per page.</param>
     /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
     /// <returns>A paginated result of progress boards.</returns>
-    Task<PagedResult<ProgressBoard>> GetPagedBoardsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<PagedResult<ProgressBoard>> GetPagedBoardsAsync(int pageNumber, int pageSize,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves progress boards created after a specific date.
@@ -32,7 +33,8 @@ public interface IProgressBoardRepository : IGenericRepository<ProgressBoard>
     /// <param name="endTime">The end date of the range.</param>
     /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
     /// <returns>A collection of progress boards created within the given date range.</returns>
-    Task<IEnumerable<ProgressBoard>> GetBoardsByDateRangeAsync(DateTime startTime, DateTime endTime, CancellationToken cancellationToken);
+    Task<IEnumerable<ProgressBoard>> GetBoardsByDateRangeAsync(DateTime startTime, DateTime endTime,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Counts the total number of progress boards.
@@ -55,5 +57,6 @@ public interface IProgressBoardRepository : IGenericRepository<ProgressBoard>
     /// <param name="progressBoardId">The ID of the progress board.</param>
     /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
     /// <returns>A collection containing the board with its author data.</returns>
-    Task<IEnumerable<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId, CancellationToken cancellationToken);
+    Task<IEnumerable<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId,
+        CancellationToken cancellationToken);
 }

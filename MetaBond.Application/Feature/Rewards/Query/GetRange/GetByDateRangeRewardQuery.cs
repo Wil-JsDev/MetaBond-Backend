@@ -6,5 +6,5 @@ namespace MetaBond.Application.Feature.Rewards.Query.GetRange;
 
 public sealed class GetByDateRangeRewardQuery : IQuery<IEnumerable<RewardsDTos>>
 {
-    public DateRangeType Range {  get; set; }
+    public DateRangeType Range { get; set; }
 }

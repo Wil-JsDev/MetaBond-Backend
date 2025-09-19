@@ -16,8 +16,8 @@ public sealed class EmailService(IOptions<MailSettings> mailSettings) : IEmailSe
         try
         {
             MimeMessage email = new();
-            email.Sender = MailboxAddress.Parse (_mailSettings.EmailFrom);
-            email.To.Add(MailboxAddress.Parse(request.To)); 
+            email.Sender = MailboxAddress.Parse(_mailSettings.EmailFrom);
+            email.To.Add(MailboxAddress.Parse(request.To));
             email.Subject = request.Subject;
             BodyBuilder builder = new()
             {
@@ -38,5 +38,4 @@ public sealed class EmailService(IOptions<MailSettings> mailSettings) : IEmailSe
             // ignored
         }
     }
-    
 }

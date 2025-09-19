@@ -45,5 +45,4 @@ public static class CommunityMembershipMapper
             communityMembership.LeftOnUtc
         );
     }
-    
 }

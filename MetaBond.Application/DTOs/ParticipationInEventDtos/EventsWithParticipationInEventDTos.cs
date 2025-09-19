@@ -2,8 +2,7 @@
 
 namespace MetaBond.Application.DTOs.ParticipationInEventDtos;
 
-public sealed record EventsWithParticipationInEventDTos
-(
+public sealed record EventsWithParticipationInEventDTos(
     Guid? ParticipationInEventId,
     IEnumerable<EventsDto> Events
 );

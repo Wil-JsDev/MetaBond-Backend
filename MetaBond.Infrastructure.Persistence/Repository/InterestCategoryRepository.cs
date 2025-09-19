@@ -42,4 +42,17 @@ public class InterestCategoryRepository(MetaBondContext metaBondContext)
 
         return pagedResponse;
     }
+
+    public async Task<List<InterestCategory>> GetByIdsAsync(
+        List<Guid> categoryIds,
+        CancellationToken cancellationToken)
+    {
+        if (categoryIds == null || !categoryIds.Any())
+            return new List<InterestCategory>();
+
+        return await _metaBondContext.Set<InterestCategory>()
+            .AsNoTracking()
+            .Where(x => categoryIds.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+    }
 }

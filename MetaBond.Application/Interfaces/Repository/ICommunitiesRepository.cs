@@ -40,9 +40,12 @@ public interface ICommunitiesRepository : IGenericRepository<Communities>
     /// Retrieves posts and events associated with a specific community.
     /// </summary>
     /// <param name="communitieId">The ID of the community.</param>
+    /// <param name="pageNumber"></param>
+    /// <param name="pageSize"></param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of communities including their posts and events.</returns>
-    Task<IEnumerable<Communities>> GetPostsAndEventsByCommunityIdAsync(Guid communitieId,
+    Task<PagedResult<Communities>> GetPostsAndEventsByCommunityIdAsync(Guid communitieId,
+        int pageNumber, int pageSize,
         CancellationToken cancellationToken);
 
     /// <summary>

@@ -49,7 +49,7 @@ public interface IEmailConfirmationTokenService
     /// A result indicating whether the confirmation was successful or failed due to invalid token, user not found, or token already used.
     /// </returns>
     Task<Result> ConfirmAccountAsync(Guid userId, string token, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Verifies whether the specified email confirmation code is available (i.e., exists and has not been used).
     /// </summary>

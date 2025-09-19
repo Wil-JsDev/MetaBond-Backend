@@ -6,7 +6,7 @@ namespace MetaBond.Application.Feature.Friendship.Commands.Update;
 
 public sealed class UpdateFriendshipCommand : ICommand<UpdateFriendshipDTos>
 {
-    public Guid Id { get; set; } 
+    public Guid Id { get; set; }
 
     public Status Status { get; set; }
 }

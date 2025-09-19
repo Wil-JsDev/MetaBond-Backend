@@ -20,7 +20,7 @@ namespace MetaBond.Application.Interfaces.Repository
 
         Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> predicate,
             CancellationToken cancellationToken);
-        
+
         Task SaveAsync(CancellationToken cancellationToken);
     }
 }

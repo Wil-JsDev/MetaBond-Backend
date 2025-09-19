@@ -8,7 +8,7 @@ using MetaBond.Application.Feature.Events.Query.FilterByDateRange;
 using MetaBond.Application.Feature.Events.Query.FilterByTitle;
 using MetaBond.Application.Feature.Events.Query.FilterByTitleCommunityId;
 using MetaBond.Application.Feature.Events.Query.GetById;
-using MetaBond.Application.Feature.Events.Query.GetCommunitiesAndParticipationInEvent;
+using MetaBond.Application.Feature.Events.Query.GetCommunities;
 using MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetOrderById;
 using MetaBond.Application.Feature.Events.Query.Pagination;
@@ -83,15 +83,19 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Filter events by date range for a community",
         Description = "Retrieves events for a specific community that fall within the specified date range."
     )]
-    public async Task<ResultT<IEnumerable<EventsDto>>> FilterByRangeAsync(
+    public async Task<ResultT<PagedResult<EventsDto>>> FilterByRangeAsync(
         [FromRoute] Guid communitiesId,
         [FromQuery] DateRangeFilter dateRange,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new FilterByDateRangeEventsQuery
         {
             CommunitiesId = communitiesId,
-            DateRangeFilter = dateRange
+            DateRangeFilter = dateRange,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -103,15 +107,19 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Filter events by title",
         Description = "Retrieves all events matching the specified title."
     )]
-    public async Task<IActionResult> FilterByTitleAsync([FromRoute] string title, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<EventsDto>>> FilterByTitleAsync([FromRoute] string title,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
-        var query = new FilterByTitleEventsQuery { Title = title };
+        var query = new FilterByTitleEventsQuery
+        {
+            Title = title,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
-        var result = await mediator.Send(query, cancellationToken);
-
-        return !result.IsSuccess
-            ? StatusCode(result.Error!.Code.ToInt(), result.Error)
-            : Ok(result.Value);
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpGet("communities/{communityId}/search/title/{title}")]
@@ -120,15 +128,19 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get events by title and community",
         Description = "Retrieves events with the specified title within a specific community."
     )]
-    public async Task<ResultT<IEnumerable<EventsDto>>> GetEventsByTitleAndCommunityIdAsync(
+    public async Task<ResultT<PagedResult<EventsDto>>> GetEventsByTitleAndCommunityIdAsync(
         [FromRoute] Guid communityId,
         [FromRoute] string title,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetEventsByTitleAndCommunityIdQuery
         {
             CommunitiesId = communityId,
-            Title = title
+            Title = title,
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -140,11 +152,18 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get event with communities",
         Description = "Retrieves the details of an event including the communities it belongs to."
     )]
-    public async Task<ResultT<IEnumerable<CommunitiesEventsDTos>>> GetEventsWithCommunitiesAsync(
+    public async Task<ResultT<PagedResult<CommunitiesEventsDTos>>> GetEventsWithCommunitiesAsync(
         [FromRoute] Guid eventId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetEventsDetailsQuery { Id = eventId };
+        var query = new GetEventsDetailsQuery
+        {
+            Id = eventId,
+            PageSize = pageNumber,
+            PageNumber = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -155,11 +174,18 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Get event participation",
         Description = "Retrieves participation details for a specific event."
     )]
-    public async Task<ResultT<IEnumerable<EventsWithParticipationInEventsDTos>>> GetEventsWithParticipationInEventAsync(
+    public async Task<ResultT<PagedResult<EventsWithParticipationInEventsDTos>>> GetEventsWithParticipationInEventAsync(
         [FromRoute] Guid eventId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetEventsWithParticipationInEventQuery { EventsId = eventId };
+        var query = new GetEventsWithParticipationInEventQuery
+        {
+            EventsId = eventId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -170,10 +196,17 @@ public class EventsController(IMediator mediator) : ControllerBase
         Summary = "Order events",
         Description = "Retrieves events ordered by the specified field."
     )]
-    public async Task<ResultT<IEnumerable<EventsDto>>> OrderByIdAsync([FromQuery] string orderBy,
+    public async Task<ResultT<PagedResult<EventsDto>>> OrderByIdAsync([FromQuery] string orderBy,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetOrderByIdEventsQuery { Order = orderBy };
+        var query = new GetOrderByIdEventsQuery
+        {
+            Order = orderBy,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }

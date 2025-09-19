@@ -67,18 +67,17 @@ public class InterestRepository(MetaBondContext metaBondContext)
         return await ValidateAsync(i => EF.Functions.ILike(i.Name!, interestName), cancellationToken);
     }
 
-    public async Task<PagedResult<Interest>> GetPagedInterestByInterestCategoryIdAsync(Guid interestCategoryId,
+    public async Task<PagedResult<Interest>> GetPagedInterestByInterestCategoryIdAsync(List<Guid> interestCategoryId,
         int pageNumber, int pageSize,
         CancellationToken cancellationToken)
     {
-        var total = await _metaBondContext.Set<Interest>()
+        var baseQuery = _metaBondContext.Set<Interest>()
             .AsNoTracking()
-            .Where(i => i.InterestCategoryId == interestCategoryId)
-            .CountAsync(cancellationToken);
+            .Where(i => interestCategoryId.Contains((Guid)i.InterestCategoryId!));
 
-        var query = await _metaBondContext.Set<Interest>()
-            .AsNoTracking()
-            .Where(i => i.InterestCategoryId == interestCategoryId)
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var query = await baseQuery
             .OrderBy(i => i.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)

@@ -49,18 +49,28 @@ public class CommunitiesRepository(MetaBondContext metaBondContext)
         return pagedResponse;
     }
 
-    public async Task<IEnumerable<Communities>> GetPostsAndEventsByCommunityIdAsync(
+    public async Task<PagedResult<Communities>> GetPostsAndEventsByCommunityIdAsync(
         Guid communitieId,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = await _metaBondContext.Set<Communities>()
+        var baseQuery = _metaBondContext.Set<Communities>()
             .AsNoTracking()
-            .Where(x => x.Id == communitieId)
+            .Where(x => x.Id == communitieId);
+
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var communities = await baseQuery
+            .OrderBy(x => x.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Include(x => x.Posts)
             .Include(x => x.Events)
             .AsSplitQuery()
             .ToListAsync(cancellationToken);
-        return query;
+
+        return new PagedResult<Communities>(communities, pageNumber, pageSize, total);
     }
 
     public async Task<bool> ValidateAsync(Expression<Func<Communities, bool>> predicate) =>

@@ -9,7 +9,7 @@ public class CreateEventsCommandValidator : AbstractValidator<CreateEventsComman
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("The title is required and cannot be empty or null.")
             .MaximumLength(50).WithMessage("The title must not exceed 50 characters.");
-        
+
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("The description is required and cannot be empty or null.")
             .MaximumLength(255).WithMessage("The description must not exceed 255 characters.");

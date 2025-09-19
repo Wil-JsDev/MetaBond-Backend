@@ -98,10 +98,17 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Get friendships created after a date",
         Description = "Retrieves friendships created after the specified date range."
     )]
-    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetAfterCreatedAsync([FromQuery] DateRangeType dateRange,
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> GetAfterCreatedAsync([FromQuery] DateRangeType dateRange,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetCreatedAfterFriendshipQuery { DateRange = dateRange };
+        var query = new GetCreatedAfterFriendshipQuery
+        {
+            DateRange = dateRange,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -112,11 +119,18 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Get friendships created before a date",
         Description = "Retrieves friendships created before the specified past date range."
     )]
-    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetBeforeCreatedAsync(
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> GetBeforeCreatedAsync(
         [FromQuery] PastDateRangeType pastDateRange,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetCreatedBeforeFriendshipQuery { PastDateRangeType = pastDateRange };
+        var query = new GetCreatedBeforeFriendshipQuery
+        {
+            PastDateRangeType = pastDateRange,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -127,10 +141,17 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Filter friendships by status",
         Description = "Retrieves friendships filtered by the specified status."
     )]
-    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetFilterByStatus([FromQuery] Status status,
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> GetFilterByStatus([FromQuery] Status status,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new FilterByStatusFriendshipQuery { Status = status };
+        var query = new FilterByStatusFriendshipQuery
+        {
+            Status = status,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -141,10 +162,17 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Order friendships by ID",
         Description = "Retrieves friendships ordered ascending or descending by ID."
     )]
-    public async Task<ResultT<IEnumerable<FriendshipDTos>>> OrderbyIdAscOrDescAsync([FromQuery] string sort,
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> OrderbyIdAscOrDescAsync([FromQuery] string sort,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetOrderByIdFriendshipQuery { Sort = sort };
+        var query = new GetOrderByIdFriendshipQuery
+        {
+            Sort = sort,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -155,10 +183,17 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Get recently created friendships",
         Description = "Retrieves the most recently created friendships up to the specified limit."
     )]
-    public async Task<ResultT<IEnumerable<FriendshipDTos>>> GetRecentCreatedAsync([FromRoute] int limit,
+    public async Task<ResultT<PagedResult<FriendshipDTos>>> GetRecentCreatedAsync([FromRoute] int limit,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetRecentlyCreatedFriendshipQuery { Limit = limit };
+        var query = new GetRecentlyCreatedFriendshipQuery
+        {
+            Limit = limit,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -187,10 +222,17 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Get friendship with users",
         Description = "Retrieves the friendship along with the associated users."
     )]
-    public async Task<ResultT<IEnumerable<FriendshipWithUserDTos>>> GetWithUsersAsync([FromRoute] Guid friendshipId,
+    public async Task<ResultT<PagedResult<FriendshipWithUserDTos>>> GetWithUsersAsync([FromRoute] Guid friendshipId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new GetFriendshipWithUsersQuery { FriendshipId = friendshipId },
+        return await mediator.Send(new GetFriendshipWithUsersQuery
+            {
+                FriendshipId = friendshipId,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            },
             cancellationToken);
     }
 }

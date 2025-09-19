@@ -100,7 +100,7 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
         Summary = "Get detailed community information",
         Description = "Retrieves detailed information about a community, including pagination for related data."
     )]
-    public async Task<ResultT<IEnumerable<PostsAndEventsDTos>>> GetCommunitiesDetailsAsync(
+    public async Task<ResultT<PagedResult<PostsAndEventsDTos>>> GetCommunitiesDetailsAsync(
         [FromRoute] Guid id,
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,

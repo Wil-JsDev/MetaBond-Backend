@@ -56,8 +56,9 @@ public class InterestController(IMediator mediator) : ControllerBase
     )]
     [ProducesResponseType(typeof(PagedResult<InterestDTos>), StatusCodes.Status200OK)]
     public async Task<ResultT<PagedResult<InterestWithUserDto>>> GetInterestByNameAsync([FromQuery] string interestName,
-        int pageNumber,
-        int pageSize, CancellationToken cancellationToken)
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
         GetInterestByNameQuery query = new()
         {
@@ -95,8 +96,9 @@ public class InterestController(IMediator mediator) : ControllerBase
         Summary = "Get paginated interests",
         Description = "Retrieves a paginated list of all interests."
     )]
-    public async Task<ResultT<PagedResult<InterestDTos>>> GetPagedInterestAsync(int pageNumber,
-        int pageSize, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<InterestDTos>>> GetPagedInterestAsync(
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         GetPagedInterestQuery query = new()
         {
@@ -114,9 +116,9 @@ public class InterestController(IMediator mediator) : ControllerBase
         Description = "Retrieves a paginated list of interests associated with a specific category."
     )]
     public async Task<ResultT<PagedResult<InterestDTos>>> GetPagedInterestByInterestCategoryAsync(
-        Guid interestCategoryId,
-        int pageNumber,
-        int pageSize,
+        [FromQuery] List<Guid> interestCategoryId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken
     )
     {

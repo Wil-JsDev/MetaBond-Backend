@@ -13,7 +13,7 @@ public interface IEmailConfirmationTokenRepository
     /// <param name="token">The email confirmation token to be generated and saved.</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     Task CreateToken(EmailConfirmationToken token, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Retrieves an email confirmation token by its unique identifier.
     /// </summary>
@@ -60,7 +60,7 @@ public interface IEmailConfirmationTokenRepository
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     Task MarkTokenAsUsedAsync(string tokenCode, CancellationToken cancellationToken);
 
-    
+
     /// <summary>
     /// Checks if the specified email confirmation code exists and has not been used.
     /// </summary>

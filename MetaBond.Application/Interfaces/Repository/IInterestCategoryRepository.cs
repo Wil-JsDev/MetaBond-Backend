@@ -42,4 +42,15 @@ public interface IInterestCategoryRepository : IGenericRepository<InterestCatego
     /// <returns>A paginated result of <see cref="InterestCategory"/> entities.</returns>
     Task<PagedResult<InterestCategory>>
         GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Retrieves all <see cref="InterestCategory"/> entities whose IDs are contained in the provided list.
+    /// </summary>
+    /// <param name="categoryIds">The list of interest category IDs to retrieve.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of <see cref="InterestCategory"/> objects matching the provided IDs. 
+    /// If no IDs match, returns an empty list.</returns>
+    Task<List<InterestCategory>> GetByIdsAsync(
+        List<Guid> categoryIds,
+        CancellationToken cancellationToken);
 }

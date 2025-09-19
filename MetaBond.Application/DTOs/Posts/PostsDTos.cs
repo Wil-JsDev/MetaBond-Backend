@@ -1,10 +1,8 @@
-﻿
-using MetaBond.Application.DTOs.Account.User;
+﻿using MetaBond.Application.DTOs.Account.User;
 
 namespace MetaBond.Application.DTOs.Posts
 {
-    public sealed record PostsDTos
-    (
+    public sealed record PostsDTos(
         Guid PostsId,
         string? Title,
         string? Content,

@@ -1,5 +1,4 @@
-﻿
-using MetaBond.Application.Abstractions.Messaging;
+﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
 
 namespace MetaBond.Application.Feature.ParticipationInEvent.Commands.Create;

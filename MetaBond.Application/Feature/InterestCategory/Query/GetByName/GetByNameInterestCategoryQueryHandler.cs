@@ -18,7 +18,7 @@ internal sealed class GetByNameInterestCategoryQueryHandler(
         if (string.IsNullOrWhiteSpace(request.Name))
         {
             logger.LogWarning("Invalid Name provided in GetByNameInterestCategoryQuery");
-            
+
             return ResultT<InterestCategoryGeneralDTos>.Failure(Error.Failure("400", "Invalid Name provided."));
         }
 
@@ -27,7 +27,7 @@ internal sealed class GetByNameInterestCategoryQueryHandler(
         if (interestCategory is null)
         {
             logger.LogWarning("Interest Category with name {Name} does not exist.", request.Name);
-            
+
             return ResultT<InterestCategoryGeneralDTos>.Failure(Error.NotFound("404", "Interest Category not found."));
         }
 

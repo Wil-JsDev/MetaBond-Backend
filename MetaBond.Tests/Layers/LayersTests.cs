@@ -5,7 +5,6 @@ namespace MetaBond.Tests.Layers;
 
 public class LayersTests : BaseTests
 {
-   
     [Fact]
     public void Domain_Should_NotHaveDependencyOnApplication()
     {
@@ -16,7 +15,7 @@ public class LayersTests : BaseTests
 
         result.IsSuccessful.Should().BeTrue();
     }
-    
+
     [Fact]
     public void DomainLayer_ShouldNotHaveDependencyOn_InfrastructureLayer()
     {
@@ -38,7 +37,4 @@ public class LayersTests : BaseTests
 
         result.IsSuccessful.Should().BeTrue();
     }
-
-    
-    
 }

@@ -9,10 +9,10 @@ public sealed class CreatePostsCommand : ICommand<PostsDTos>
     public string? Title { get; set; }
 
     public string? Content { get; set; }
-        
+
     public Guid? CommunitiesId { get; set; }
 
     public IFormFile? ImageFile { get; init; }
-    
+
     public Guid? CreatedById { get; set; }
 }
