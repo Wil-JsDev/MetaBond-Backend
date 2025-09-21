@@ -4,6 +4,7 @@ using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -15,9 +16,9 @@ public class GetProgressEntriesWithAuthorsQueryHandler(
     ILogger<GetProgressEntriesWithAuthorsQueryHandler> logger,
     IDistributedCache decorated) :
     IQueryHandler<GetProgressEntriesWithAuthorsQuery,
-        IEnumerable<ProgressEntriesWithUserDTos>>
+        PagedResult<ProgressEntriesWithUserDTos>>
 {
-    public async Task<ResultT<IEnumerable<ProgressEntriesWithUserDTos>>> Handle(
+    public async Task<ResultT<PagedResult<ProgressEntriesWithUserDTos>>> Handle(
         GetProgressEntriesWithAuthorsQuery request, CancellationToken cancellationToken)
     {
         var progressEntry = await EntityHelper.GetEntityByIdAsync
@@ -30,29 +31,49 @@ public class GetProgressEntriesWithAuthorsQueryHandler(
         if (!progressEntry.IsSuccess)
             return progressEntry.Error!;
 
+        var validationPagination =
+            PaginationHelper.ValidatePagination<ProgressEntriesWithUserDTos>(request.PageNumber,
+                request.PageSize,
+                logger);
+
+        if (!validationPagination.IsSuccess)
+            return validationPagination.Error;
+
         var result = await decorated.GetOrCreateAsync(
             $"Get-Progress-Entries-With-Authors-{request.ProgressEntryId}",
             async () =>
             {
                 var progressEntries = await progressEntryRepository.GetProgressEntriesWithAuthorsAsync(
                     request.ProgressEntryId,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                return progressEntries.ProgressEntriesWithUserToListDto();
+                var items = progressEntries.Items ?? [];
+
+                PagedResult<ProgressEntriesWithUserDTos> pagedResult = new()
+                {
+                    CurrentPage = progressEntries.CurrentPage,
+                    Items = items.ProgressEntriesWithUserToListDto(),
+                    TotalItems = progressEntries.TotalItems,
+                    TotalPages = progressEntries.TotalPages
+                };
+
+                return pagedResult;
             },
             cancellationToken: cancellationToken);
 
-        var progressEntriesWithUserDTosEnumerable = result.ToList();
+        var progressEntriesWithUserDTosEnumerable = result.Items ?? [];
         if (!progressEntriesWithUserDTosEnumerable.Any())
         {
             logger.LogWarning("No progress entries found with authors for the given ID.");
 
-            return ResultT<IEnumerable<ProgressEntriesWithUserDTos>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<ProgressEntriesWithUserDTos>>.Failure(Error.NotFound("404",
                 "No progress entries found."));
         }
 
         logger.LogInformation("Progress entries with author information retrieved successfully.");
 
-        return ResultT<IEnumerable<ProgressEntriesWithUserDTos>>.Success(progressEntriesWithUserDTosEnumerable);
+        return ResultT<PagedResult<ProgressEntriesWithUserDTos>>.Success(result);
     }
 }
