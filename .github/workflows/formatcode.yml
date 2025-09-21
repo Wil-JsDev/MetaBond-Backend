@@ -1,0 +1,27 @@
+name: Format Code
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore MetaBond.sln
+
+      - name: Run dotnet format (check only)
+        run: dotnet format MetaBond.sln --verify-no-changes --severity info --exclude bin,obj || true
