@@ -22,4 +22,12 @@ jobs:
         run: dotnet restore
 
       - name: Run dotnet format (check only)
-        run: dotnet format --verify-no-changes --severity info
+        run: dotnet format
+
+      - name: Commit and push changes
+          run: |
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "ci: apply code formatting" || echo "No changes to commit"
+            git push origin HEAD:${{ github.head_ref }}
