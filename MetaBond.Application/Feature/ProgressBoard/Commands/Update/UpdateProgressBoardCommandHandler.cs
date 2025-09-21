@@ -23,14 +23,7 @@ internal sealed class UpdateProgressBoardCommandHandler(
             "ProgressBoard",
             logger
         );
-        if (!progressBoard.IsSuccess)
-        {
-            logger.LogError("Failed to update progress board. ID: {ProgressBoardId} not found.",
-                request.ProgressBoardId);
-
-            return ResultT<ProgressBoardDTos>.Failure(Error.NotFound("404",
-                $"Progress board with ID {request.ProgressBoardId} not found"));
-        }
+        if (!progressBoard.IsSuccess) return progressBoard.Error!;
 
         progressBoard.Value.CommunitiesId = request.CommunitiesId;
         progressBoard.Value.UpdatedAt = DateTime.UtcNow;

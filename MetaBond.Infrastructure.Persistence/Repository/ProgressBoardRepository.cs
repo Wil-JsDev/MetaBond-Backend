@@ -19,40 +19,67 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<ProgressBoard>> GetBoardsByDateRangeAsync(DateTime startTime, DateTime endTime,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<ProgressBoard>> GetBoardsByDateRangeAsync(DateTime startTime, DateTime endTime,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<ProgressBoard>()
+            var baseQuery = _metaBondContext.Set<ProgressBoard>()
                 .AsNoTracking()
-                .Where(x => x.CreatedAt <= startTime && x.CreatedAt <= endTime)
+                .Where(x => x.CreatedAt <= startTime && x.CreatedAt <= endTime);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            return query;
+            var pagedResponse = new PagedResult<ProgressBoard>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<ProgressBoard>> GetBoardsWithEntriesAsync(Guid id,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<ProgressBoard>> GetBoardsWithEntriesAsync(Guid id,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<ProgressBoard>()
-                .Where(x => x.Id == id)
+            var baseQuery = _metaBondContext.Set<ProgressBoard>()
+                .AsNoTracking()
+                .Where(x => x.Id == id);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Include(x => x.ProgressEntries)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
-            return query;
+            var pagedResponse = new PagedResult<ProgressBoard>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<ProgressBoard>> GetProgressBoardsWithAuthorAsync(Guid progressBoardId,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            return await _metaBondContext.Set<ProgressBoard>()
+            var baseQuery = _metaBondContext.Set<ProgressBoard>()
                 .AsNoTracking()
-                .Where(x => x.Id == progressBoardId)
+                .Where(x => x.Id == progressBoardId);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Include(x => x.User)
                 .Include(x => x.ProgressEntries)
                 .Include(x => x.Communities)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<ProgressBoard>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
 
         public async Task<PagedResult<ProgressBoard>> GetPagedBoardsAsync(int pageNumber, int pageSize,
@@ -73,15 +100,23 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return pagedResponse;
         }
 
-        public async Task<IEnumerable<ProgressBoard>> GetRecentBoardsAsync(DateTime dateTime,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<ProgressBoard>> GetRecentBoardsAsync(DateTime dateTime,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = Task.Run(() => _metaBondContext.Set<ProgressBoard>()
+            var baseQuery = _metaBondContext.Set<ProgressBoard>()
                 .AsNoTracking()
-                .Where(x => x.CreatedAt < dateTime)
-                .ToList(), cancellationToken);
+                .Where(x => x.CreatedAt < dateTime);
 
-            return await query;
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<ProgressBoard>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
         }
     }
 }
