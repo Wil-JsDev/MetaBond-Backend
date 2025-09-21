@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using MetaBond.Infrastructure.Shared.JsonConverters;
 using MetaBond.Presentation.Api.ExceptionHandler;
 using MetaBond.Presentation.Api.Filters;
 using Microsoft.AspNetCore.RateLimiting;
@@ -89,6 +90,7 @@ public static class ServiceExtension
     public static void AddResultTFilter(this IMvcBuilder builder)
     {
         builder.AddMvcOptions(options => { options.Filters.Add<ResultTActionFilter>(); });
+        builder.AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new SafeGuidConverter()); });
     }
 
     public static void AddException(this IServiceCollection services)
