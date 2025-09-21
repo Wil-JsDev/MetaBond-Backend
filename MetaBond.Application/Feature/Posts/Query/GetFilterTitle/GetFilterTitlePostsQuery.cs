@@ -1,10 +1,15 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Pagination;
 
 namespace MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 
-public sealed class GetFilterTitlePostsQuery : IQuery<IEnumerable<PostsDTos>>
+public sealed class GetFilterTitlePostsQuery : IQuery<PagedResult<PostsDTos>>
 {
     public Guid CommunitiesId { get; set; }
     public string? Title { get; set; }
+
+    public int PageNumber { get; set; }
+
+    public int PageSize { get; set; }
 }

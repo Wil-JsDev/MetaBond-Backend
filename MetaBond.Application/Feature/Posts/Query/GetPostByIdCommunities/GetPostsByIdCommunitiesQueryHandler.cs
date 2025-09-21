@@ -4,6 +4,7 @@ using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,9 +15,9 @@ internal sealed class GetPostsByIdCommunitiesQueryHandler(
     IPostsRepository postsRepository,
     IDistributedCache decoratedCache,
     ILogger<GetPostsByIdCommunitiesQueryHandler> logger)
-    : IQueryHandler<GetPostsByIdCommunitiesQuery, IEnumerable<PostsWithCommunitiesDTos>>
+    : IQueryHandler<GetPostsByIdCommunitiesQuery, PagedResult<PostsWithCommunitiesDTos>>
 {
-    public async Task<ResultT<IEnumerable<PostsWithCommunitiesDTos>>> Handle(
+    public async Task<ResultT<PagedResult<PostsWithCommunitiesDTos>>> Handle(
         GetPostsByIdCommunitiesQuery request,
         CancellationToken cancellationToken)
     {
@@ -25,36 +26,54 @@ internal sealed class GetPostsByIdCommunitiesQueryHandler(
             request.PostsId,
             "Posts",
             logger);
-        if (!posts.IsSuccess)
-            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(posts.Error!);
+        if (!posts.IsSuccess) return posts.Error!;
 
-        string cacheKey = $"get-posts-by-id-details-{request.PostsId}";
+        var paginationValidation = PaginationHelper.ValidatePagination<PostsWithCommunitiesDTos>(request.PageNumber,
+            request.PageSize, logger);
+
+        if (!paginationValidation.IsSuccess) return paginationValidation.Error!;
+
+        string cacheKey =
+            $"get-posts-by-id-details-{request.PostsId}-page-{request.PageNumber}-size-{request.PageSize}";
         var postsWithCommunities = await decoratedCache.GetOrCreateAsync(
             cacheKey,
             async () =>
             {
                 var postsWithCommunity = await postsRepository.GetPostsByIdWithCommunitiesAsync(
                     request.PostsId,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                var postsWithCommunitiesDTos = postsWithCommunity.ToPostsWithCommunitiesDtos();
+                var items = postsWithCommunity.Items ?? [];
 
-                return postsWithCommunitiesDTos;
+                var postsWithCommunitiesDTos = items.ToPostsWithCommunitiesDtos();
+
+                PagedResult<PostsWithCommunitiesDTos> result = new()
+                {
+                    TotalItems = postsWithCommunity.TotalItems,
+                    TotalPages = postsWithCommunity.TotalPages,
+                    CurrentPage = postsWithCommunity.CurrentPage,
+                    Items = postsWithCommunitiesDTos
+                };
+
+                return result;
             },
             cancellationToken: cancellationToken);
 
-        IEnumerable<PostsWithCommunitiesDTos> postsWithCommunitiesDTosEnumerable = postsWithCommunities.ToList();
-        if (!postsWithCommunitiesDTosEnumerable.Any())
+        var itemsList = postsWithCommunities.Items ?? [];
+
+        if (!itemsList.Any())
         {
             logger.LogError("No communities found for post with ID '{PostsId}'.", request.PostsId);
 
-            return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Failure(Error.Failure("400", "The list is empty"));
+            return ResultT<PagedResult<PostsWithCommunitiesDTos>>.Failure(Error.Failure("400", "The list is empty"));
         }
 
         logger.LogInformation(
             "Successfully retrieved {Count} posts with their associated communities for post ID '{PostsId}'.",
-            postsWithCommunitiesDTosEnumerable.Count(), request.PostsId);
+            itemsList.Count(), request.PostsId);
 
-        return ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(postsWithCommunitiesDTosEnumerable);
+        return ResultT<PagedResult<PostsWithCommunitiesDTos>>.Success(postsWithCommunities);
     }
 }

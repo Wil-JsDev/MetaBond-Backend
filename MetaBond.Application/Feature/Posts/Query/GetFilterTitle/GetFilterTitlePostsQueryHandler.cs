@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -14,9 +15,9 @@ internal sealed class GetFilterTitlePostsQueryHandler(
     ICommunitiesRepository communitiesRepository,
     IDistributedCache decoratedCache,
     ILogger<GetFilterTitlePostsQueryHandler> logger)
-    : IQueryHandler<GetFilterTitlePostsQuery, IEnumerable<PostsDTos>>
+    : IQueryHandler<GetFilterTitlePostsQuery, PagedResult<PostsDTos>>
 {
-    public async Task<ResultT<IEnumerable<PostsDTos>>> Handle(
+    public async Task<ResultT<PagedResult<PostsDTos>>> Handle(
         GetFilterTitlePostsQuery request,
         CancellationToken cancellationToken)
     {
@@ -28,13 +29,13 @@ internal sealed class GetFilterTitlePostsQueryHandler(
         );
 
         if (!community.IsSuccess)
-            return ResultT<IEnumerable<PostsDTos>>.Failure(community.Error!);
+            return community.Error!;
 
         if (string.IsNullOrEmpty(request.Title))
         {
             logger.LogError("Invalid request: GetFilterTitlePostsQuery request is null.");
 
-            return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "Invalid request"));
+            return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("400", "Invalid request"));
         }
 
         var exists = await postsRepository.ValidateAsync(x => x.Title == request.Title, cancellationToken);
@@ -42,11 +43,17 @@ internal sealed class GetFilterTitlePostsQueryHandler(
         {
             logger.LogError("No post found with the title '{Title}'.", request.Title);
 
-            return ResultT<IEnumerable<PostsDTos>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<PostsDTos>>.Failure(Error.NotFound("404",
                 $"No post exists with the title '{request.Title}'"));
         }
 
-        string cacheKey = $"community-filter-title-{request.CommunitiesId}-{request.Title}";
+        var paginationValidation =
+            PaginationHelper.ValidatePagination<PostsDTos>(request.PageNumber, request.PageSize, logger);
+
+        if (!paginationValidation.IsSuccess) return paginationValidation.Error!;
+
+        string cacheKey =
+            $"community-filter-title-{request.CommunitiesId}-{request.Title}-page-{request.PageNumber}-size-{request.PageSize}";
         var result = await decoratedCache.GetOrCreateAsync(
             cacheKey,
             async () =>
@@ -54,25 +61,39 @@ internal sealed class GetFilterTitlePostsQueryHandler(
                 var postsWithTitle = await postsRepository.GetFilterByTitleAsync(
                     request.CommunitiesId,
                     request.Title,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                var postsDTos = postsWithTitle.Select(PostsMapper.PostsToDto);
+                var items = postsWithTitle.Items ?? [];
 
-                return postsDTos;
+                var postsDTos = items.Select(PostsMapper.PostsToDto);
+
+                PagedResult<PostsDTos> result = new()
+                {
+                    TotalItems = postsWithTitle.TotalItems,
+                    TotalPages = postsWithTitle.TotalPages,
+                    CurrentPage = postsWithTitle.CurrentPage,
+                    Items = postsDTos
+                };
+
+                return result;
             },
             cancellationToken: cancellationToken);
 
-        IEnumerable<PostsDTos> postsDTosEnumerable = result.ToList();
-        if (!postsDTosEnumerable.Any())
+        var items = result.Items ?? [];
+
+        var postsDTosEnumerable = items.ToList();
+        if (postsDTosEnumerable.Any())
         {
             logger.LogError("No posts found with the title '{Title}'.", request.Title);
 
-            return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "The list is empty"));
+            return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("400", "The list is empty"));
         }
 
         logger.LogInformation("Successfully retrieved {Count} posts with the title '{Title}'.",
             postsDTosEnumerable.Count(), request.Title);
 
-        return ResultT<IEnumerable<PostsDTos>>.Success(postsDTosEnumerable);
+        return ResultT<PagedResult<PostsDTos>>.Success(result);
     }
 }

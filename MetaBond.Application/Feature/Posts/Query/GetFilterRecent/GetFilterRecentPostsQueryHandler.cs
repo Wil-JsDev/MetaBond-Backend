@@ -1,7 +1,9 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Posts;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -12,45 +14,54 @@ internal sealed class GetFilterRecentPostsQueryHandler(
     IPostsRepository postsRepository,
     IDistributedCache decoratedCache,
     ILogger<GetFilterRecentPostsQueryHandler> logger)
-    : IQueryHandler<GetFilterRecentPostsQuery, IEnumerable<PostsDTos>>
+    : IQueryHandler<GetFilterRecentPostsQuery, PagedResult<PostsDTos>>
 {
-    public async Task<ResultT<IEnumerable<PostsDTos>>> Handle(
+    public async Task<ResultT<PagedResult<PostsDTos>>> Handle(
         GetFilterRecentPostsQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.TopCount <= 0)
-        {
-            logger.LogError("Invalid request: GetFilterRecentPostsQuery request is null.");
+        var paginationValidation =
+            PaginationHelper.ValidatePagination<PostsDTos>(request.PageNumber, request.PageSize, logger);
+        if (!paginationValidation.IsSuccess) return paginationValidation.Error!;
 
-            return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "Invalid request"));
-        }
+        string cacheKey = $"posts:recent:{request.CommunitiesId}:p{request.PageNumber}:s{request.PageSize}";
 
-        string cacheKey = $"get-filter-recent-top-count{request.TopCount}-community-{request.CommunitiesId}";
         var result = await decoratedCache.GetOrCreateAsync(
             cacheKey,
             async () =>
             {
                 var postsFilters = await postsRepository.FilterRecentPostsByCountAsync(
                     request.CommunitiesId,
-                    request.TopCount,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                IEnumerable<PostsDTos> postsDTos = postsFilters.Select(PostsMapper.PostsToDto);
+                var items = postsFilters.Items ?? [];
 
-                return postsDTos;
+                var postsDtos = items.Select(PostsMapper.PostsToDto).ToList();
+
+                return new PagedResult<PostsDTos>(
+                    totalItems: postsFilters.TotalItems,
+                    currentPage: postsFilters.CurrentPage,
+                    pageSize: request.PageSize,
+                    items: postsDtos
+                );
             },
             cancellationToken: cancellationToken);
 
-        var postsDTosEnumerable = result.ToList();
-        if (!postsDTosEnumerable.Any())
+        if (!result.Items.Any())
         {
-            logger.LogError("No recent posts found with the specified count: {TopCount}", request.TopCount);
+            logger.LogWarning(
+                "No posts found for Community {CommunityId}, Page {Page}, Size {Size}",
+                request.CommunitiesId, request.PageNumber, request.PageSize);
 
-            return ResultT<IEnumerable<PostsDTos>>.Failure(Error.Failure("400", "The list is empty"));
+            return ResultT<PagedResult<PostsDTos>>.Failure(Error.Failure("404", "No posts found"));
         }
 
-        logger.LogInformation("Successfully retrieved {Count} recent posts.", postsDTosEnumerable.Count());
+        logger.LogInformation(
+            "Retrieved {Count} recent posts for Community {CommunityId}, Page {Page}, Size {Size}",
+            result.Items.Count(), request.CommunitiesId, request.PageNumber, request.PageSize);
 
-        return ResultT<IEnumerable<PostsDTos>>.Success(postsDTosEnumerable);
+        return ResultT<PagedResult<PostsDTos>>.Success(result);
     }
 }

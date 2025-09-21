@@ -26,7 +26,8 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="title">The title or keyword to filter by.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of posts matching the title in the specified community.</returns>
-    Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title,
+    Task<PagedResult<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title,
+        int pageNumber, int pageSize,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -35,7 +36,8 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="id">The ID of the post.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection containing the post with its related community information.</returns>
-    Task<IEnumerable<Posts>> GetPostsByIdWithCommunitiesAsync(Guid id, CancellationToken cancellationToken);
+    Task<PagedResult<Posts>> GetPostsByIdWithCommunitiesAsync(Guid id, int pageNumber, int pageSize,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves the 10 most recent posts from a specific community.
@@ -43,7 +45,8 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="communitiesId">The ID of the community.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of the 10 most recent posts.</returns>
-    Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId, CancellationToken cancellationToken);
+    Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves a limited number of the most recent posts from a community.
@@ -52,8 +55,8 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="topCount">The number of recent posts to retrieve.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of the most recent posts up to the specified count.</returns>
-    Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId, int topCount,
-        CancellationToken cancellationToken);
+    Task<PagedResult<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId,
+        int pageNumber, int pageSize, CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves a post with its associated author data.
@@ -61,5 +64,6 @@ public interface IPostsRepository : IGenericRepository<Posts>
     /// <param name="postsId">The ID of the post.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection containing the post and its author details.</returns>
-    Task<IEnumerable<Posts>> GetPostWithAuthorAsync(Guid postsId, CancellationToken cancellationToken);
+    Task<PagedResult<Posts>> GetPostWithAuthorAsync(Guid postsId, int pageNumber, int pageSize,
+        CancellationToken cancellationToken);
 }
