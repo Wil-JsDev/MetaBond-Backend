@@ -10,8 +10,12 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -31,5 +35,4 @@ jobs:
           git add .
           git commit -m "ci: apply code formatting" || echo "No changes to commit"
           git push origin HEAD:${{ github.head_ref }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     
