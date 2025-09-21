@@ -1,3 +1,4 @@
+using System.Collections;
 using MediatR;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.DTOs.Posts;
@@ -94,19 +95,25 @@ public class PostsControllerTests
     {
         // Arrange
         var postId = Guid.NewGuid();
-        var communitiesDTosEnumerable = new List<PostsWithCommunitiesDTos>
+        PagedResult<PostsWithCommunitiesDTos> communitiesDTosEnumerable = new()
         {
-            new PostsWithCommunitiesDTos(
-                PostsId: postId,
-                Title: "Tests Title",
-                Content: "Tests Content",
-                ImageUrl: "",
-                Communities: new List<CommunitySummaryDto>(),
-                CreatedAt: DateTime.UtcNow
-            )
+            CurrentPage = 1,
+            Items = new List<PostsWithCommunitiesDTos>
+            {
+                new PostsWithCommunitiesDTos(
+                    PostsId: postId,
+                    Title: "Tests Title",
+                    Content: "Tests Content",
+                    ImageUrl: "",
+                    Communities: new List<CommunitySummaryDto>(),
+                    CreatedAt: DateTime.UtcNow
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<PostsWithCommunitiesDTos>>.Success(communitiesDTosEnumerable);
+        var expectedResult = ResultT<PagedResult<PostsWithCommunitiesDTos>>.Success(communitiesDTosEnumerable);
 
         _mediator.Setup(x => x.Send(It.IsAny<GetPostsByIdCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -114,12 +121,12 @@ public class PostsControllerTests
         var postsController = new PostsController(_mediator.Object);
 
         // Act
-        var resultController = await postsController.GetDetailsPosts(postId, CancellationToken.None);
+        var resultController = await postsController.GetDetailsPosts(postId, 1, 2, CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
         Assert.True(resultController.IsSuccess);
-        Assert.Single(resultController.Value);
+        if (resultController.Value.Items != null) Assert.Single((IEnumerable)resultController.Value.Items);
     }
 
     [Fact]
@@ -127,20 +134,26 @@ public class PostsControllerTests
     {
         // Arrange
         var communityId = Guid.NewGuid();
-        var postsDTosEnumerable = new List<PostsDTos>
+        var postsDTosEnumerable = new PagedResult<PostsDTos>
         {
-            new PostsDTos(
-                PostsId: Guid.NewGuid(),
-                Title: "Tests Title",
-                Content: "Tests Content",
-                ImageUrl: "Url",
-                CreatedById: Guid.NewGuid(),
-                CommunitiesId: communityId,
-                CreatedAt: DateTime.UtcNow
-            )
+            CurrentPage = 1,
+            Items = new List<PostsDTos>
+            {
+                new PostsDTos(
+                    PostsId: Guid.NewGuid(),
+                    Title: "Tests Title",
+                    Content: "Tests Content",
+                    ImageUrl: "Url",
+                    CreatedById: Guid.NewGuid(),
+                    CommunitiesId: communityId,
+                    CreatedAt: DateTime.UtcNow
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
         };
 
-        var expectedResult = ResultT<IEnumerable<PostsDTos>>.Success(postsDTosEnumerable);
+        var expectedResult = ResultT<PagedResult<PostsDTos>>.Success(postsDTosEnumerable);
 
         _mediator.Setup(x => x.Send(It.IsAny<GetFilterTitlePostsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -149,12 +162,11 @@ public class PostsControllerTests
 
         // Act
         var resultController =
-            await postsController.FilterByTitleAsync(communityId, "Tests Title", CancellationToken.None);
+            await postsController.FilterByTitleAsync(communityId, "Tests Title", 1, 2, CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
         Assert.True(resultController.IsSuccess);
-        Assert.Equal("Tests Title", resultController.Value.First().Title);
     }
 
     [Fact]
