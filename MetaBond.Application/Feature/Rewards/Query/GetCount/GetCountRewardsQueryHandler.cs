@@ -8,7 +8,6 @@ namespace MetaBond.Application.Feature.Rewards.Query.GetCount;
 
 internal sealed class GetCountRewardsQueryHandler(
     IRewardsRepository repository,
-    IDistributedCache decoratedCache,
     ILogger<GetCountRewardsQueryHandler> logger)
     : IQueryHandler<GetCountRewardsQuery, int>
 {

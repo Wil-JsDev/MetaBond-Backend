@@ -4,6 +4,7 @@ using MetaBond.Application.DTOs.Rewards;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
@@ -17,12 +18,16 @@ internal sealed class GetUsersByRewardIdQueryHandler(
     IDistributedCache decorated
 ) :
     IQueryHandler<GetUsersByRewardIdQuery,
-        IEnumerable<RewardsWithUserDTos>>
+        PagedResult<RewardsWithUserDTos>>
 {
-    public async Task<ResultT<IEnumerable<RewardsWithUserDTos>>> Handle(
+    public async Task<ResultT<PagedResult<RewardsWithUserDTos>>> Handle(
         GetUsersByRewardIdQuery request,
         CancellationToken cancellationToken)
     {
+        var validationPagination =
+            PaginationHelper.ValidatePagination<RewardsWithUserDTos>(request.PageNumber, request.PageSize, logger);
+        if (!validationPagination.IsSuccess) return validationPagination.Error;
+
         var reward = await EntityHelper.GetEntityByIdAsync(
             rewardsRepository.GetByIdAsync,
             request.RewardsId,
@@ -34,30 +39,41 @@ internal sealed class GetUsersByRewardIdQueryHandler(
             return reward.Error!;
 
         var rewardsWithUser = await decorated.GetOrCreateAsync(
-            $"Get-User-By-Rewards-By-Id-{request.RewardsId}",
+            $"Get-User-By-Rewards-By-Id-{request.RewardsId}-page-{request.PageNumber}-size-{request.PageSize}",
             async () =>
             {
-                var rewards = await rewardsRepository.GetUsersByRewardIdAsync(request.RewardsId, cancellationToken);
+                var rewards = await rewardsRepository.GetUsersByRewardIdAsync(request.RewardsId, request.PageNumber,
+                    request.PageSize, cancellationToken);
 
-                IEnumerable<RewardsWithUserDTos> rewardsWithUserDTos =
-                    rewards.Select(RewardsMapper.RewardsWithUserToDto);
+                var items = rewards.Items ?? [];
+                var dtos = items.Select(RewardsMapper.RewardsWithUserToDto).ToList();
 
-                return rewardsWithUserDTos;
+                PagedResult<RewardsWithUserDTos> resultPaged = new()
+                {
+                    TotalItems = rewards.TotalItems,
+                    TotalPages = rewards.TotalPages,
+                    CurrentPage = rewards.CurrentPage,
+                    Items = dtos
+                };
+
+                return resultPaged;
             },
             cancellationToken: cancellationToken);
 
-        var rewardsWithUserDTosEnumerable = rewardsWithUser.ToList();
-        if (!rewardsWithUserDTosEnumerable.Any())
+        var usersWithRewardList = rewardsWithUser.Items?.ToList() ?? [];
+        if (!usersWithRewardList.Any())
         {
-            logger.LogWarning("No users associated with reward ID {RewardId}.", request.RewardsId);
+            logger.LogWarning("No users associated with reward ID {RewardId}. Page: {PageNumber}, Size: {PageSize}",
+                request.RewardsId, request.PageNumber, request.PageSize);
 
-            return ResultT<IEnumerable<RewardsWithUserDTos>>.Failure(
+            return ResultT<PagedResult<RewardsWithUserDTos>>.Failure(
                 Error.NotFound("404", $"No users associated with reward ID {request.RewardsId}."));
         }
 
-        logger.LogInformation("Retrieved {Count} users associated with reward ID {RewardId}.",
-            rewardsWithUserDTosEnumerable.Count(), request.RewardsId);
+        logger.LogInformation(
+            "Retrieved {Count} users associated with reward ID {RewardId}. Page: {PageNumber}, Size: {PageSize}",
+            usersWithRewardList.Count, request.RewardsId, request.PageNumber, request.PageSize);
 
-        return ResultT<IEnumerable<RewardsWithUserDTos>>.Success(rewardsWithUserDTosEnumerable);
+        return ResultT<PagedResult<RewardsWithUserDTos>>.Success(rewardsWithUser);
     }
 }

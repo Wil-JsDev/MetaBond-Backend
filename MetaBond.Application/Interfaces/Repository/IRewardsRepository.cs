@@ -10,51 +10,58 @@ namespace MetaBond.Application.Interfaces.Repository;
 public interface IRewardsRepository : IGenericRepository<Rewards>
 {
     /// <summary>
-    /// Retrieves a paginated list of rewards.
+    /// Retrieves a paginated collection of rewards.
     /// </summary>
-    /// <param name="pageNumber">The page number to retrieve.</param>
-    /// <param name="pageZize">The number of items per page.</param>
-    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
-    /// <returns>A paged result of rewards.</returns>
-    Task<PagedResult<Rewards>> GetPagedRewardsAsync(int pageNumber, int pageZize, CancellationToken cancellationToken);
+    /// <param name="pageNumber">The page number to retrieve (1-based).</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A paged result containing the rewards for the specified page.</returns>
+    Task<PagedResult<Rewards>> GetPagedRewardsAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves the most recently created reward.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
-    /// <returns>The most recent reward.</returns>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The latest reward created in the system.</returns>
     Task<Rewards> GetMostRecentRewardAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Retrieves all rewards created within the specified date range.
+    /// Retrieves a paginated collection of rewards created within a specified date range.
     /// </summary>
-    /// <param name="startTime">The start of the date range.</param>
-    /// <param name="endTime">The end of the date range.</param>
-    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
-    /// <returns>A collection of rewards within the date range.</returns>
-    Task<IEnumerable<Rewards>> GetRewardsByDateRangeAsync(DateTime startTime, DateTime endTime,
-        CancellationToken cancellationToken);
+    /// <param name="startTime">The start of the date range (inclusive).</param>
+    /// <param name="endTime">The end of the date range (inclusive).</param>
+    /// <param name="pageNumber">The page number to retrieve (1-based).</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A paged result containing rewards created in the given date range.</returns>
+    Task<PagedResult<Rewards>> GetRewardsByDateRangeAsync(DateTime startTime, DateTime endTime,
+        int pageNumber, int pageSize, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Counts the total number of rewards.
+    /// Counts the total number of rewards in the system.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
-    /// <returns>The total number of rewards.</returns>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The total count of rewards.</returns>
     Task<int> CountRewardsAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Retrieves the top rewards sorted by points in descending order.
+    /// Retrieves a paginated collection of rewards ordered by points in descending order.
     /// </summary>
-    /// <param name="topCount">The number of top rewards to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
-    /// <returns>A collection of the top rewards by points.</returns>
-    Task<IEnumerable<Rewards>> GetTopRewardsByPointsAsync(int topCount, CancellationToken cancellationToken);
+    /// <param name="pageNumber">The page number to retrieve (1-based).</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A paged result containing the top rewards sorted by points.</returns>
+    Task<PagedResult<Rewards>> GetTopRewardsByPointsAsync(int pageNumber, int pageSize,
+        CancellationToken cancellationToken);
 
     /// <summary>
-    /// Retrieves users associated with a specific reward.
+    /// Retrieves a paginated collection of users associated with a specific reward.
     /// </summary>
     /// <param name="rewardId">The unique identifier of the reward.</param>
-    /// <param name="cancellationToken">Cancellation token for the asynchronous operation.</param>
-    /// <returns>A collection of users who received the specified reward.</returns>
-    Task<IEnumerable<Rewards>> GetUsersByRewardIdAsync(Guid rewardId, CancellationToken cancellationToken);
+    /// <param name="pageNumber">The page number to retrieve (1-based).</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A paged result containing the users linked to the specified reward.</returns>
+    Task<PagedResult<Rewards>> GetUsersByRewardIdAsync(Guid rewardId, int pageNumber, int pageSize,
+        CancellationToken cancellationToken);
 }

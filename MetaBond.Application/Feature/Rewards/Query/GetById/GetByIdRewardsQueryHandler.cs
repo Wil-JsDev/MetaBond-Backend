@@ -25,17 +25,12 @@ internal sealed class GetByIdRewardsQueryHandler(
             logger
         );
 
-        if (reward.IsSuccess)
-        {
-            var rewardsDTos = RewardsMapper.ToDto(reward.Value);
+        if (!reward.IsSuccess) return reward.Error!;
 
-            logger.LogInformation("Reward with ID: {RewardsId} found.", request.RewardsId);
+        var rewardsDTos = RewardsMapper.ToDto(reward.Value);
 
-            return ResultT<RewardsDTos>.Success(rewardsDTos);
-        }
+        logger.LogInformation("Reward with ID: {RewardsId} found.", request.RewardsId);
 
-        logger.LogWarning("Reward with ID: {RewardsId} not found.", request.RewardsId);
-
-        return ResultT<RewardsDTos>.Failure(Error.NotFound("400", $"Reward with ID {request.RewardsId} not found"));
+        return ResultT<RewardsDTos>.Success(rewardsDTos);
     }
 }
