@@ -442,6 +442,9 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 us.Property(u => u.Photo)
                     .HasMaxLength(100)
                     .IsRequired();
+
+                us.Property(ad => ad.IsEmailConfirmed)
+                    .HasDefaultValue(false);
             });
 
             #endregion
@@ -514,6 +517,36 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 entity.Property(e => e.Name)
                     .HasMaxLength(30)
                     .IsRequired();
+            });
+
+            #endregion
+
+            #region Admin
+
+            modelBuilder.Entity<Admin>(ad =>
+            {
+                ad.Property(admin => admin.FirstName)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                ad.Property(admin => admin.LastName)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                ad.Property(admin => admin.Email)
+                    .HasMaxLength(60)
+                    .IsRequired();
+
+                ad.Property(admin => admin.Password)
+                    .HasMaxLength(60)
+                    .IsRequired();
+
+                ad.Property(admin => admin.Photo)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                ad.Property(admin => admin.IsEmailConfirmed)
+                    .HasDefaultValue(false);
             });
 
             #endregion
