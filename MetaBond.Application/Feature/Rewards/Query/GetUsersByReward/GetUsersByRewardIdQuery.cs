@@ -8,8 +8,8 @@ namespace MetaBond.Application.Feature.Rewards.Query.GetUsersByReward;
 public sealed class GetUsersByRewardIdQuery : IQuery<PagedResult<RewardsWithUserDTos>>
 {
     public Guid RewardsId { get; init; }
-    
+
     public int PageNumber { get; init; }
-    
+
     public int PageSize { get; init; }
 }

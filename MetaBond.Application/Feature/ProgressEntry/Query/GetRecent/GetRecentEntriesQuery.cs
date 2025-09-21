@@ -7,8 +7,8 @@ namespace MetaBond.Application.Feature.ProgressEntry.Query.GetRecent;
 public sealed class GetRecentEntriesQuery : IQuery<PagedResult<ProgressEntryDTos>>
 {
     public Guid ProgressBoardId { get; set; }
-    
+
     public int PageNumber { get; set; }
-    
+
     public int PageSize { get; set; }
 }

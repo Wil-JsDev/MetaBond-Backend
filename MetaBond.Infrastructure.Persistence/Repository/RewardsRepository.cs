@@ -98,16 +98,16 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             var baseQuery = _metaBondContext.Set<Rewards>()
                 .AsNoTracking()
                 .Where(x => x.Id == rewardId);
-            
+
             var total = await baseQuery.CountAsync(cancellationToken);
-            
+
             var query = await baseQuery
                 .Include(r => r.User)
                 .AsSplitQuery()
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
-            
+
             PagedResult<Rewards> pagedResponse = new(query, pageNumber, pageSize, total);
             return pagedResponse;
         }

@@ -8,8 +8,8 @@ namespace MetaBond.Application.Feature.Rewards.Query.GetRange;
 public sealed class GetByDateRangeRewardQuery : IQuery<PagedResult<RewardsDTos>>
 {
     public DateRangeType Range { get; set; }
-    
+
     public int PageNumber { get; set; }
-    
+
     public int PageSize { get; set; }
 }
