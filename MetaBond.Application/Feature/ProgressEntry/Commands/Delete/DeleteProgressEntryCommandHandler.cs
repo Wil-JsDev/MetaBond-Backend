@@ -23,17 +23,12 @@ internal sealed class DeleteProgressEntryCommandHandler(
             logger
         );
 
-        if (progressEntry.IsSuccess)
-        {
-            await repository.DeleteAsync(progressEntry.Value, cancellationToken);
+        if (!progressEntry.IsSuccess) return progressEntry.Error!;
 
-            logger.LogInformation("Progress entry with ID {Id} successfully deleted.", request.Id);
+        await repository.DeleteAsync(progressEntry.Value, cancellationToken);
 
-            return ResultT<Guid>.Success(request.Id);
-        }
+        logger.LogInformation("Progress entry with ID {Id} successfully deleted.", request.Id);
 
-        logger.LogError("Progress entry with ID {Id} not found.", request.Id);
-
-        return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.Id} not found"));
+        return ResultT<Guid>.Success(request.Id);
     }
 }

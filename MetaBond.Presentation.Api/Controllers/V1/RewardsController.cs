@@ -93,10 +93,17 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get rewards by date range",
         Description = "Retrieves rewards filtered by a specified date range."
     )]
-    public async Task<ResultT<IEnumerable<RewardsDTos>>> GetDateRangeAsync([FromQuery] DateRangeType range,
+    public async Task<ResultT<PagedResult<RewardsDTos>>> GetDateRangeAsync([FromQuery] DateRangeType range,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetByDateRangeRewardQuery { Range = range };
+        var query = new GetByDateRangeRewardQuery
+        {
+            Range = range,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -118,10 +125,15 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get top rewards by count",
         Description = "Retrieves the top rewards ordered by a count parameter."
     )]
-    public async Task<ResultT<IEnumerable<RewardsWithUserDTos>>> GetTopRewards([FromQuery] int count,
+    public async Task<ResultT<PagedResult<RewardsWithUserDTos>>> GetTopRewards([FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetTopRewardsQuery { TopCount = count };
+        var query = new GetTopRewardsQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -150,9 +162,16 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Get reward with author",
         Description = "Retrieves a reward along with its author information."
     )]
-    public async Task<ResultT<IEnumerable<RewardsWithUserDTos>>> GetWithAuthorAsync([FromRoute] Guid rewardsId,
+    public async Task<ResultT<PagedResult<RewardsWithUserDTos>>> GetWithAuthorAsync([FromRoute] Guid rewardsId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new GetUsersByRewardIdQuery { RewardsId = rewardsId }, cancellationToken);
+        return await mediator.Send(new GetUsersByRewardIdQuery
+        {
+            RewardsId = rewardsId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        }, cancellationToken);
     }
 }

@@ -6,6 +6,7 @@ using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -17,9 +18,9 @@ internal sealed class GetProgressBoardsWithAuthorQueryHandler(
     ILogger<GetProgressBoardsWithAuthorQueryHandler> logger,
     IDistributedCache decorated) :
     IQueryHandler<GetProgressBoardsWithAuthorQuery,
-        IEnumerable<ProgressBoardWithUserDTos>>
+        PagedResult<ProgressBoardWithUserDTos>>
 {
-    public async Task<ResultT<IEnumerable<ProgressBoardWithUserDTos>>> Handle
+    public async Task<ResultT<PagedResult<ProgressBoardWithUserDTos>>> Handle
     (GetProgressBoardsWithAuthorQuery request,
         CancellationToken cancellationToken)
     {
@@ -30,41 +31,55 @@ internal sealed class GetProgressBoardsWithAuthorQueryHandler(
             logger
         );
 
-        if (!progressBoard.IsSuccess)
-        {
-            logger.LogError("Failed to retrieve progress board. ID: {ProgressBoardId} not found.",
-                request.ProgressBoardId);
+        if (!progressBoard.IsSuccess) return progressBoard.Error!;
 
-            return ResultT<IEnumerable<ProgressBoardWithUserDTos>>.Failure(progressBoard.Error!);
-        }
+        var paginationValidation = PaginationHelper.ValidatePagination<ProgressBoardWithUserDTos>(
+            request.PageNumber, request.PageSize, logger);
 
-        var progressBoards = await decorated.GetOrCreateAsync($"GetProgressBoardsWithAuthor_{request.ProgressBoardId}",
+        if (!paginationValidation.IsSuccess) return paginationValidation.Error!;
+
+        var progressBoards = await decorated.GetOrCreateAsync(
+            $"GetProgressBoardsWithAuthor_{request.ProgressBoardId}-page-{request.PageNumber}-s-{request.PageSize}",
             async () =>
             {
                 var progressBoardList = await progressBoardRepository.GetProgressBoardsWithAuthorAsync(
                     progressBoard.Value.Id,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                var boardsWithAuthor = progressBoardList.Select(ProgressBoardMapper.ToDTo);
+                var items = progressBoardList.Items ?? [];
 
-                return boardsWithAuthor;
+                var boardsWithAuthor = items.Select(ProgressBoardMapper.ToDTo);
+
+                PagedResult<ProgressBoardWithUserDTos> pagedResult = new()
+                {
+                    TotalItems = progressBoardList.TotalItems,
+                    CurrentPage = progressBoardList.CurrentPage,
+                    TotalPages = progressBoardList.TotalPages,
+                    Items = boardsWithAuthor
+                };
+
+                return pagedResult;
             },
             cancellationToken: cancellationToken);
 
-        IEnumerable<ProgressBoardWithUserDTos> boardWithUserDTosEnumerable = progressBoards.ToList();
+
+        var itemsDto = progressBoards.Items ?? [];
+        var boardWithUserDTosEnumerable = itemsDto.ToList();
+
         if (!boardWithUserDTosEnumerable.Any())
         {
             logger.LogWarning($"No ProgressBoards found with id: {request.ProgressBoardId}");
 
-            return ResultT<IEnumerable<ProgressBoardWithUserDTos>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<ProgressBoardWithUserDTos>>.Failure(Error.NotFound("404",
                 "No ProgressBoards found"));
         }
 
-        var progressBoardWithUserDTosEnumerable = boardWithUserDTosEnumerable.ToList();
-
         logger.LogInformation(
-            $"Successfully retrieved {progressBoardWithUserDTosEnumerable.Count()} progress boards with authors for ProgressBoardId: {request.ProgressBoardId}");
+            "Successfully retrieved {Count} progress boards with authors for ProgressBoardId: {RequestProgressBoardId}",
+            boardWithUserDTosEnumerable.Count(), request.ProgressBoardId);
 
-        return ResultT<IEnumerable<ProgressBoardWithUserDTos>>.Success(progressBoardWithUserDTosEnumerable);
+        return ResultT<PagedResult<ProgressBoardWithUserDTos>>.Success(progressBoards);
     }
 }

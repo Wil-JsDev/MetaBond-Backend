@@ -4,6 +4,7 @@ using MetaBond.Application.DTOs.ParticipationInEventDtos;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
@@ -15,9 +16,9 @@ internal sealed class GetEventsQueryHandler(
     IParticipationInEventRepository participationInEventRepository,
     IDistributedCache decoratedCache,
     ILogger<GetEventsQueryHandler> logger)
-    : IQueryHandler<GetEventsQuery, IEnumerable<EventsWithParticipationInEventDTos>>
+    : IQueryHandler<GetEventsQuery, PagedResult<EventsWithParticipationInEventDTos>>
 {
-    public async Task<ResultT<IEnumerable<EventsWithParticipationInEventDTos>>> Handle(
+    public async Task<ResultT<PagedResult<EventsWithParticipationInEventDTos>>> Handle(
         GetEventsQuery request,
         CancellationToken cancellationToken)
     {
@@ -28,49 +29,55 @@ internal sealed class GetEventsQueryHandler(
             logger
         );
 
-        if (participationInEventId.IsSuccess)
+        if (!participationInEventId.IsSuccess) return participationInEventId.Error!;
+
+        var paginationValidation = PaginationHelper.ValidatePagination<EventsWithParticipationInEventDTos>(
+            request.PageNumber,
+            request.PageSize, logger);
+
+        if (!paginationValidation.IsSuccess)
+            return paginationValidation.Error!;
+
+        string cacheKey =
+            $"GetEventsQueryHandler-{request.ParticipationInEventId}-size-{request.PageSize}--page-{request.PageNumber}";
+
+        var result = await decoratedCache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var participationInEvents = await participationInEventRepository.GetEventsAsync(
+                    participationInEventId.Value.Id,
+                    request.PageNumber,
+                    request.PageSize,
+                    cancellationToken);
+
+                if (participationInEvents.Items == null) return null;
+                var pagedDto = participationInEvents.Items.ToParticipationInEventDtos();
+
+                PagedResult<EventsWithParticipationInEventDTos> result = new(
+                    totalItems: participationInEvents.TotalItems,
+                    currentPage: participationInEvents.CurrentPage,
+                    pageSize: participationInEvents.TotalPages,
+                    items: pagedDto
+                );
+                return result;
+            },
+            cancellationToken: cancellationToken);
+
+
+        if (!result.Items.Any())
         {
-            logger.LogInformation("Participation in event found with ID: {ParticipationInEventId}",
+            logger.LogError("No events found for participation in event with ID: {ParticipationInEventId}",
                 participationInEventId.Value.Id);
 
-            string cacheKey = $"GetEventsQueryHandler-{request.ParticipationInEventId}";
-
-            var result = await decoratedCache.GetOrCreateAsync(
-                cacheKey,
-                async () =>
-                {
-                    var participationInEvents = await participationInEventRepository.GetEventsAsync(
-                        participationInEventId.Value.Id,
-                        cancellationToken);
-
-                    var inEvents = participationInEvents.ToList();
-
-                    return inEvents.ToParticipationInEventDtos();
-                },
-                cancellationToken: cancellationToken);
-
-            var eventsWithParticipationInEventDTosEnumerable = result.ToList();
-
-            if (!eventsWithParticipationInEventDTosEnumerable.Any())
-            {
-                logger.LogError("No events found for participation in event with ID: {ParticipationInEventId}",
-                    participationInEventId.Value.Id);
-
-                return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Failure(Error.Failure("400",
-                    "The list is empty"));
-            }
-
-            logger.LogInformation(
-                "Successfully retrieved {Count} events for participation in event with ID: {ParticipationInEventId}",
-                eventsWithParticipationInEventDTosEnumerable.Count, participationInEventId.Value.Id);
-
-            return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Success(
-                eventsWithParticipationInEventDTosEnumerable);
+            return ResultT<PagedResult<EventsWithParticipationInEventDTos>>.Failure(Error.Failure("400",
+                "The list is empty"));
         }
 
-        logger.LogError("No participation in event found with ID: {EventId}", request.ParticipationInEventId);
+        logger.LogInformation(
+            "Successfully retrieved {Count} events for participation in event with ID: {ParticipationInEventId}",
+            result.Items.Count(), participationInEventId.Value.Id);
 
-        return ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Failure(Error.NotFound("404",
-            $"{request.ParticipationInEventId} not found"));
+        return ResultT<PagedResult<EventsWithParticipationInEventDTos>>.Success(result);
     }
 }

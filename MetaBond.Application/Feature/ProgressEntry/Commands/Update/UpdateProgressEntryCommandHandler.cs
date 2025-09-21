@@ -24,24 +24,20 @@ internal sealed class UpdateProgressEntryCommandHandler(
             "ProgressEntry",
             logger
         );
-        if (progressEntry.IsSuccess)
-        {
-            progressEntry.Value.Description = request.Description;
-            progressEntry.Value.UpdateAt = DateTime.UtcNow;
+        if (!progressEntry.IsSuccess) return progressEntry.Error!;
 
-            await progressEntryRepository.UpdateAsync(progressEntry.Value, cancellationToken);
+        progressEntry.Value.Description = request.Description;
 
-            logger.LogInformation("Progress entry with ID {Id} successfully updated.", request.ProgressEntryId);
+        progressEntry.Value.UpdateAt = DateTime.UtcNow;
 
-            var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry.Value);
+        await progressEntryRepository.UpdateAsync(progressEntry.Value, cancellationToken);
 
-            logger.LogInformation("Returning updated progress entry data.");
+        logger.LogInformation("Progress entry with ID {Id} successfully updated.", request.ProgressEntryId);
 
-            return ResultT<ProgressEntryDTos>.Success(progressEntryDto);
-        }
+        var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry.Value);
 
-        logger.LogError("Progress entry with ID {Id} not found.", request.ProgressEntryId);
+        logger.LogInformation("Returning updated progress entry data.");
 
-        return ResultT<ProgressEntryDTos>.Failure(Error.NotFound("404", $"{request.ProgressEntryId} not found"));
+        return ResultT<ProgressEntryDTos>.Success(progressEntryDto);
     }
 }

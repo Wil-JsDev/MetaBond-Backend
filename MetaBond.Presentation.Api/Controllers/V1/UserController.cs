@@ -139,12 +139,15 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpGet("search")]
     [EnableRateLimiting("fixed")]
-    public async Task<ResultT<IEnumerable<UserDTos>>> GetUsernameAsync([FromQuery] string username,
+    public async Task<ResultT<PagedResult<UserDTos>>> GetUsernameAsync([FromQuery] string username,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         SearchByUsernameUserQuery query = new()
         {
-            Username = username
+            Username = username,
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
         return await mediator.Send(query, cancellationToken);

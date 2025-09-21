@@ -36,16 +36,27 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return reward;
         }
 
-        public async Task<IEnumerable<Rewards>> GetRewardsByDateRangeAsync(
+        public async Task<PagedResult<Rewards>> GetRewardsByDateRangeAsync(
             DateTime startTime,
             DateTime endTime,
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Rewards>()
+            var baseQuery = _metaBondContext.Set<Rewards>()
                 .AsNoTracking()
-                .Where(x => x.DateAwarded >= startTime && x.DateAwarded <= endTime)
+                .Where(x => x.DateAwarded >= startTime && x.DateAwarded <= endTime);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.DateAwarded)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
-            return query;
+
+            var pagedResponse = new PagedResult<Rewards>(query, pageNumber, pageSize, total);
+            return pagedResponse;
         }
 
         public async Task<int> CountRewardsAsync(CancellationToken cancellationToken)
@@ -57,30 +68,48 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return query;
         }
 
-        public async Task<IEnumerable<Rewards>> GetTopRewardsByPointsAsync(
-            int topCount,
+        public async Task<PagedResult<Rewards>> GetTopRewardsByPointsAsync(
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Rewards>()
+            var baseQuery = _metaBondContext.Set<Rewards>()
                 .AsNoTracking()
-                .OrderByDescending(x => x.PointAwarded)
+                .OrderByDescending(x => x.PointAwarded);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Include(r => r.User)
                 .AsSplitQuery()
-                .Take(topCount)
                 .ToListAsync(cancellationToken);
 
-            return query;
+            PagedResult<Rewards> pagedResponse = new(query, pageNumber, pageSize, total);
+            return pagedResponse;
         }
 
-        public async Task<IEnumerable<Rewards>> GetUsersByRewardIdAsync(Guid rewardId,
+        public async Task<PagedResult<Rewards>> GetUsersByRewardIdAsync(Guid rewardId,
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken)
         {
-            return await _metaBondContext.Set<Rewards>()
+            var baseQuery = _metaBondContext.Set<Rewards>()
                 .AsNoTracking()
-                .Where(x => x.Id == rewardId)
-                .Include(x => x.User)
+                .Where(x => x.Id == rewardId);
+            
+            var total = await baseQuery.CountAsync(cancellationToken);
+            
+            var query = await baseQuery
+                .Include(r => r.User)
                 .AsSplitQuery()
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
+            
+            PagedResult<Rewards> pagedResponse = new(query, pageNumber, pageSize, total);
+            return pagedResponse;
         }
     }
 }

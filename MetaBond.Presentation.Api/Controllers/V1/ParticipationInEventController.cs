@@ -66,11 +66,18 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
         Summary = "Get events for a participation",
         Description = "Retrieves the details of events associated with a specific participation."
     )]
-    public async Task<ResultT<IEnumerable<EventsWithParticipationInEventDTos>>> GetParticipationInEventDetailsAsync(
+    public async Task<ResultT<PagedResult<EventsWithParticipationInEventDTos>>> GetParticipationInEventDetailsAsync(
         [FromRoute] Guid participationInEventId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetEventsQuery { ParticipationInEventId = participationInEventId };
+        var query = new GetEventsQuery
+        {
+            ParticipationInEventId = participationInEventId,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+        };
 
         return await mediator.Send(query, cancellationToken);
     }

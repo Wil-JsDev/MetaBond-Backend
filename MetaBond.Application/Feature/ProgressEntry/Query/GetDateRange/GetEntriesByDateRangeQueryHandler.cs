@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.Extensions.Caching.Distributed;
@@ -14,9 +15,9 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
     IProgressEntryRepository progressEntryRepository,
     IDistributedCache decoratedCache,
     ILogger<GetEntriesByDateRangeQueryHandler> logger)
-    : IQueryHandler<GetEntriesByDateRangeQuery, IEnumerable<ProgressEntryDTos>>
+    : IQueryHandler<GetEntriesByDateRangeQuery, PagedResult<ProgressEntryDTos>>
 {
-    public async Task<ResultT<IEnumerable<ProgressEntryDTos>>> Handle(
+    public async Task<ResultT<PagedResult<ProgressEntryDTos>>> Handle(
         GetEntriesByDateRangeQuery request,
         CancellationToken cancellationToken)
     {
@@ -30,8 +31,12 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
         if (!progressEntryResult.IsSuccess)
             return progressEntryResult.Error!;
 
-        var progressEntry = GetValue(request.ProgressBoardId);
-        if (progressEntry.TryGetValue((request.Range), out var dateRange))
+        var progressEntryQueries = GetValue(progressEntryRepository,
+            request.ProgressBoardId,
+            request.PageNumber,
+            request.PageSize);
+
+        if (progressEntryQueries.TryGetValue((request.Range), out var dateRange))
         {
             var result = await decoratedCache.GetOrCreateAsync(
                 $"progress-entry-get-by-date-range-{request.Range}",
@@ -39,45 +44,77 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
                 {
                     var progressEntryList = await dateRange(cancellationToken);
 
-                    var progressEntryDTos = progressEntryList.Select(ProgressEntryMapper.ToDto);
-                    return progressEntryDTos;
+                    var items = progressEntryList.Items ?? [];
+
+                    var progressEntryDTos = items.Select(ProgressEntryMapper.ToDto);
+
+                    PagedResult<ProgressEntryDTos> pagedResult = new()
+                    {
+                        CurrentPage = progressEntryList.CurrentPage,
+                        TotalItems = progressEntryList.TotalItems,
+                        TotalPages = progressEntryList.TotalPages,
+                        Items = progressEntryDTos
+                    };
+
+                    return pagedResult;
                 },
                 cancellationToken: cancellationToken);
 
-            IEnumerable<ProgressEntryDTos> progressEntryDTosEnumerable = result.ToList();
-            if (!progressEntryDTosEnumerable.Any())
+            var itemsDto = result.Items ?? [];
+
+            if (!itemsDto.Any())
             {
                 logger.LogError("No progress entries found for the specified date range.");
 
-                return ResultT<IEnumerable<ProgressEntryDTos>>.Failure(Error.Failure("400",
+                return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400",
                     "No progress entries available for the selected date range."));
             }
 
             logger.LogInformation("Successfully retrieved {Count} progress entries for the date range {Range}.",
-                progressEntryDTosEnumerable.Count(), request.Range);
+                itemsDto.Count(), request.Range);
 
-            return ResultT<IEnumerable<ProgressEntryDTos>>.Success(progressEntryDTosEnumerable);
+            return ResultT<PagedResult<ProgressEntryDTos>>.Success(result);
         }
 
         logger.LogError("Invalid date range type provided: {Range}", request.Range);
 
-        return ResultT<IEnumerable<ProgressEntryDTos>>.Failure(Error.Failure("400", "Invalid date range type."));
+        return ResultT<PagedResult<ProgressEntryDTos>>.Failure(Error.Failure("400", "Invalid date range type."));
     }
 
     #region Private Methods
 
-    private Dictionary<DateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressEntry>>>> GetValue(
-        Guid progressBoardId)
+    private static Dictionary<DateRangeType, Func<CancellationToken, Task<PagedResult<Domain.Models.ProgressEntry>>>>
+        GetValue(
+            IProgressEntryRepository progressEntryRepository,
+            Guid progressBoardId,
+            int pageNumber,
+            int pageSize)
     {
-        return new Dictionary<DateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressEntry>>>>
+        DateTime utcNow = DateTime.UtcNow.Date;
+
+        DateTime StartOfDay() => utcNow;
+        DateTime EndOfDay() => utcNow.AddDays(1).AddTicks(-1);
+
+        DateTime StartOfWeek() => utcNow.AddDays(-7);
+        DateTime EndOfWeek() => utcNow.AddDays(-1).AddTicks(-1);
+
+        DateTime StartOfMonth() => new DateTime(utcNow.Year, utcNow.Month, 1);
+        DateTime EndOfMonth() => StartOfMonth().AddMonths(1).AddTicks(-1);
+
+        DateTime StartOfYear() => new DateTime(utcNow.Year, 1, 1);
+        DateTime EndOfYear() => new DateTime(utcNow.Year + 1, 1, 1).AddTicks(-1);
+
+        return new Dictionary<DateRangeType, Func<CancellationToken, Task<PagedResult<Domain.Models.ProgressEntry>>>>
         {
             {
                 DateRangeType.Today,
                 async cancellationToken =>
                     await progressEntryRepository.GetEntriesByDateRangeAsync(
                         progressBoardId,
-                        DateTime.UtcNow.Date,
-                        DateTime.UtcNow.AddDays(1).AddTicks(-1),
+                        StartOfDay(),
+                        EndOfDay(),
+                        pageNumber,
+                        pageSize,
                         cancellationToken
                     )
             },
@@ -86,8 +123,10 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
                 async cancellationToken =>
                     await progressEntryRepository.GetEntriesByDateRangeAsync(
                         progressBoardId,
-                        DateTime.UtcNow.Date.AddDays(-7),
-                        DateTime.UtcNow.Date.AddTicks(-7),
+                        StartOfWeek(),
+                        EndOfWeek(),
+                        pageNumber,
+                        pageSize,
                         cancellationToken
                     )
             },
@@ -96,9 +135,10 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
                 async cancellationToken =>
                     await progressEntryRepository.GetEntriesByDateRangeAsync(
                         progressBoardId,
-                        new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1), // First day of the current month
-                        new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(1)
-                            .AddTicks(-1), // Last day of the current month (23:59:59.9999999)
+                        StartOfMonth(),
+                        EndOfMonth(),
+                        pageNumber,
+                        pageSize,
                         cancellationToken
                     )
             },
@@ -107,12 +147,13 @@ internal sealed class GetEntriesByDateRangeQueryHandler(
                 async cancellationToken =>
                     await progressEntryRepository.GetEntriesByDateRangeAsync(
                         progressBoardId,
-                        new DateTime(DateTime.UtcNow.Year, 1, 1), // First day of the current year
-                        new DateTime(DateTime.UtcNow.Year + 1, 1, 1)
-                            .AddTicks(-1), // Last day of the current year (23:59:59.9999999)
+                        StartOfYear(),
+                        EndOfYear(),
+                        pageNumber,
+                        pageSize,
                         cancellationToken
                     )
-            },
+            }
         };
     }
 

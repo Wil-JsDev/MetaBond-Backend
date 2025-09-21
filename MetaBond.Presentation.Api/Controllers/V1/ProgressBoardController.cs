@@ -94,7 +94,7 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get progress entries of a board",
         Description = "Retrieves paginated progress entries for a specific progress board by ID."
     )]
-    public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> GetProgressEntriesAsync(
+    public async Task<ResultT<PagedResult<ProgressBoardWithProgressEntryDTos>>> GetProgressEntriesAsync(
         [FromRoute] Guid id, [FromQuery] int pageNumber,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
@@ -114,7 +114,7 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Filter progress boards by date",
         Description = "Retrieves progress boards within a specific date range using pagination."
     )]
-    public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> GetFilterDateRangeAsync(
+    public async Task<ResultT<PagedResult<ProgressBoardWithProgressEntryDTos>>> GetFilterDateRangeAsync(
         [FromQuery] DateRangeType dateRange, [FromQuery] int page,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
@@ -134,11 +134,18 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get recent progress entries",
         Description = "Retrieves the most recent progress entries filtered by a date range."
     )]
-    public async Task<ResultT<IEnumerable<ProgressBoardDTos>>> GetFilterRecentAsync(
+    public async Task<ResultT<PagedResult<ProgressBoardDTos>>> GetFilterRecentAsync(
         [FromQuery] DateRangeFilter dateRange,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetRecentProgressBoardQuery { DateFilter = dateRange };
+        var query = new GetRecentProgressBoardQuery
+        {
+            DateFilter = dateRange,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -168,11 +175,18 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Get progress board with author",
         Description = "Retrieves a progress board along with its author information."
     )]
-    public async Task<ResultT<IEnumerable<ProgressBoardWithUserDTos>>> GetProgressBoardWithAuthorAsync(
+    public async Task<ResultT<PagedResult<ProgressBoardWithUserDTos>>> GetProgressBoardWithAuthorAsync(
         [FromRoute] Guid progressBoardId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new GetProgressBoardsWithAuthorQuery { ProgressBoardId = progressBoardId },
+        return await mediator.Send(new GetProgressBoardsWithAuthorQuery
+            {
+                ProgressBoardId = progressBoardId,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            },
             cancellationToken);
     }
 }

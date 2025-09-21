@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.ProgressEntry;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -13,9 +14,9 @@ internal sealed class GetProgressEntryWithBoardByIdQueryHandler(
     IProgressEntryRepository repository,
     IDistributedCache decoratedCache,
     ILogger<GetProgressEntryWithBoardByIdQueryHandler> logger)
-    : IQueryHandler<GetProgressEntryWithBoardByIdQuery, IEnumerable<ProgressEntryWithProgressBoardDTos>>
+    : IQueryHandler<GetProgressEntryWithBoardByIdQuery, PagedResult<ProgressEntryWithProgressBoardDTos>>
 {
-    public async Task<ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>> Handle(
+    public async Task<ResultT<PagedResult<ProgressEntryWithProgressBoardDTos>>> Handle(
         GetProgressEntryWithBoardByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -26,13 +27,14 @@ internal sealed class GetProgressEntryWithBoardByIdQueryHandler(
             logger
         );
 
-        if (!progressEntry.IsSuccess)
-        {
-            logger.LogError("Progress entry with ID {ProgressEntryId} not found.", request.ProgressEntryId);
+        if (!progressEntry.IsSuccess) return progressEntry.Error!;
 
-            return ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>.Failure(Error.NotFound("404",
-                "Progress entry not found."));
-        }
+        var validationPagination =
+            PaginationHelper.ValidatePagination<ProgressEntryWithProgressBoardDTos>(request.PageNumber,
+                request.PageSize,
+                logger);
+
+        if (!validationPagination.IsSuccess) return validationPagination.Error!;
 
         var progressEntryWithProgressBoard = await decoratedCache.GetOrCreateAsync(
             $"progress-entry-with-progress-board-{request.ProgressEntryId}",
@@ -40,19 +42,33 @@ internal sealed class GetProgressEntryWithBoardByIdQueryHandler(
             {
                 var idProgressEntryWithProgressBoard = await repository.GetByIdProgressEntryWithProgressBoard(
                     request.ProgressEntryId,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                return idProgressEntryWithProgressBoard.ToProgressEntryWithBoardDtos();
+                var items = idProgressEntryWithProgressBoard.Items ?? [];
+
+                PagedResult<ProgressEntryWithProgressBoardDTos> pagedResult = new()
+                {
+                    CurrentPage = idProgressEntryWithProgressBoard.CurrentPage,
+                    TotalItems = idProgressEntryWithProgressBoard.TotalItems,
+                    TotalPages = idProgressEntryWithProgressBoard.TotalPages,
+                    Items = items.ToProgressEntryWithBoardDtos()
+                };
+
+                return pagedResult;
             },
             cancellationToken: cancellationToken);
 
-        var progressEntryWithProgressBoardDTosEnumerable = progressEntryWithProgressBoard.ToList();
+        var itemsDto = progressEntryWithProgressBoard.Items ?? [];
+
+        var progressEntryWithProgressBoardDTosEnumerable = itemsDto.ToList();
         if (!progressEntryWithProgressBoardDTosEnumerable.Any())
         {
             logger.LogError("No progress board entries found for ProgressEntry ID {ProgressEntryId}",
                 request.ProgressEntryId);
 
-            return ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>.Failure(Error.Failure("400",
+            return ResultT<PagedResult<ProgressEntryWithProgressBoardDTos>>.Failure(Error.Failure("400",
                 "No related progress board entries found."));
         }
 
@@ -60,7 +76,7 @@ internal sealed class GetProgressEntryWithBoardByIdQueryHandler(
             "Successfully retrieved {Count} progress board entries for ProgressEntry ID {ProgressEntryId}",
             progressEntryWithProgressBoardDTosEnumerable.Count(), request.ProgressEntryId);
 
-        return ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>.Success(
-            progressEntryWithProgressBoardDTosEnumerable);
+        return ResultT<PagedResult<ProgressEntryWithProgressBoardDTos>>.Success(
+            progressEntryWithProgressBoard);
     }
 }

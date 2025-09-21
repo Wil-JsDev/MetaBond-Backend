@@ -25,14 +25,7 @@ internal sealed class GetByIdProgressBoardQueryHandler(
             logger
         );
 
-        if (!progressBoard.IsSuccess)
-        {
-            logger.LogError("Failed to retrieve progress board. ID: {ProgressBoardId} not found.",
-                request.ProgressBoardId);
-
-            return ResultT<ProgressBoardDTos>.Failure(Error.NotFound("404",
-                $"Progress board with ID {request.ProgressBoardId} not found"));
-        }
+        if (!progressBoard.IsSuccess) return progressBoard.Error!;
 
         var progressBoardDTos = ProgressBoardMapper.ProgressBoardToDto(progressBoard.Value);
 

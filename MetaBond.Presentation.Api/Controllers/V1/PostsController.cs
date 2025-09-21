@@ -68,14 +68,16 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get recent posts in a community",
         Description = "Retrieves the most recent posts in a specific community. Specify topCount to limit results."
     )]
-    public async Task<ResultT<IEnumerable<PostsDTos>>> GetRecentPostsAsync([FromRoute] Guid communitiesId,
-        [FromQuery] int topCount,
+    public async Task<ResultT<PagedResult<PostsDTos>>> GetRecentPostsAsync([FromRoute] Guid communitiesId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetFilterRecentPostsQuery
         {
             CommunitiesId = communitiesId,
-            TopCount = topCount
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -101,10 +103,17 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get post details with communities",
         Description = "Retrieves detailed information of a post along with the communities it belongs to."
     )]
-    public async Task<ResultT<IEnumerable<PostsWithCommunitiesDTos>>> GetDetailsPosts([FromRoute] Guid postsId,
+    public async Task<ResultT<PagedResult<PostsWithCommunitiesDTos>>> GetDetailsPosts([FromRoute] Guid postsId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetPostsByIdCommunitiesQuery { PostsId = postsId };
+        var query = new GetPostsByIdCommunitiesQuery
+        {
+            PostsId = postsId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -115,14 +124,18 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Filter posts by title",
         Description = "Retrieves posts in a community filtered by title keyword."
     )]
-    public async Task<ResultT<IEnumerable<PostsDTos>>> FilterByTitleAsync([FromRoute] Guid communitiesId,
+    public async Task<ResultT<PagedResult<PostsDTos>>> FilterByTitleAsync([FromRoute] Guid communitiesId,
         [FromQuery] string title,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetFilterTitlePostsQuery
         {
             CommunitiesId = communitiesId,
-            Title = title
+            Title = title,
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -152,9 +165,16 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Get post with author info",
         Description = "Retrieves a post along with its author details."
     )]
-    public async Task<ResultT<IEnumerable<PostsWithUserDTos>>> GetPostsWithAuthorAsync([FromRoute] Guid postsId,
+    public async Task<ResultT<PagedResult<PostsWithUserDTos>>> GetPostsWithAuthorAsync([FromRoute] Guid postsId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new GetPostWithAuthorQuery { PostsId = postsId }, cancellationToken);
+        return await mediator.Send(new GetPostWithAuthorQuery
+        {
+            PostsId = postsId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        }, cancellationToken);
     }
 }

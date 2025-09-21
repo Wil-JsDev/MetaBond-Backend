@@ -27,28 +27,47 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return result;
         }
 
-        public async Task<IEnumerable<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId, int topCount,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Posts>()
+            var baseQuery = _metaBondContext.Set<Posts>()
                 .AsNoTracking()
-                .Where(x => x.CommunitiesId == communitiesId)
+                .Where(x => x.CommunitiesId == communitiesId);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
                 .OrderByDescending(x => x.CreatedAt)
-                .Take(topCount)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
-            return query;
+            PagedResult<Posts> result = new(query, pageNumber, pageSize, total);
+
+            return result;
         }
 
-        public async Task<IEnumerable<Posts>> GetPostWithAuthorAsync(Guid postsId, CancellationToken cancellationToken)
+        public async Task<PagedResult<Posts>> GetPostWithAuthorAsync(Guid postsId, int pageNumber, int pageSize,
+            CancellationToken cancellationToken)
         {
-            return await _metaBondContext.Set<Posts>()
+            var baseQuery = _metaBondContext.Set<Posts>()
                 .AsNoTracking()
-                .Where(x => x.Id == postsId)
+                .Where(x => x.Id == postsId);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Include(posts => posts.CreatedBy)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
-            ;
+
+            PagedResult<Posts> result = new(query, pageNumber, pageSize, total);
+
+            return result;
         }
 
         public async Task<IEnumerable<Posts>> FilterTop10RecentPostsAsync(Guid communitiesId,
@@ -64,28 +83,46 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return posts;
         }
 
-        public async Task<IEnumerable<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<Posts>> GetFilterByTitleAsync(Guid communitiesId, string title,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var posts = await _metaBondContext.Set<Posts>()
+            var baseQuery = _metaBondContext.Set<Posts>()
                 .AsNoTracking()
-                .Where(x => x.CommunitiesId == communitiesId && x.Title == title)
+                .Where(x => x.CommunitiesId == communitiesId && x.Title == title);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
-            return posts;
+
+            PagedResult<Posts> result = new(query, pageNumber, pageSize, total);
+
+            return result;
         }
 
-
-        public async Task<IEnumerable<Posts>> GetPostsByIdWithCommunitiesAsync(Guid id,
-            CancellationToken cancellationToken)
+        public async Task<PagedResult<Posts>> GetPostsByIdWithCommunitiesAsync(Guid id,
+            int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = await _metaBondContext.Set<Posts>()
+            var baseQuery = _metaBondContext.Set<Posts>()
                 .AsNoTracking()
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Include(x => x.Communities)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
-            return query;
+            PagedResult<Posts> result = new(query, pageNumber, pageSize, total);
+
+            return result;
         }
     }
 }

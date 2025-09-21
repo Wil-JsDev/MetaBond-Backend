@@ -24,24 +24,17 @@ internal sealed class UpdateParticipationInEventCommandHandler(
             logger
         );
 
-        if (participationInEvent.IsSuccess)
-        {
-            participationInEvent.Value.EventId = request.EventId;
+        if (!participationInEvent.IsSuccess) return participationInEvent.Error!;
+        participationInEvent.Value.EventId = request.EventId;
 
-            await participationInEventRepository.UpdateAsync(participationInEvent.Value, cancellationToken);
+        await participationInEventRepository.UpdateAsync(participationInEvent.Value, cancellationToken);
 
-            logger.LogInformation(
-                "Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
-                participationInEvent.Value.Id, participationInEvent.Value.EventId);
+        logger.LogInformation(
+            "Successfully updated participation for ParticipationId: {ParticipationId} with new EventId: {EventId}",
+            participationInEvent.Value.Id, participationInEvent.Value.EventId);
 
-            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent.Value);
+        var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent.Value);
 
-            return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
-        }
-
-        logger.LogError("Participation with Id: {ParticipationId} not found for update.", request.Id);
-
-        return ResultT<ParticipationInEventDTos>.Failure(Error.NotFound("404",
-            $"{request.Id} Participation not found"));
+        return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
     }
 }

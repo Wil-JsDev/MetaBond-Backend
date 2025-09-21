@@ -23,20 +23,25 @@ public interface IUserRepository : IGenericRepository<User>
 
     /// <summary>
     /// Retrieves a paginated list of users.
+    /// Throws <see cref="ArgumentException"/> if pageNumber or pageSize are less than or equal to zero.
     /// </summary>
-    /// <param name="pageNumber">The page number to retrieve.</param>
-    /// <param name="pageSize">The number of users per page.</param>
+    /// <param name="pageNumber">The page number to retrieve (must be > 0).</param>
+    /// <param name="pageSize">The number of users per page (must be > 0).</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="PagedResult{User}"/> containing the users for the specified page.</returns>
     Task<PagedResult<User>> GetPagedUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
 
     /// <summary>
     /// Searches users whose usernames match the specified keyword.
+    /// Throws <see cref="ArgumentException"/> if keyword is null or empty, or if pageNumber/pageSize are <= 0.
     /// </summary>
-    /// <param name="keyword">The keyword to search for in usernames.</param>
+    /// <param name="keyword">The keyword to search for in usernames (must not be null or empty).</param>
+    /// <param name="pageNumber">The page number to retrieve (must be > 0).</param>
+    /// <param name="pageSize">The number of users per page (must be > 0).</param>
     /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
     /// <returns>A collection of <see cref="User"/> entities that match the keyword.</returns>
-    Task<IEnumerable<User>> SearchUsernameAsync(string keyword, CancellationToken cancellationToken);
+    Task<PagedResult<User>> SearchUsernameAsync(string keyword, int pageNumber, int pageSize,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks whether a user with the specified email exists.
@@ -80,7 +85,7 @@ public interface IUserRepository : IGenericRepository<User>
     /// A task that represents the asynchronous operation. The result contains the user with their interests loaded,
     /// or <c>null</c> if the user is not found.
     /// </returns>
-    Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken);
+    Task<User?> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks if an email is already in use by another user, excluding a specified user ID.

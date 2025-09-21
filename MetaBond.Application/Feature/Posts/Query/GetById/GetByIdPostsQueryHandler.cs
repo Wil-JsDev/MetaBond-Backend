@@ -20,17 +20,12 @@ internal sealed class GetByIdPostsQueryHandler(
             request.PostsId,
             "Posts",
             logger);
-        if (posts.IsSuccess)
-        {
-            PostsDTos postsDTos = PostsMapper.PostsToDto(posts.Value);
+        if (!posts.IsSuccess) return posts.Error!;
 
-            logger.LogInformation("Post retrieved successfully with ID: {PostId}", posts.Value.Id);
+        var postsDTos = PostsMapper.PostsToDto(posts.Value);
 
-            return ResultT<PostsDTos>.Success(postsDTos);
-        }
+        logger.LogInformation("Post retrieved successfully with ID: {PostId}", posts.Value.Id);
 
-        logger.LogError("Post with ID: {PostId} not found.", request.PostsId);
-
-        return ResultT<PostsDTos>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
+        return ResultT<PostsDTos>.Success(postsDTos);
     }
 }

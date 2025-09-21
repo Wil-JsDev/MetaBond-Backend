@@ -23,8 +23,11 @@ public interface IParticipationInEventRepository : IGenericRepository<Participat
     /// Retrieves the event(s) associated with a specific participation record.
     /// </summary>
     /// <param name="participationInEventId">The ID of the participation record.</param>
+    /// <param name="pageNumber"></param>
+    /// <param name="pageSize"></param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A collection of events linked to the specified participation record.</returns>
-    Task<IEnumerable<ParticipationInEvent>> GetEventsAsync(Guid participationInEventId,
+    Task<PagedResult<ParticipationInEvent>> GetEventsAsync(Guid participationInEventId,
+        int pageNumber, int pageSize,
         CancellationToken cancellationToken);
 }
