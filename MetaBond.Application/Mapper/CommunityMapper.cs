@@ -14,7 +14,9 @@ public static class CommunityMapper
             CommunitiesId: communities.Id,
             Name: communities.Name,
             CreatedAt: communities.CreateAt,
-            CategoryId: communities.CommunityCategoryId ?? Guid.Empty
+            CategoryId: communities.CommunityCategoryId ?? Guid.Empty,
+            Description: communities.Description,
+            Image: communities.Photo
         );
     }
 
@@ -24,7 +26,8 @@ public static class CommunityMapper
         (
             communities.Id,
             communities.Name,
-            communities.CreateAt
+            communities.Description,
+            communities.Photo
         );
     }
 

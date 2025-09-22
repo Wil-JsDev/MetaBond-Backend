@@ -28,13 +28,7 @@ public static class CommunityMembershipMapper
 
     public static CommunitiesDTos CommunityMembershipToCommunitiesDTos(CommunityMembership communityMembership)
     {
-        return new CommunitiesDTos
-        (
-            CommunitiesId: communityMembership.Community!.Id,
-            Name: communityMembership.Community!.Name,
-            CreatedAt: communityMembership.Community!.CreateAt,
-            CategoryId: communityMembership.Community!.CommunityCategoryId ?? Guid.Empty
-        );
+        return CommunityMapper.MapCommunitiesDTos(communityMembership.Community!);
     }
 
     public static LeaveCommunityDto LeaveCommunityToDto(CommunityMembership communityMembership)
