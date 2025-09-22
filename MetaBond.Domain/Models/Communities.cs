@@ -10,6 +10,10 @@ public sealed class Communities : BaseModel
     public Guid? CommunityCategoryId { get; set; }
 
     public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+    
+    public DateTime? UpdateAt { get; set; }
+    
+    public string? Photo { get; set; }
 
     public ProgressBoard? ProgressBoard { get; set; }
 
