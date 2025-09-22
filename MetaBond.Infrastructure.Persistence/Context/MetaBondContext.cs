@@ -49,6 +49,12 @@ namespace MetaBond.Infrastructure.Persistence.Context
         {
             base.OnModelCreating(modelBuilder);
 
+            #region Filter
+
+            modelBuilder.Entity<User>().HasQueryFilter(us => us.StatusUser == StatusAccount.Active.ToString());
+
+            #endregion
+
             #region Extensions
 
             modelBuilder.SeedRoles();
@@ -440,7 +446,7 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .IsRequired();
 
                 us.Property(u => u.Photo)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsRequired();
 
                 us.Property(ad => ad.IsEmailConfirmed)
@@ -547,7 +553,7 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .IsRequired();
 
                 ad.Property(admin => admin.Photo)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsRequired();
 
                 ad.Property(admin => admin.IsEmailConfirmed)
