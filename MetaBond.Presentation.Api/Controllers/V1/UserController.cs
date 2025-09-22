@@ -16,6 +16,7 @@ using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
@@ -26,6 +27,10 @@ public class UserController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
     [DisableRateLimiting]
+    [SwaggerOperation(
+        Summary = "Create a new user",
+        Description = "Creates a new user using the provided command data."
+    )]
     public async Task<ResultT<UserDTos>> CreateAsync([FromBody] CreateUserCommand command,
         CancellationToken cancellationToken)
     {
@@ -34,6 +39,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPost("confirm-account")]
     [DisableRateLimiting]
+    [SwaggerOperation(
+        Summary = "Confirm user account",
+        Description = "Confirms a user account using the provided userId and confirmation code."
+    )]
     public async Task<ResultT<string>> ConfirmAccountAsync([FromQuery] Guid userId, [FromQuery] string code,
         CancellationToken cancellationToken)
     {
@@ -48,6 +57,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPost("forgot-password")]
     [DisableRateLimiting]
+    [SwaggerOperation(
+        Summary = "Forgot password",
+        Description = "Sends a password reset email to the user with the provided email address."
+    )]
     public async Task<ResultT<string>> ForgotPasswordAsync([FromQuery] string email,
         CancellationToken cancellationToken)
     {
@@ -61,6 +74,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPut]
     [DisableRateLimiting]
+    [SwaggerOperation(
+        Summary = "Update user information",
+        Description = "Updates the information of an existing user."
+    )]
     public async Task<ResultT<UpdateUserDTos>> UpdateAsync([FromBody] UpdateUserCommand command,
         CancellationToken cancellationToken)
     {
@@ -69,6 +86,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPut("{code}")]
     [DisableRateLimiting]
+    [SwaggerOperation(
+        Summary = "Update user password",
+        Description = "Updates the password for a user using a reset code and new password information."
+    )]
     public async Task<ResultT<string>> UpdatePasswordAsync([FromRoute] string code, [FromQuery] string email,
         [FromBody] UpdatePasswordParameter parameter, CancellationToken cancellationToken)
     {
@@ -85,6 +106,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPut("{userId}/photo")]
     [DisableRateLimiting]
+    [SwaggerOperation(
+        Summary = "Update user photo",
+        Description = "Updates the profile photo of a user by their unique identifier."
+    )]
     public async Task<ResultT<string>> UpdatePhotoAsync([FromRoute] Guid userId, UpdatePhotoParameterDto parameter,
         CancellationToken cancellationToken)
     {
@@ -99,6 +124,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpGet("search-by/{username}")]
     [EnableRateLimiting("fixed")]
+    [SwaggerOperation(
+        Summary = "Get user by username",
+        Description = "Retrieves a user by their username."
+    )]
     public async Task<ResultT<UserDTos>> GetByUsernameAsync([FromRoute] string username,
         CancellationToken cancellationToken)
     {
@@ -112,6 +141,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpGet("{userId}")]
     [EnableRateLimiting("fixed")]
+    [SwaggerOperation(
+        Summary = "Get user with friendship info",
+        Description = "Retrieves a user and their friendship information by user ID."
+    )]
     public async Task<ResultT<UserWithFriendshipDTos>> GetUserWithFriendshipAsync([FromRoute] Guid userId,
         CancellationToken cancellationToken)
     {
@@ -125,6 +158,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpGet("pagination")]
     [EnableRateLimiting("fixed")]
+    [SwaggerOperation(
+        Summary = "Get paginated users",
+        Description = "Retrieves a paginated list of users."
+    )]
     public async Task<ResultT<PagedResult<UserDTos>>> GetPagedAsync([FromQuery] int pageNumber,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
@@ -139,6 +176,10 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpGet("search")]
     [EnableRateLimiting("fixed")]
+    [SwaggerOperation(
+        Summary = "Search users by username",
+        Description = "Retrieves a paginated list of users filtered by username."
+    )]
     public async Task<ResultT<PagedResult<UserDTos>>> GetUsernameAsync([FromQuery] string username,
         [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
