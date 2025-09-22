@@ -28,7 +28,7 @@ internal sealed class CreateUserCommandHandler(
         string imageUrl = "";
         if (request.ImageFile != null)
         {
-            using var stream = request.ImageFile.OpenReadStream();
+            await using var stream = request.ImageFile.OpenReadStream();
             imageUrl = await cloudinaryService.UploadImageCloudinaryAsync(
                 stream,
                 request.ImageFile.FileName,
