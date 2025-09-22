@@ -2,6 +2,7 @@
 using MetaBond.Application.DTOs.Communities;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,9 @@ namespace MetaBond.Application.Feature.Communities.Commands.Create;
 internal sealed class CreateCommunitiesCommandHandler(
     ICommunitiesRepository communitiesRepository,
     ICommunityCategoryRepository communityCategoryRepository,
-    ILogger<CreateCommunitiesCommandHandler> logger)
+    ILogger<CreateCommunitiesCommandHandler> logger,
+    ICloudinaryService cloudinaryService
+)
     : ICommandHandler<CreateCommunitiesCommand, CommunitiesDTos>
 {
     public async Task<ResultT<CommunitiesDTos>> Handle(
@@ -36,12 +39,23 @@ internal sealed class CreateCommunitiesCommandHandler(
 
         if (!communityCategory.IsSuccess) return ResultT<CommunitiesDTos>.Failure(communityCategory.Error!);
 
+        string imageUrl = "";
+        if (request.ImageFile is not null)
+        {
+            await using var stream = request.ImageFile.OpenReadStream();
+            imageUrl = await cloudinaryService.UploadImageCloudinaryAsync(
+                stream,
+                request.ImageFile.FileName,
+                cancellationToken);
+        }
+
         Domain.Models.Communities communities = new()
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
-            CommunityCategoryId = request.CategoryId
+            CommunityCategoryId = request.CategoryId,
+            Photo = imageUrl
         };
 
         await communitiesRepository.CreateAsync(communities, cancellationToken);
