@@ -12,9 +12,7 @@ namespace MetaBond.Application.Feature.Admin.Commands.Create;
 internal sealed class CreateAdminCommandHandler(
     IAdminRepository adminRepository,
     ILogger<CreateAdminCommandHandler> logger,
-    ICloudinaryService cloudinaryService,
-    IEmailService emailService,
-    IEmailConfirmationTokenService emailConfirmationTokenService
+    ICloudinaryService cloudinaryService
 ) : ICommandHandler<CreateAdminCommand, AdminDto>
 {
     public async Task<ResultT<AdminDto>> Handle(CreateAdminCommand request, CancellationToken cancellationToken)
@@ -29,7 +27,7 @@ internal sealed class CreateAdminCommandHandler(
                 cancellationToken);
         }
 
-        bool emailInUse = await adminRepository.IsEmailUnusedAsync(request.Email, cancellationToken);
+        bool emailInUse = await adminRepository.ExistsEmailAsync(request.Email, cancellationToken);
         if (emailInUse)
         {
             logger.LogWarning("Email {Email} already exists.", request.Email);
@@ -55,32 +53,14 @@ internal sealed class CreateAdminCommandHandler(
             Username = request.Username,
             Email = request.Email,
             Photo = imageUrl,
-            Password = hashedPassword
+            Password = hashedPassword,
+            IsEmailConfirmed = true
         };
 
         await adminRepository.CreateAsync(admin, cancellationToken);
 
         logger.LogInformation("Admin {AdminId} created with email {Email}.", admin.Id, admin.Email);
 
-        var token = await emailConfirmationTokenService.GenerateTokenAsync(admin.Id, cancellationToken);
-        if (!token.IsSuccess)
-        {
-            logger.LogError("Error generating token for admin {AdminId}.", admin.Id);
-
-            return token.Error!;
-        }
-
-        await SendConfirmationEmailAsync(admin.Email, token.Value);
-
         return ResultT<AdminDto>.Success(AdminMapper.ToDTo(admin));
-    }
-
-    private async Task SendConfirmationEmailAsync(string email, string code)
-    {
-        await emailService.SendEmailAsync(new EmailRequestDTo(
-            To: email,
-            Body: EmailTemplates.ConfirmAccountEmailHtml(code),
-            Subject: "Confirm Account"
-        ));
     }
 }
