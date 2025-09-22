@@ -445,6 +445,11 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
                 us.Property(ad => ad.IsEmailConfirmed)
                     .HasDefaultValue(false);
+
+                us.Property(u => u.StatusUser)
+                    .IsRequired()
+                    .HasColumnType("varchar(50)")
+                    .HasDefaultValue(StatusAccount.Active);
             });
 
             #endregion

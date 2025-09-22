@@ -17,4 +17,8 @@ public sealed class Admin
     public string? Password { get; set; }
 
     public bool IsEmailConfirmed { get; set; } = false;
+
+    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
 }
