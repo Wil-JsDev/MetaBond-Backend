@@ -40,7 +40,7 @@ public interface IAdminRepository : IGenericRepository<Admin>
     /// <param name="email">The email to check.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the email is unused, otherwise false.</returns>
-    Task<bool> IsEmailUnusedAsync(string email, CancellationToken cancellationToken);
+    Task<bool> ExistsEmailAsync(string email, CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks if a username exists among Admins.

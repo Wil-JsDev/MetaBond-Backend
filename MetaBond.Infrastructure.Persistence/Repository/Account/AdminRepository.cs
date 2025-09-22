@@ -43,9 +43,9 @@ public class AdminRepository(MetaBondContext metaBondContext, IUserRepository us
                 cancellationToken);
     }
 
-    public async Task<bool> IsEmailUnusedAsync(string email, CancellationToken cancellationToken)
+    public async Task<bool> ExistsEmailAsync(string email, CancellationToken cancellationToken)
     {
-        return !await ValidateAsync(us => us.Email == email, cancellationToken);
+        return await ValidateAsync(us => us.Email == email, cancellationToken);
     }
 
     public async Task<bool> ExistsUsernameAsync(string username, CancellationToken cancellationToken)
