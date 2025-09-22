@@ -51,6 +51,7 @@ internal sealed class UpdateUserCommandHandler(
 
         user.Value.Username = request.Username;
         user.Value.Email = request.Email;
+        user.Value.UpdatedAt = DateTime.UtcNow;
 
         await userRepository.UpdateAsync(user.Value, cancellationToken);
 

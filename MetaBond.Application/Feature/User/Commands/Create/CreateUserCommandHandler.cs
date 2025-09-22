@@ -60,6 +60,14 @@ internal sealed class CreateUserCommandHandler(
             return ResultT<UserDTos>.Failure(defaultRole.Error!);
         }
 
+        // Validate InterestsIds is not null or empty (optional, business rule)
+        if (!request.InterestsIds.Any())
+        {
+            logger.LogWarning("No interests provided for user {Email}", request.Email);
+
+            return ResultT<UserDTos>.Failure(Error.Failure("400", "At least one interest must be selected"));
+        }
+
         Domain.Models.User user = new()
         {
             Id = Guid.NewGuid(),
@@ -84,7 +92,7 @@ internal sealed class CreateUserCommandHandler(
         {
             logger.LogError("Failed to generate token for user {UserId}", user.Id);
 
-            return ResultT<UserDTos>.Failure(token.Error!);
+            return token.Error!;
         }
 
         string code = token.Value;
