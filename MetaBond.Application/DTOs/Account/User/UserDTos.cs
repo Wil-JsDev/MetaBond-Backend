@@ -5,5 +5,8 @@ public sealed record UserDTos(
     string? FirstName,
     string? LastName,
     string? Username,
-    string? Photo
+    string? Photo,
+    string? StatusAccount,
+    DateTime? CreatedAt,
+    DateTime? UpdateAt
 );
