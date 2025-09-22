@@ -28,7 +28,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ResultT<AdminDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResultT<AdminDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResultT<AdminDto>), StatusCodes.Status409Conflict)]
-    public async Task<ResultT<AdminDto>> CreateAdminAsync([FromBody] CreateAdminCommand command,
+    public async Task<ResultT<AdminDto>> CreateAdminAsync([FromForm] CreateAdminCommand command,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);

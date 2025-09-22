@@ -31,7 +31,7 @@ public class UserController(IMediator mediator) : ControllerBase
         Summary = "Create a new user",
         Description = "Creates a new user using the provided command data."
     )]
-    public async Task<ResultT<UserDTos>> CreateAsync([FromBody] CreateUserCommand command,
+    public async Task<ResultT<UserDTos>> CreateAsync([FromForm] CreateUserCommand command,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);
