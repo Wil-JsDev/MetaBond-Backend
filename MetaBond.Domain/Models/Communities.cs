@@ -11,6 +11,10 @@ public sealed class Communities : BaseModel
 
     public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? UpdateAt { get; set; }
+
+    public string? Photo { get; set; }
+
     public ProgressBoard? ProgressBoard { get; set; }
 
     public ICollection<Posts>? Posts { get; set; }

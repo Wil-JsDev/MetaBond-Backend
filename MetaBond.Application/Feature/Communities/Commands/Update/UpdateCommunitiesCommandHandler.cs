@@ -28,6 +28,7 @@ internal sealed class UpdateCommunitiesCommandHandler(
         {
             communities.Value.Name = request.Name;
             communities.Value.Description = request.Description;
+            communities.Value.UpdateAt = DateTime.UtcNow;
 
             await communitiesRepository.UpdateAsync(communities.Value, cancellationToken);
 

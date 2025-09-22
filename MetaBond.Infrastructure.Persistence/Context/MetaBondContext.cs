@@ -356,6 +356,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 x.Property(c => c.Description)
                     .IsRequired()
                     .HasMaxLength(maxLength: 250);
+
+                x.Property(c => c.Photo)
+                    .IsRequired()
+                    .HasMaxLength(250);
             });
 
             #endregion

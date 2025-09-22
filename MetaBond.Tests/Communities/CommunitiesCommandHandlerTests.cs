@@ -34,7 +34,9 @@ public class CommunitiesCommandHandlerTests
             CommunitiesId: Guid.NewGuid(),
             Name: createCommunitiesCommand.Name,
             CreatedAt: DateTime.UtcNow,
-            CategoryId: Guid.Empty
+            Description: createCommunitiesCommand.Description,
+            Image: null,
+            CategoryId: createCommunitiesCommand.CategoryId ?? Guid.Empty
         );
 
         var expectedResult = ResultT<CommunitiesDTos>.Success(communitiesDTos);
@@ -91,6 +93,8 @@ public class CommunitiesCommandHandlerTests
             CommunitiesId: communitiesCommand.Id,
             Name: communitiesCommand.Name,
             CreatedAt: DateTime.UtcNow,
+            Description: null,
+            Image: null,
             CategoryId: Guid.Empty
         );
 
@@ -120,6 +124,8 @@ public class CommunitiesCommandHandlerTests
             CommunitiesId: id,
             Name: "New Name",
             CreatedAt: DateTime.UtcNow,
+            Description: null,
+            Image: null,
             CategoryId: Guid.Empty
         );
 
@@ -149,9 +155,9 @@ public class CommunitiesCommandHandlerTests
 
         var communities = new List<CommunitiesByCategoryDto>
         {
-            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 1", DateTime.UtcNow),
-            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 2", DateTime.UtcNow),
-            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 3", DateTime.UtcNow)
+            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 1", "Description", null),
+            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 2", "Description", null),
+            new CommunitiesByCategoryDto(Guid.NewGuid(), "Community 3", "Description", null)
         };
 
         var pagedResult = new PagedResult<CommunitiesByCategoryDto>
@@ -259,12 +265,16 @@ public class CommunitiesCommandHandlerTests
                     CommunitiesId: Guid.NewGuid(),
                     Name: "Community 1",
                     CreatedAt: DateTime.UtcNow,
+                    Description: null,
+                    Image: null,
                     CategoryId: Guid.NewGuid()
                 ),
                 new CommunitiesDTos(
                     CommunitiesId: Guid.NewGuid(),
                     Name: "Community 2",
                     CreatedAt: DateTime.UtcNow,
+                    Description: null,
+                    Image: null,
                     CategoryId: Guid.NewGuid()
                 )
             }
