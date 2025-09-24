@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace MetaBond.Application.Feature.User.Commands.UpdatePassword;
 
-public sealed class UpdatePasswordUserValidator : AbstractValidator<UpdatePasswordUserCommand>
+public sealed class UpdatePasswordUserCommandValidator : AbstractValidator<UpdatePasswordUserCommand>
 {
-    public UpdatePasswordUserValidator()
+    public UpdatePasswordUserCommandValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
