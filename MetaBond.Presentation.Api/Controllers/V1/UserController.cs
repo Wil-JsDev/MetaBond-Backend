@@ -55,18 +55,18 @@ public class UserController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpPost("forgot-password")]
+    [HttpPost("{userId}/forgot-password")]
     [DisableRateLimiting]
     [SwaggerOperation(
         Summary = "Forgot password",
         Description = "Sends a password reset email to the user with the provided email address."
     )]
-    public async Task<ResultT<string>> ForgotPasswordAsync([FromQuery] string email,
+    public async Task<ResultT<string>> ForgotPasswordAsync([FromRoute] Guid userId,
         CancellationToken cancellationToken)
     {
         ForgotPasswordUserCommand command = new()
         {
-            Email = email
+            UserId = userId
         };
 
         return await mediator.Send(command, cancellationToken);
