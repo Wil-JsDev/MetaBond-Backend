@@ -5,6 +5,7 @@ using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Application.Feature.User.Commands.ConfirmAccount;
 using MetaBond.Application.Feature.User.Commands.Create;
 using MetaBond.Application.Feature.User.Commands.ForgotPassword;
+using MetaBond.Application.Feature.User.Commands.ResetPassword;
 using MetaBond.Application.Feature.User.Commands.Update;
 using MetaBond.Application.Feature.User.Commands.UpdatePassword;
 using MetaBond.Application.Feature.User.Commands.UpdatePhoto;
@@ -14,6 +15,7 @@ using MetaBond.Application.Feature.User.Query.Pagination;
 using MetaBond.Application.Feature.User.Query.SearchByUsername;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -192,5 +194,23 @@ public class UserController(IMediator mediator) : ControllerBase
         };
 
         return await mediator.Send(query, cancellationToken);
+    }
+
+    [HttpPut("reset-password/{userId}")]
+    [SwaggerOperation(
+        Summary = "Reset user password",
+        Description = "Resets the password for a user by their unique identifier. Requires the new password and confirmation."
+    )]
+    public async Task<ResultT<string>> ResetPasswordAsync([FromRoute] Guid userId,
+        [FromBody] UpdatePasswordParameter request, CancellationToken cancellationToken)
+    {
+        ResetPasswordUserCommand command = new()
+        {
+            UserId = userId,
+            NewPassword = request.NewPassword,
+            ConfirmNewPassword = request.NewPasswordConfirmPassword
+        };
+
+        return await mediator.Send(command, cancellationToken);
     }
 }
