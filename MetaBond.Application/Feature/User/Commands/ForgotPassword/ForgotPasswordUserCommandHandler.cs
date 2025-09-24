@@ -1,5 +1,6 @@
 using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.Email;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
@@ -19,23 +20,26 @@ internal sealed class ForgotPasswordUserCommandHandler(
         ForgotPasswordUserCommand request,
         CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByEmailAsync(request!.Email!, cancellationToken);
-        if (user == null)
-        {
-            logger.LogError("Email {Email} not found during forgot password request", request.Email);
+        var user = await EntityHelper.GetEntityByIdAsync(
+            userRepository.GetByIdAsync,
+            request.UserId ?? Guid.Empty,
+            "User",
+            logger
+        );
 
-            return ResultT<string>.Failure(Error.NotFound("404", $"No user found with email {request.Email}"));
-        }
+        if (!user.IsSuccess)
+            return user.Error!;
 
-        var code = await emailConfirmationTokenService.GenerateTokenAsync(user.Id, cancellationToken);
+        var code = await emailConfirmationTokenService.GenerateTokenAsync(request.UserId ?? Guid.Empty,
+            cancellationToken);
 
         await emailService.SendEmailAsync(new EmailRequestDTo(
-            To: user.Email,
-            Body: EmailTemplates.GetPasswordRecoveryEmailHtml(user.Username!, code.Value),
+            To: user.Value.Email,
+            Body: EmailTemplates.GetPasswordRecoveryEmailHtml(user.Value.Username!, code.Value),
             Subject: "Forgot Password"
         ));
 
-        logger.LogInformation("Password reset code generated and email sent to {Email}", user.Email);
+        logger.LogInformation("Password reset code generated and email sent to {Email}", user.Value.Email);
 
         return ResultT<string>.Success("Password reset email sent successfully.");
     }
