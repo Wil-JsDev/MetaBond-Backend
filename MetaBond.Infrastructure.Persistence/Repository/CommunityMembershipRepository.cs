@@ -49,6 +49,17 @@ public class CommunityMembershipRepository(MetaBondContext metaBondContext)
         return communityMembership;
     }
 
+    public async Task<CommunityMembership?> GetByUserAndCommunityAsync(Guid userId, Guid communityId,
+        CancellationToken cancellationToken)
+    {
+        return await _metaBondContext.Set<CommunityMembership>()
+            .AsNoTracking()
+            .Include(cm => cm.User)
+            .Include(cm => cm.Community)
+            .Where(cm => cm.UserId == userId && cm.CommunityId == communityId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<CommunityMembership> JoinCommunityAsync(CommunityMembership entity,
         CancellationToken cancellationToken)
     {
