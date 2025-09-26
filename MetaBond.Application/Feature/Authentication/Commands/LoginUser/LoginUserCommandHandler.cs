@@ -21,7 +21,7 @@ internal sealed class LoginUserCommandHandler(
         CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByEmailAsync(request.Email ?? string.Empty, cancellationToken);
-        
+
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user?.Password))
         {
             logger.LogWarning("LoginUserCommandHandler: Invalid credentials attempt.");

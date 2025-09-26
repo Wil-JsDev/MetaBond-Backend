@@ -199,7 +199,8 @@ public class UserController(IMediator mediator) : ControllerBase
     [HttpPut("reset-password/{userId}")]
     [SwaggerOperation(
         Summary = "Reset user password",
-        Description = "Resets the password for a user by their unique identifier. Requires the new password and confirmation."
+        Description =
+            "Resets the password for a user by their unique identifier. Requires the new password and confirmation."
     )]
     public async Task<ResultT<string>> ResetPasswordAsync([FromRoute] Guid userId,
         [FromBody] UpdatePasswordParameter request, CancellationToken cancellationToken)

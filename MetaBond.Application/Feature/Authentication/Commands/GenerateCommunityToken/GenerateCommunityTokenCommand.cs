@@ -6,6 +6,6 @@ namespace MetaBond.Application.Feature.Authentication.Commands.GenerateCommunity
 public sealed class GenerateCommunityTokenCommand : ICommand<AuthenticationCommunityResponse>
 {
     public Guid CommunityId { get; set; }
-    
+
     public Guid UserId { get; set; }
 }

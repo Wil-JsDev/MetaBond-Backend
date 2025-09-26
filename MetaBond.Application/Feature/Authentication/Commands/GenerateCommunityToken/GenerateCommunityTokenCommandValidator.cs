@@ -8,7 +8,7 @@ public class GenerateCommunityTokenCommandValidator : AbstractValidator<Generate
     {
         RuleFor(cm => cm.CommunityId)
             .NotEmpty().WithMessage("CommunityId is required.");
-        
+
         RuleFor(cm => cm.UserId)
             .NotEmpty().WithMessage("UserId is required.");
     }
