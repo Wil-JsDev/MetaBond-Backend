@@ -72,6 +72,22 @@ public interface ICommunityMembershipRepository : IGenericRepository<CommunityMe
     /// </returns>
     Task<string?> GetUserRoleAsync(Guid userId, Guid communityId, CancellationToken cancellationToken);
 
-    Task<CommunityMembership> LeaveCommunityAsync(Guid userId, Guid communityId,
+    /// <summary>
+    /// Removes a user from a specific community by deleting their membership.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user leaving the community.</param>
+    /// <param name="communityId">The unique identifier of the community.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The removed <see cref="CommunityMembership"/> entity.</returns>
+    Task<CommunityMembership> LeaveCommunityAsync(Guid userId, Guid communityId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Retrieves the community membership of a specific user within a community, if it exists.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="communityId">The unique identifier of the community.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The <see cref="CommunityMembership"/> entity if found; otherwise, null.</returns>
+    Task<CommunityMembership?> GetByUserAndCommunityAsync(Guid userId, Guid communityId,
         CancellationToken cancellationToken);
 }
