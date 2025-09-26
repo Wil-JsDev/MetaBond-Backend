@@ -12,4 +12,6 @@ public sealed class CreateCommunitiesCommand : ICommand<CommunitiesDTos>
     public IFormFile? ImageFile { get; set; }
 
     public Guid? CategoryId { get; set; }
+
+    public Guid? UserId { get; set; }
 }
