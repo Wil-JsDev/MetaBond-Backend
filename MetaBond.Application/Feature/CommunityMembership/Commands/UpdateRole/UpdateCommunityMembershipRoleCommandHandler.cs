@@ -43,10 +43,13 @@ internal sealed class UpdateCommunityMembershipRoleCommandHandler(
         // member -> Member
         if (!Enum.TryParse(typeof(CommunityMembershipRoles), request.Role, true, out var parsedRole))
         {
-            logger.LogWarning("Invalid role {Role} provided for User {UserId} in Community {CommunityId}.",
+            logger.LogWarning(
+                "Failed to assign role: '{Role}' is not a valid role for User {UserId} in Community {CommunityId}.",
                 request.Role, request.UserId, request.CommunityId);
 
-            return ResultT<string>.Failure(Error.Conflict("400", $"Invalid role '{request.Role}'."));
+            return ResultT<string>.Failure(
+                Error.Conflict("409",
+                    $"The role '{request.Role}' is not valid for User '{userResult.Value.FirstName}' in Community '{communityResult.Value.Name}'."));
         }
 
         var normalizedRole = parsedRole.ToString();
