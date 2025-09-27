@@ -7,7 +7,6 @@ using MetaBond.Application.Feature.CommunityMembership.Commands.LeaveCommunity;
 using MetaBond.Application.Feature.CommunityMembership.Commands.UpdateRole;
 using MetaBond.Application.Feature.CommunityMembership.Query.GetCommunityMember;
 using MetaBond.Application.Feature.CommunityMembership.Query.GetUserCommunities;
-using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -35,21 +34,19 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
         return await mediator.Send(joinCommunityCommand, cancellationToken);
     }
 
-    [HttpPatch("role")]
+    [HttpPut("{communityId}/members/{userId}/role")]
     [SwaggerOperation(
         Summary = "Update user role in a community",
         Description = "Updates the role of a user within a community."
     )]
-    [ProducesResponseType(typeof(object), 200)]
-    [ProducesResponseType(typeof(string), 400)]
     public async Task<ResultT<string>> UpdateRoleAsync([FromQuery] Guid communityId, [FromQuery] Guid userId,
-        [FromBody] string roles, CancellationToken cancellationToken)
+        [FromBody] CommunityMembershipRoleParameter roles, CancellationToken cancellationToken)
     {
         var command = new UpdateCommunityMembershipRoleCommand
         {
             UserId = userId,
             CommunityId = communityId,
-            Role = roles
+            Role = roles.Role
         };
 
         return await mediator.Send(command, cancellationToken);
