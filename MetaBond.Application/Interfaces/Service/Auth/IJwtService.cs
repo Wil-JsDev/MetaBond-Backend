@@ -43,24 +43,26 @@ public interface IJwtService
     /// Generates a JWT access token for a user within a specific community membership.
     /// </summary>
     /// <param name="user">The user for whom to generate the token.</param>
+    /// <param name="communityMembership"></param>
     /// <param name="community">The community membership context.</param>
     /// <param name="role"></param>
     /// <returns>A JWT access token as a string.</returns>
-    string GenerateTokenCommunity(User user, CommunityMembership community, string role);
+    string GenerateTokenCommunity(User user, CommunityMembership communityMembership, Communities community,
+        string role);
 
     /// <summary>
     /// Refreshes the access and refresh tokens for an admin using a valid refresh token.
     /// </summary>
     /// <param name="refreshToken">The refresh token string.</param>
     /// <returns>A ResultT containing the new AuthenticationResponse or a failure result.</returns>
-    ResultT<AuthenticationResponse> RefreshAdminTokens(string refreshToken);
+    Task<ResultT<AuthenticationResponse>> RefreshAdminTokens(string refreshToken);
 
     /// <summary>
     /// Refreshes the access and refresh tokens for a user using a valid refresh token.
     /// </summary>
     /// <param name="refreshToken">The refresh token string.</param>
     /// <returns>A ResultT containing the new AuthenticationResponse or a failure result.</returns>
-    ResultT<AuthenticationResponse> RefreshUserTokens(string refreshToken);
+    Task<ResultT<AuthenticationResponse>> RefreshUserTokens(string refreshToken);
 
     /// <summary>
     /// Validates and extracts the principal from an expired JWT token. Returns a failure result if the token is invalid or malformed.

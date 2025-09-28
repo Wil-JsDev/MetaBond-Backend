@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MetaBond.Application.DTOs.Account.Auth;
+using MetaBond.Application.Interfaces.Repository.Account;
 using MetaBond.Application.Interfaces.Service.Auth;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -14,7 +15,10 @@ namespace MetaBond.Infrastructure.Shared.Service;
 /// <summary>
 /// Service for generating JWT and refresh tokens for users, admins, and community memberships.
 /// </summary>
-public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
+public class JwtService(
+    IOptions<JwtSettings> jwtSettings,
+    IAdminRepository adminRepository,
+    IUserRepository userRepository) : IJwtService
 {
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
     private const string AccessType = "access";
@@ -66,23 +70,24 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
         ValidateSettings();
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, admin.Username ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Sub, admin.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("type", RefreshType)
         };
         return BuildToken(claims, TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationInDays));
     }
 
-    public string GenerateTokenCommunity(User user, CommunityMembership community, string role)
+    public string GenerateTokenCommunity(User user, CommunityMembership communityMembership, Communities community,
+        string role)
     {
         ValidateSettings();
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, community.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, communityMembership.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.Role, role),
             new Claim("userId", user.Id.ToString()),
-            new Claim("communityId", community.CommunityId.ToString()),
+            new Claim("communityId", community.Id.ToString()),
             new Claim("type", CommunityType)
         };
         return BuildToken(claims, TimeSpan.FromMinutes(_jwtSettings.ExpirationInMinutes));
@@ -105,38 +110,30 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
             IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtSettings.Key ?? string.Empty)),
             ValidateLifetime = false // Allow expired tokens
         };
+
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
         var tokenHandler = new JwtSecurityTokenHandler();
-        try
-        {
-            var principal =
-                tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                    StringComparison.InvariantCultureIgnoreCase))
-            {
-                return ResultT<ClaimsPrincipal>.Failure(Error.Failure("401", "Invalid token algorithm."));
-            }
 
-            return ResultT<ClaimsPrincipal>.Success(principal);
-        }
-        catch (SecurityTokenException ex)
+        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase))
         {
-            return ResultT<ClaimsPrincipal>.Failure(Error.Failure("401", $"Token validation failed: {ex.Message}"));
+            return ResultT<ClaimsPrincipal>.Failure(Error.Failure("401", "Invalid token algorithm."));
         }
-        catch (Exception ex)
-        {
-            return ResultT<ClaimsPrincipal>.Failure(Error.Failure("400", $"Token parsing error: {ex.Message}"));
-        }
+
+        return ResultT<ClaimsPrincipal>.Success(principal);
     }
 
-    public ResultT<AuthenticationResponse> RefreshUserTokens(string refreshToken)
+    public async Task<ResultT<AuthenticationResponse>> RefreshUserTokens(string refreshToken)
     {
-        return RefreshTokensInternal(refreshToken, isAdmin: false);
+        return await RefreshTokensInternal(refreshToken, isAdmin: false);
     }
 
-    public ResultT<AuthenticationResponse> RefreshAdminTokens(string refreshToken)
+    public async Task<ResultT<AuthenticationResponse>> RefreshAdminTokens(string refreshToken)
     {
-        return RefreshTokensInternal(refreshToken, isAdmin: true);
+        return await RefreshTokensInternal(refreshToken, isAdmin: true);
     }
 
     #region Private Methods
@@ -144,7 +141,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
     /// <summary>
     /// Internal logic for refreshing tokens for user or admin.
     /// </summary>
-    private ResultT<AuthenticationResponse> RefreshTokensInternal(string refreshToken, bool isAdmin)
+    private async Task<ResultT<AuthenticationResponse>> RefreshTokensInternal(string refreshToken, bool isAdmin)
     {
         var principalResult = GetPrincipalFromExpiredToken(refreshToken);
         if (principalResult is { IsSuccess: false })
@@ -161,7 +158,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
                 Error.Failure("401", "Provided token is not a refresh token."));
         }
 
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var sub = principal.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
         if (string.IsNullOrEmpty(sub))
         {
             return ResultT<AuthenticationResponse>.Failure(
@@ -177,13 +174,25 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
         string newToken, newRefreshToken;
         if (isAdmin)
         {
-            var admin = new Admin { Id = id };
+            var admin = await adminRepository.GetByIdAsync(id);
+            if (admin is null)
+            {
+                return ResultT<AuthenticationResponse>.Failure(
+                    Error.Failure("400", "Admin not found."));
+            }
+
             newToken = GenerateTokenAdmin(admin);
             newRefreshToken = GenerateRefreshTokenAdmin(admin);
         }
         else
         {
-            var user = new User { Id = id };
+            var user = await userRepository.GetByIdAsync(id);
+            if (user is null)
+            {
+                return ResultT<AuthenticationResponse>.Failure(
+                    Error.Failure("400", "User not found."));
+            }
+
             newToken = GenerateTokenUser(user);
             newRefreshToken = GenerateRefreshTokenUser(user);
         }
