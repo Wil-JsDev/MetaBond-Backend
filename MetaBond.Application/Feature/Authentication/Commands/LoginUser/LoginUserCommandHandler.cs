@@ -22,12 +22,21 @@ internal sealed class LoginUserCommandHandler(
     {
         var user = await userRepository.GetByEmailAsync(request.Email ?? string.Empty, cancellationToken);
 
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user?.Password))
+        if (user is null)
         {
-            logger.LogWarning("LoginUserCommandHandler: Invalid credentials attempt.");
+            logger.LogWarning("LoginUserCommandHandler: User with email: {Email} was not found.",
+                request.Email);
 
             return ResultT<AuthenticationResponse>.Failure(
-                Error.Failure("401", "Invalid credentials"));
+                Error.Failure("401", "User with email was not found."));
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user?.Password))
+        {
+            logger.LogWarning("LoginUserCommandHandler: Password is incorrect for user");
+
+            return ResultT<AuthenticationResponse>.Failure(
+                Error.Failure("401", "Password is incorrect"));
         }
 
         if (user.StatusUser == StatusAccount.Banned.ToString())

@@ -21,11 +21,22 @@ internal sealed class LoginAdminCommandHandler(
     {
         // Consider implementing rate limiting or lockout after several failed attempts for security.
         var admin = await adminRepository.GetByEmailAsync(request.Email ?? string.Empty, cancellationToken);
-        if (admin is null || !BCrypt.Net.BCrypt.Verify(request.Password, admin.Password))
+
+        if (admin is null)
         {
-            logger.LogWarning("LoginAdminCommandHandler: Invalid admin credentials attempt.");
+            logger.LogWarning("LoginAdminCommandHandler: Admin with email: {Email} was not found.",
+                request.Email ?? "");
+
             return ResultT<AuthenticationResponse>.Failure(
-                Error.Failure("401", "Invalid credentials"));
+                Error.Failure("401", "Admin with email was not found."));
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, admin.Password))
+        {
+            logger.LogWarning("Password is incorrect for admin with email: {Email}", request.Email ?? "");
+
+            return ResultT<AuthenticationResponse>.Failure(
+                Error.Failure("401", "Invalid password for admin with email"));
         }
 
         var accessToken = jwtService.GenerateTokenAdmin(admin);
