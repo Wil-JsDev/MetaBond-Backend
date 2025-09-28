@@ -1,5 +1,6 @@
 ﻿using MetaBond.Application.DTOs.Account.Auth;
 using MetaBond.Application.Interfaces.Service;
+using MetaBond.Application.Interfaces.Service.Auth;
 using MetaBond.Domain.Settings;
 using MetaBond.Infrastructure.Shared.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,6 +28,7 @@ namespace MetaBond.Infrastructure.Shared
 
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IJwtService, JwtService>();
 
             #endregion
 
@@ -50,9 +52,8 @@ namespace MetaBond.Infrastructure.Shared
                     ClockSkew = TimeSpan.Zero,
                     ValidIssuer = configuration["JwtSettings:Issuer"],
                     ValidAudience = configuration["JwtSettings:Audience"],
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(
-                            System.Text.Encoding.UTF8.GetBytes(configuration["JwtSettings:Key"] ?? string.Empty)),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Convert.FromBase64String(configuration["JwtSettings:Key"] ?? string.Empty)),
                     // Explicitly validate the algorithm
                     RequireSignedTokens = true,
                     ValidAlgorithms = [SecurityAlgorithms.HmacSha256]
