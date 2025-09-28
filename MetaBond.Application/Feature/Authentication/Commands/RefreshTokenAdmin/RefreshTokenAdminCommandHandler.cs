@@ -12,17 +12,22 @@ internal sealed class
         IJwtService jwtService
     ) : ICommandHandler<RefreshTokenAdminCommand, AuthenticationResponse>
 {
-    public Task<ResultT<AuthenticationResponse>> Handle(RefreshTokenAdminCommand request,
+    public async Task<ResultT<AuthenticationResponse>> Handle(RefreshTokenAdminCommand request,
         CancellationToken cancellationToken)
     {
-        var newRefreshTokenResult = jwtService.RefreshAdminTokens(request.RefreshToken ?? string.Empty);
+        var newRefreshTokenResult = await jwtService.RefreshAdminTokens(request.RefreshToken ?? string.Empty);
 
-        if (newRefreshTokenResult.IsSuccess) return Task.FromResult(newRefreshTokenResult);
+        if (newRefreshTokenResult.IsSuccess)
+        {
+            logger.LogInformation("RefreshTokenAdminCommandHandler: Admin refresh token successful.");
+
+            return ResultT<AuthenticationResponse>.Success(newRefreshTokenResult.Value);
+        }
 
         logger.LogWarning("RefreshTokenAdminCommandHandler: Invalid refresh token attempt. Reason: {Reason}",
             newRefreshTokenResult.Error?.Description ?? "Unknown error");
 
-        return Task.FromResult(ResultT<AuthenticationResponse>.Failure(
-            newRefreshTokenResult.Error ?? Error.Failure("401", "Invalid refresh token.")));
+        return ResultT<AuthenticationResponse>.Failure(
+            newRefreshTokenResult.Error ?? Error.Failure("401", "Invalid refresh token."));
     }
 }
