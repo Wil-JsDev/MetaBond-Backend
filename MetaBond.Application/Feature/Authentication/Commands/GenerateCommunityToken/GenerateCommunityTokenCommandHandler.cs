@@ -58,7 +58,7 @@ internal sealed class GenerateCommunityTokenCommandHandler(
 
         var communityMembershipToken =
             jwtService.GenerateTokenCommunity(user.Value, communityMembership,
-                communityMembership.Role ?? string.Empty);
+                community.Value, communityMembership.Role ?? string.Empty);
 
         logger.LogInformation("User {UserId} successfully logged in Community {CommunityId}.", community.Value.Id,
             user.Value.Id);
