@@ -52,7 +52,7 @@ public static class ServiceExtension
             options.AddFixedWindowLimiter("fixed", limiterOptions =>
             {
                 limiterOptions.Window = TimeSpan.FromMinutes(1);
-                limiterOptions.PermitLimit = 8;
+                limiterOptions.PermitLimit = 20;
             });
 
             options.AddSlidingWindowLimiter("sliding", limiterOptions =>
