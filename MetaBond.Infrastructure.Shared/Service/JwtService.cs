@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using MetaBond.Application.DTOs.Account.Auth;
 using MetaBond.Application.Interfaces.Service.Auth;
 using MetaBond.Application.Utils;
@@ -79,10 +78,10 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
         ValidateSettings();
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, community.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
             new Claim(ClaimTypes.Role, role),
+            new Claim("userId", user.Id.ToString()),
             new Claim("communityId", community.CommunityId.ToString()),
             new Claim("type", CommunityType)
         };
@@ -103,7 +102,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
             ValidateIssuerSigningKey = true,
             ValidIssuer = _jwtSettings.Issuer,
             ValidAudience = _jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key ?? string.Empty)),
+            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtSettings.Key ?? string.Empty)),
             ValidateLifetime = false // Allow expired tokens
         };
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -210,7 +209,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
 
     private string BuildToken(IEnumerable<Claim> claims, TimeSpan expiresIn)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key ?? string.Empty));
+        var key = new SymmetricSecurityKey(Convert.FromBase64String(_jwtSettings.Key ?? string.Empty));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
