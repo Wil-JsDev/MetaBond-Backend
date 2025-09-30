@@ -4,7 +4,9 @@ using MetaBond.Application.DTOs.Posts;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
@@ -14,9 +16,9 @@ internal sealed class GetPostWithAuthorQueryHandler(
     IPostsRepository postsRepository,
     ILogger<GetPostWithAuthorQueryHandler> logger,
     IDistributedCache decoratedCache
-) : IQueryHandler<GetPostWithAuthorQuery, IEnumerable<PostsWithUserDTos>>
+) : IQueryHandler<GetPostWithAuthorQuery, PagedResult<PostsWithUserDTos>>
 {
-    public async Task<ResultT<IEnumerable<PostsWithUserDTos>>> Handle(
+    public async Task<ResultT<PagedResult<PostsWithUserDTos>>> Handle(
         GetPostWithAuthorQuery request,
         CancellationToken cancellationToken)
     {
@@ -26,32 +28,52 @@ internal sealed class GetPostWithAuthorQueryHandler(
             "Posts",
             logger);
         if (!posts.IsSuccess)
-            return ResultT<IEnumerable<PostsWithUserDTos>>.Failure(posts.Error!);
+            return ResultT<PagedResult<PostsWithUserDTos>>.Failure(posts.Error!);
 
-        var postsWithAuthor = await decoratedCache.GetOrCreateAsync($"GetPostsWithAuthor-{request.PostsId}",
+        var validationPagination = PaginationHelper.ValidatePagination<PostsWithUserDTos>(request.PageNumber,
+            request.PageSize, logger);
+
+        if (!validationPagination.IsSuccess)
+            return validationPagination.Error!;
+
+        var postsWithAuthor = await decoratedCache.GetOrCreateAsync(
+            $"GetPostsWithAuthor-{request.PostsId}-page-{request.PageNumber}-size-{request.PageSize}",
             async () =>
             {
                 var postsWithAuthors = await postsRepository.GetPostWithAuthorAsync(request.PostsId ?? Guid.Empty,
+                    request.PageNumber,
+                    request.PageSize,
                     cancellationToken);
 
-                var postsWithUser = postsWithAuthors.ToPostsWithUserDtos();
+                var items = postsWithAuthors.Items ?? [];
 
-                return postsWithUser;
+                var postsWithUser = items.ToPostsWithUserDtos();
+
+                PagedResult<PostsWithUserDTos> result = new()
+                {
+                    TotalItems = postsWithAuthors.TotalItems,
+                    TotalPages = postsWithAuthors.TotalPages,
+                    CurrentPage = postsWithAuthors.CurrentPage,
+                    Items = postsWithUser
+                };
+
+                return result;
             },
             cancellationToken: cancellationToken);
 
-        IEnumerable<PostsWithUserDTos> postsWithUserDTosEnumerable = postsWithAuthor.ToList();
+        var postsWithUserDTosEnumerable = postsWithAuthor.Items ?? [];
+
         if (!postsWithUserDTosEnumerable.Any())
         {
             logger.LogWarning("No posts found with the specified PostId: {PostId}", request.PostsId);
 
-            return ResultT<IEnumerable<PostsWithUserDTos>>.Failure(Error.Failure("400",
+            return ResultT<PagedResult<PostsWithUserDTos>>.Failure(Error.Failure("400",
                 "No posts found with the given PostId."));
         }
 
         logger.LogInformation("Successfully retrieved and mapped {Count} posts with author info.",
             postsWithUserDTosEnumerable.Count());
 
-        return ResultT<IEnumerable<PostsWithUserDTos>>.Success(postsWithUserDTosEnumerable);
+        return ResultT<PagedResult<PostsWithUserDTos>>.Success(postsWithAuthor);
     }
 }

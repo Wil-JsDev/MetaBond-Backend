@@ -8,10 +8,12 @@ using MetaBond.Application.Feature.Rewards.Query.GetById;
 using MetaBond.Application.Feature.Rewards.Query.GetRange;
 using MetaBond.Application.Feature.Rewards.Query.GetTop;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Domain.Models;
 using MetaBond.Presentation.Api.Controllers.V1;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 
 namespace MetaBond.Tests.Rewards;
@@ -50,8 +52,10 @@ public class RewardsControllerTests
         var result = await controller.AddAsync(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(command.Description, result.Value.Description);
+        var resultT = Assert.IsType<ResultT<RewardsDTos>>(result);
+        Assert.True(resultT.IsSuccess);
+        Assert.NotNull(resultT.Value);
+        Assert.Equal(command.Description, resultT.Value.Description);
         _mediator.Verify(m => m.Send(command, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -72,8 +76,9 @@ public class RewardsControllerTests
         var result = await controller.DeleteAsync(id, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(id, result.Value);
+        var resultT = Assert.IsType<ResultT<Guid>>(result);
+        Assert.True(resultT.IsSuccess);
+        Assert.Equal(id, resultT.Value);
         _mediator.Verify(m => m.Send(It.IsAny<DeleteRewardsCommand>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -107,8 +112,10 @@ public class RewardsControllerTests
         var result = await controller.UpdateAsync(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(command.RewardsId, result.Value.RewardsId);
+        var resultT = Assert.IsType<ResultT<RewardsDTos>>(result);
+        Assert.True(resultT.IsSuccess);
+        Assert.NotNull(resultT.Value);
+        Assert.Equal(command.RewardsId, resultT.Value.RewardsId);
         _mediator.Verify(m => m.Send(command, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -139,10 +146,10 @@ public class RewardsControllerTests
         var result = await controller.GetByIdAsync(id, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(id, result.Value.RewardsId);
-
+        var resultT = Assert.IsType<ResultT<RewardsDTos>>(result);
+        Assert.True(resultT.IsSuccess);
+        Assert.NotNull(resultT.Value);
+        Assert.Equal(id, resultT.Value.RewardsId);
         _mediator.Verify(m => m.Send(
             It.Is<GetByIdRewardsQuery>(q => q.RewardsId == id),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -160,7 +167,13 @@ public class RewardsControllerTests
             DateAwarded: DateTime.UtcNow
         );
 
-        var expected = ResultT<IEnumerable<RewardsDTos>>.Success(new[] { dto });
+        var expected = ResultT<PagedResult<RewardsDTos>>.Success(new PagedResult<RewardsDTos>
+        {
+            Items = new[] { dto },
+            TotalItems = 1,
+            TotalPages = 1,
+            CurrentPage = 1
+        });
 
         _mediator.Setup(m => m.Send(
                 It.Is<GetByDateRangeRewardQuery>(q => q.Range == DateRangeType.Month),
@@ -170,11 +183,13 @@ public class RewardsControllerTests
         var controller = new RewardsController(_mediator.Object);
 
         // Act
-        var result = await controller.GetDateRangeAsync(DateRangeType.Month, CancellationToken.None);
+        var result = await controller.GetDateRangeAsync(DateRangeType.Month, 1, 10, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Value);
+        var resultT = Assert.IsType<ResultT<PagedResult<RewardsDTos>>>(result);
+        Assert.True(resultT.IsSuccess);
+        Assert.NotNull(resultT.Value);
+        Assert.Single(resultT.Value.Items);
         _mediator.Verify(m => m.Send(
             It.Is<GetByDateRangeRewardQuery>(q => q.Range == DateRangeType.Month),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -194,25 +209,31 @@ public class RewardsControllerTests
                 "Apoyo comunidad", 80, DateTime.UtcNow)
         };
 
-        var expected = ResultT<IEnumerable<RewardsWithUserDTos>>.Success(dtos);
+        var expected = ResultT<PagedResult<RewardsWithUserDTos>>.Success(new PagedResult<RewardsWithUserDTos>
+        {
+            Items = dtos,
+            TotalItems = 3,
+            TotalPages = 1,
+            CurrentPage = 1
+        });
 
         _mediator.Setup(m => m.Send(
-                It.Is<GetTopRewardsQuery>(q => q.TopCount == 3),
+                It.Is<GetTopRewardsQuery>(q => q.PageSize == 3),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var controller = new RewardsController(_mediator.Object);
 
         // Act
-        var result = await controller.GetTopRewards(3, CancellationToken.None);
+        var result = await controller.GetTopRewards(1, 3, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(3, result.Value.Count());
-
+        var resultT = Assert.IsType<ResultT<PagedResult<RewardsWithUserDTos>>>(result);
+        Assert.True(resultT.IsSuccess);
+        Assert.NotNull(resultT.Value);
+        Assert.Equal(3, resultT.Value.Items.Count());
         _mediator.Verify(m => m.Send(
-            It.Is<GetTopRewardsQuery>(q => q.TopCount == 3),
+            It.Is<GetTopRewardsQuery>(q => q.PageSize == 3),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

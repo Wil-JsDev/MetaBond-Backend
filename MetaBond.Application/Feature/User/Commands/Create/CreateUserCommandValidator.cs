@@ -31,8 +31,14 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 
         RuleFor(x => x.ImageFile)
             .NotNull().WithMessage("Image file is required.")
-            .Must(file => file!.Length > 0).WithMessage("Image file cannot be empty.")
-            .Must(file => _allowedExtensions.Contains(Path.GetExtension(file!.FileName).ToLower()))
+            .Must(file => file is { Length: > 0 })
+            .WithMessage("Image file cannot be empty.")
+            .When(x => x.ImageFile != null)
+            .Must(file =>
+            {
+                var extension = Path.GetExtension(file?.FileName)?.ToLower();
+                return _allowedExtensions.Contains(extension);
+            })
             .WithMessage("Only .jpg, .jpeg, .png and .webp image formats are allowed.");
 
         RuleFor(x => x.InterestsIds)

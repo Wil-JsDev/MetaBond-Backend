@@ -30,7 +30,7 @@ internal sealed class UpdatePasswordUserCommandHandler(
         {
             logger.LogWarning("Code '{Code}' has already been used.", request.Code);
 
-            return ResultT<string>.Failure(Error.Conflict("409", "The code has already been used."));
+            return ResultT<string>.Failure(codeAvailabilityResult.Error!);
         }
 
         logger.LogInformation("Code '{Code}' is available.", request.Code);

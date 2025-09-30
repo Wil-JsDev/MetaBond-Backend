@@ -16,7 +16,15 @@ public sealed class User
 
     public string? Password { get; set; }
 
-    public bool IsEmailConfirmed { get; set; }
+    public bool IsEmailConfirmed { get; set; } = false;
+
+    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
+
+    public DateTime? BannedAt { get; set; }
+
+    public string? StatusUser { get; set; }
 
     public Guid? RoleId { get; set; }
 

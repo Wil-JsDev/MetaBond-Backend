@@ -40,13 +40,13 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             cancellationToken);
     }
 
-    public async Task<User> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<User?> GetUserWithInterestsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        return (await _metaBondContext.Set<User>()
+        return await _metaBondContext.Set<User>()
             .AsNoTracking()
             .Include(s => s.Interests)!
             .ThenInclude(s => s.Interest)
-            .FirstOrDefaultAsync(us => us.Id == userId, cancellationToken))!;
+            .FirstOrDefaultAsync(us => us.Id == userId, cancellationToken);
     }
 
     public async Task<bool> IsEmailInUseAsync(string email, Guid excludeUserId, CancellationToken cancellationToken)
@@ -77,12 +77,24 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
         return new PagedResult<User>(pagedUsers, pageNumber, pageSize, totalRecord);
     }
 
-    public async Task<IEnumerable<User>> SearchUsernameAsync(string keyword, CancellationToken cancellationToken)
+    public async Task<PagedResult<User>> SearchUsernameAsync(string keyword, int pageNumber, int pageSize,
+        CancellationToken cancellationToken)
     {
-        return await _metaBondContext.Set<User>()
+        var baseQuery = _metaBondContext.Set<User>()
             .AsNoTracking()
-            .Where(e => e.Username!.Contains(keyword))
+            .Where(e => e.Username != null && e.Username.Contains(keyword));
+
+        var total = await baseQuery.CountAsync(cancellationToken);
+
+        var query = await baseQuery
+            .OrderBy(e => e.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        var pagedResponse = new PagedResult<User>(query, pageNumber, pageSize, total);
+
+        return pagedResponse;
     }
 
     public async Task<User?> GetUserWithFriendshipsAsync(Guid userId, CancellationToken cancellationToken)
@@ -91,7 +103,7 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
             .AsNoTracking()
             .Include(ep => ep.ReceivedFriendRequests)!
             .ThenInclude(ef => ef.Requester)
-            .Include(ep => ep.SentFriendRequests)!
+            .Include(ep => ep.SentFriendRequests)
             .ThenInclude(ef => ef.Addressee)
             .AsSplitQuery()
             .FirstOrDefaultAsync(us => us.Id == userId, cancellationToken);

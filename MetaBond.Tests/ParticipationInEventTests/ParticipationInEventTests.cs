@@ -1,3 +1,4 @@
+using System.Collections;
 using MediatR;
 using MetaBond.Application.DTOs.Events;
 using MetaBond.Application.DTOs.ParticipationInEventDtos;
@@ -90,18 +91,23 @@ public class ParticipationInEventTests
             ParticipationInEventId = Guid.NewGuid()
         };
 
-        IEnumerable<EventsWithParticipationInEventDTos> eventsWithParticipationInEventDTosEnumerable =
-            new List<EventsWithParticipationInEventDTos>()
+        PagedResult<EventsWithParticipationInEventDTos> eventsWithParticipationInEventDTosEnumerable = new()
+        {
+            CurrentPage = 1,
+            Items = new List<EventsWithParticipationInEventDTos>()
             {
                 new EventsWithParticipationInEventDTos
                 (
                     ParticipationInEventId: query.ParticipationInEventId,
                     Events: new List<EventsDto>()
                 )
-            };
+            },
+            TotalItems = 1,
+            TotalPages = 2
+        };
 
         var expectedResult =
-            ResultT<IEnumerable<EventsWithParticipationInEventDTos>>.Success(
+            ResultT<PagedResult<EventsWithParticipationInEventDTos>>.Success(
                 eventsWithParticipationInEventDTosEnumerable);
 
         _mediator.Setup(x => x.Send(It.IsAny<GetEventsQuery>(), It.IsAny<CancellationToken>()))
@@ -112,12 +118,13 @@ public class ParticipationInEventTests
         // Act
         var resultController =
             await participationInEventController.GetParticipationInEventDetailsAsync((Guid)query.ParticipationInEventId,
+                1, 2,
                 CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
         Assert.True(resultController.IsSuccess);
-        Assert.Single(resultController.Value);
+        if (resultController.Value.Items != null) Assert.Single((IEnumerable)resultController.Value.Items);
     }
 
     [Fact]

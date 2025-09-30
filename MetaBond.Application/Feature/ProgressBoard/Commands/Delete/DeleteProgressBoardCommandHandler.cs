@@ -21,21 +21,14 @@ namespace MetaBond.Application.Feature.ProgressBoard.Commands.Delete
                 "ProgressBoard",
                 logger
             );
-            if (progressBoard.IsSuccess)
-            {
-                await repository.DeleteAsync(progressBoard.Value, cancellationToken);
+            if (!progressBoard.IsSuccess) return progressBoard.Error!;
 
-                logger.LogInformation("Progress board with ID: {ProgressBoardId} deleted successfully.",
-                    progressBoard.Value.Id);
+            await repository.DeleteAsync(progressBoard.Value, cancellationToken);
 
-                return ResultT<Guid>.Success(progressBoard.Value.Id);
-            }
+            logger.LogInformation("Progress board with ID: {ProgressBoardId} deleted successfully.",
+                progressBoard.Value.Id);
 
-            logger.LogError("Failed to delete progress board. ID: {ProgressBoardId} not found.",
-                request.ProgressBoardId);
-
-            return ResultT<Guid>.Failure(Error.NotFound("404",
-                $"Progress board with ID {request.ProgressBoardId} not found"));
+            return ResultT<Guid>.Success(progressBoard.Value.Id);
         }
     }
 }

@@ -22,17 +22,12 @@ internal sealed class DeleteRewardsCommandHandler(
             logger
         );
 
-        if (reward.IsSuccess)
-        {
-            await repository.DeleteAsync(reward.Value, cancellationToken);
+        if (!reward.IsSuccess) return reward.Error!;
 
-            logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Value.Id);
+        await repository.DeleteAsync(reward.Value, cancellationToken);
 
-            return ResultT<Guid>.Success(reward.Value.Id);
-        }
+        logger.LogInformation("Reward with ID {RewardsId} deleted successfully", reward.Value.Id);
 
-        logger.LogError("Reward with ID {RewardsId} not found", request.RewardsId);
-
-        return ResultT<Guid>.Failure(Error.Failure("404", "Reward not found"));
+        return ResultT<Guid>.Success(reward.Value.Id);
     }
 }

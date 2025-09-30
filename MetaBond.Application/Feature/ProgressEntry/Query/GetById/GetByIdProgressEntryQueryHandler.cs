@@ -24,17 +24,13 @@ internal sealed class GetByIdProgressEntryQueryHandler(
             "ProgressEntry",
             logger
         );
-        if (progressEntry.IsSuccess)
-        {
-            var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry.Value);
 
-            logger.LogInformation("Progress entry with ID {Id} retrieved successfully.", progressEntry.Value.Id);
+        if (!progressEntry.IsSuccess) return progressEntry.Error!;
 
-            return ResultT<ProgressEntryDTos>.Success(progressEntryDto);
-        }
+        var progressEntryDto = ProgressEntryMapper.ToDto(progressEntry.Value);
 
-        logger.LogError("Progress entry with ID {Id} not found.", request.ProgressEntryId);
+        logger.LogInformation("Progress entry with ID {Id} retrieved successfully.", progressEntry.Value.Id);
 
-        return ResultT<ProgressEntryDTos>.Failure(Error.NotFound("400", $"{request.ProgressEntryId} not found"));
+        return ResultT<ProgressEntryDTos>.Success(progressEntryDto);
     }
 }

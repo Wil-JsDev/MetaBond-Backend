@@ -98,13 +98,16 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
         Summary = "Get progress entries by date range",
         Description = "Retrieves progress entries for a board filtered by a specified date range."
     )]
-    public async Task<ResultT<IEnumerable<ProgressEntryDTos>>> GetDateRangeAsync([FromRoute] Guid progressBoardId,
-        [FromQuery] DateRangeType dateRange, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<ProgressEntryDTos>>> GetDateRangeAsync([FromRoute] Guid progressBoardId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize, [FromQuery] DateRangeType dateRange,
+        CancellationToken cancellationToken)
     {
         var query = new GetEntriesByDateRangeQuery
         {
             ProgressBoardId = progressBoardId,
-            Range = dateRange
+            Range = dateRange,
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -116,14 +119,15 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
         Summary = "Get recent progress entries",
         Description = "Retrieves the most recent progress entries for a board, limited by topCount."
     )]
-    public async Task<ResultT<IEnumerable<ProgressEntryDTos>>> GetFilterByRecentAsync([FromRoute] Guid progressBoardId,
-        [FromQuery] int topCount,
+    public async Task<ResultT<PagedResult<ProgressEntryDTos>>> GetFilterByRecentAsync([FromRoute] Guid progressBoardId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetRecentEntriesQuery
         {
             ProgressBoardId = progressBoardId,
-            TopCount = topCount
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -135,10 +139,15 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
         Summary = "Order progress entries by ID",
         Description = "Retrieves progress entries for a board ordered by their ID."
     )]
-    public async Task<ResultT<IEnumerable<ProgressEntryBasicDTos>>> OrderByIdAsync([FromRoute] Guid progressBoardId,
-        CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<ProgressEntryBasicDTos>>> OrderByIdAsync([FromRoute] Guid progressBoardId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var query = new GetOrderByIdProgressEntryQuery { ProgressBoardId = progressBoardId };
+        var query = new GetOrderByIdProgressEntryQuery
+        {
+            ProgressBoardId = progressBoardId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -149,11 +158,17 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
         Summary = "Order progress entries by description",
         Description = "Retrieves progress entries for a board ordered by their description."
     )]
-    public async Task<ResultT<IEnumerable<ProgressEntryWithDescriptionDTos>>> OrderByDescriptionAsync(
+    public async Task<ResultT<PagedResult<ProgressEntryWithDescriptionDTos>>> OrderByDescriptionAsync(
         [FromRoute] Guid progressBoardId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = new GetOrderByDescriptionProgressEntryQuery { ProgressBoardId = progressBoardId };
+        var query = new GetOrderByDescriptionProgressEntryQuery
+        {
+            ProgressBoardId = progressBoardId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -164,10 +179,15 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
         Summary = "Get progress entry with board details",
         Description = "Retrieves a progress entry along with its associated progress board."
     )]
-    public async Task<ResultT<IEnumerable<ProgressEntryWithProgressBoardDTos>>> GetProgressEntryWithBoard(
-        [FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<ProgressEntryWithProgressBoardDTos>>> GetProgressEntryWithBoard(
+        [FromRoute] Guid id, [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var query = new GetProgressEntryWithBoardByIdQuery { ProgressEntryId = id };
+        var query = new GetProgressEntryWithBoardByIdQuery
+        {
+            ProgressEntryId = id,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
 
         return await mediator.Send(query, cancellationToken);
     }
@@ -196,11 +216,17 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
         Summary = "Get progress entries with author",
         Description = "Retrieves a progress entry along with its author information."
     )]
-    public async Task<ResultT<IEnumerable<ProgressEntriesWithUserDTos>>> GetProgressEntriesWithAuthorAsync(
+    public async Task<ResultT<PagedResult<ProgressEntriesWithUserDTos>>> GetProgressEntriesWithAuthorAsync(
         [FromRoute] Guid progressEntriesId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new GetProgressEntriesWithAuthorsQuery { ProgressEntryId = progressEntriesId },
+        return await mediator.Send(new GetProgressEntriesWithAuthorsQuery
+            {
+                ProgressEntryId = progressEntriesId,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            },
             cancellationToken);
     }
 }

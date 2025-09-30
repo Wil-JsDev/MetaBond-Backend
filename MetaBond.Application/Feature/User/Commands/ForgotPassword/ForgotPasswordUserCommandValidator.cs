@@ -6,8 +6,8 @@ public class ForgotPasswordUserCommandValidator : AbstractValidator<ForgotPasswo
 {
     public ForgotPasswordUserCommandValidator()
     {
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("Email format is invalid.");
+        RuleFor(c => c.UserId)
+            .NotEmpty().WithMessage("UserId is required.")
+            .Must(id => id != Guid.Empty).WithMessage("UserId cannot be an empty GUID.");
     }
 }

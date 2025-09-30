@@ -23,23 +23,18 @@ internal sealed class UpdateRewardsCommandHandler(
             "Rewards",
             logger
         );
-        if (reward.IsSuccess)
-        {
-            reward.Value.Description = request.Description;
+        if (!reward.IsSuccess) return reward.Error!;
 
-            reward.Value.PointAwarded = request.PointAwarded;
+        reward.Value.Description = request.Description;
 
-            await rewardsRepository.UpdateAsync(reward.Value, cancellationToken);
+        reward.Value.PointAwarded = request.PointAwarded;
 
-            logger.LogInformation("Reward with ID: {RewardsId} updated successfully.", request.RewardsId);
+        await rewardsRepository.UpdateAsync(reward.Value, cancellationToken);
 
-            var rewardsDTos = RewardsMapper.ToDto(reward.Value);
+        logger.LogInformation("Reward with ID: {RewardsId} updated successfully.", request.RewardsId);
 
-            return ResultT<RewardsDTos>.Success(rewardsDTos);
-        }
+        var rewardsDTos = RewardsMapper.ToDto(reward.Value);
 
-        logger.LogError("No reward found with ID: {RewardsId}", request.RewardsId);
-
-        return ResultT<RewardsDTos>.Failure(Error.NotFound("404", $"{request.RewardsId} not found"));
+        return ResultT<RewardsDTos>.Success(rewardsDTos);
     }
 }

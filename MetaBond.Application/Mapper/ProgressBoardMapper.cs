@@ -36,12 +36,7 @@ public static class ProgressBoardMapper
                 ),
             Communities: progressBoard.Communities == null
                 ? null!
-                : new CommunitiesDTos(
-                    CommunitiesId: progressBoard.Communities.Id,
-                    Name: progressBoard.Communities.Name,
-                    CreatedAt: progressBoard.Communities.CreateAt,
-                    CategoryId: progressBoard.Communities.CommunityCategoryId ?? Guid.Empty
-                ),
+                : CommunityMapper.MapCommunitiesDTos(progressBoard.Communities),
             User: progressBoard.User == null
                 ? null!
                 : new UserProgressEntryDTos(

@@ -6,6 +6,7 @@ using MetaBond.Application.Feature.ProgressEntry.Commands.Update;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetByIdProgressEntryWithProgressBoard;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetDateRange;
 using MetaBond.Application.Feature.ProgressEntry.Query.GetRecent;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Domain.Models;
@@ -122,37 +123,61 @@ public class ProgressEntryControllerTests
     {
         // Arrange
         var progressBoardId = Guid.NewGuid();
-        var topCount = 5;
+        var pageNumber = 1;
+        var pageSize = 5;
 
-        var dto = new ProgressEntryDTos(
-            ProgressEntryId: Guid.NewGuid(),
-            ProgressBoardId: progressBoardId,
-            UserId: Guid.NewGuid(),
-            Description: "Recent entry",
-            CreatedAt: DateTime.UtcNow,
-            UpdateAt: DateTime.UtcNow
-        );
+        PagedResult<ProgressEntryDTos> pagedResult = new()
+        {
+            CurrentPage = pageNumber,
+            Items = new List<ProgressEntryDTos>
+            {
+                new ProgressEntryDTos(
+                    ProgressEntryId: Guid.NewGuid(),
+                    ProgressBoardId: progressBoardId,
+                    UserId: Guid.NewGuid(),
+                    Description: "Recent entry",
+                    CreatedAt: DateTime.UtcNow,
+                    UpdateAt: DateTime.UtcNow
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
+        };
 
-        var expectedResult = ResultT<IEnumerable<ProgressEntryDTos>>.Success(new[] { dto });
+        var expectedResult = ResultT<PagedResult<ProgressEntryDTos>>.Success(pagedResult);
 
         _mediator.Setup(m => m.Send(
-                It.Is<GetRecentEntriesQuery>(q => q.ProgressBoardId == progressBoardId && q.TopCount == topCount),
+                It.Is<GetRecentEntriesQuery>(q =>
+                    q.ProgressBoardId == progressBoardId &&
+                    q.PageNumber == pageNumber &&
+                    q.PageSize == pageSize),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var controller = new ProgressEntriesController(_mediator.Object);
 
         // Act
-        var result = await controller.GetFilterByRecentAsync(progressBoardId, topCount, CancellationToken.None);
+        var result =
+            await controller.GetFilterByRecentAsync(progressBoardId, pageNumber, pageSize, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Value);
-        Assert.Equal(progressBoardId, result.Value.First().ProgressBoardId);
+
+        Assert.NotNull(result.Value);
+        Assert.Equal(1, result.Value.TotalItems);
+        Assert.Equal(1, result.Value.TotalPages);
+        Assert.Equal(pageNumber, result.Value.CurrentPage);
+        Assert.Single(result.Value.Items);
+
+        var firstItem = result.Value.Items.First();
+        Assert.Equal(progressBoardId, firstItem.ProgressBoardId);
 
         _mediator.Verify(m => m.Send(
-            It.Is<GetRecentEntriesQuery>(q => q.ProgressBoardId == progressBoardId && q.TopCount == topCount),
+            It.Is<GetRecentEntriesQuery>(q =>
+                q.ProgressBoardId == progressBoardId &&
+                q.PageNumber == pageNumber &&
+                q.PageSize == pageSize),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -163,16 +188,25 @@ public class ProgressEntryControllerTests
         // Arrange
         var progressBoardId = Guid.NewGuid();
 
-        var dto = new ProgressEntryDTos(
-            ProgressEntryId: Guid.NewGuid(),
-            ProgressBoardId: progressBoardId,
-            UserId: Guid.NewGuid(),
-            Description: "Monthly entry",
-            CreatedAt: DateTime.UtcNow,
-            UpdateAt: DateTime.UtcNow
-        );
+        PagedResult<ProgressEntryDTos> pagedResult = new()
+        {
+            CurrentPage = 1,
+            Items = new List<ProgressEntryDTos>
+            {
+                new ProgressEntryDTos(
+                    ProgressEntryId: Guid.NewGuid(),
+                    ProgressBoardId: progressBoardId,
+                    UserId: Guid.NewGuid(),
+                    Description: "Recent entry",
+                    CreatedAt: DateTime.UtcNow,
+                    UpdateAt: DateTime.UtcNow
+                )
+            },
+            TotalItems = 1,
+            TotalPages = 1
+        };
 
-        var expectedResult = ResultT<IEnumerable<ProgressEntryDTos>>.Success(new[] { dto });
+        var expectedResult = ResultT<PagedResult<ProgressEntryDTos>>.Success(pagedResult);
 
         _mediator.Setup(m => m.Send(
                 It.Is<GetEntriesByDateRangeQuery>(q =>
@@ -184,11 +218,14 @@ public class ProgressEntryControllerTests
         var controller = new ProgressEntriesController(_mediator.Object);
 
         // Act
-        var result = await controller.GetDateRangeAsync(progressBoardId, DateRangeType.Month, CancellationToken.None);
+        // var result = await controller.GetDateRangeAsync(progressBoardId, DateRangeType.Month, CancellationToken.None);
+
+        var result =
+            await controller.GetDateRangeAsync(progressBoardId, 1, 2, DateRangeType.Month, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Value);
+        Assert.Single(result.Value.Items);
     }
 }

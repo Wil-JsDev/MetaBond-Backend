@@ -12,7 +12,10 @@ public static class UserMapper
             FirstName: user.FirstName,
             LastName: user.LastName,
             Username: user.Username,
-            Photo: user.Photo
+            Photo: user.Photo,
+            StatusAccount: user.StatusUser,
+            CreatedAt: user.CreatedAt,
+            UpdateAt: user.UpdatedAt
         );
     }
 }

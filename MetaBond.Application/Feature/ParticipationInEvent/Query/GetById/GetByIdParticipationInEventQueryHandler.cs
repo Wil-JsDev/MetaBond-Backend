@@ -25,20 +25,13 @@ internal sealed class GetByIdParticipationInEventQueryHandler(
             logger
         );
 
-        if (participationInEvent.IsSuccess)
-        {
-            var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent.Value);
+        if (!participationInEvent.IsSuccess) return participationInEvent.Error!;
 
-            logger.LogInformation("Successfully retrieved participation with ParticipationId: {ParticipationId}.",
-                participationInEvent.Value.Id);
+        var inEventDTos = ParticipationInEventMapper.ParticipationInEventToDto(participationInEvent.Value);
 
-            return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
-        }
+        logger.LogInformation("Successfully retrieved participation with ParticipationId: {ParticipationId}.",
+            participationInEvent.Value.Id);
 
-        logger.LogError("Participation with ParticipationId: {ParticipationId} not found.",
-            request.ParticipationInEventId);
-
-        return ResultT<ParticipationInEventDTos>.Failure(Error.NotFound("404",
-            $"{request.ParticipationInEventId} Participation not found"));
+        return ResultT<ParticipationInEventDTos>.Success(inEventDTos);
     }
 }

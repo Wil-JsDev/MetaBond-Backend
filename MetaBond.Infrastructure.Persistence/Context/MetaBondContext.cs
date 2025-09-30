@@ -49,6 +49,12 @@ namespace MetaBond.Infrastructure.Persistence.Context
         {
             base.OnModelCreating(modelBuilder);
 
+            #region Filter
+
+            modelBuilder.Entity<User>().HasQueryFilter(us => us.StatusUser == StatusAccount.Active.ToString());
+
+            #endregion
+
             #region Extensions
 
             modelBuilder.SeedRoles();
@@ -350,6 +356,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 x.Property(c => c.Description)
                     .IsRequired()
                     .HasMaxLength(maxLength: 250);
+
+                x.Property(c => c.Photo)
+                    .IsRequired()
+                    .HasMaxLength(250);
             });
 
             #endregion
@@ -440,8 +450,16 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .IsRequired();
 
                 us.Property(u => u.Photo)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsRequired();
+
+                us.Property(ad => ad.IsEmailConfirmed)
+                    .HasDefaultValue(false);
+
+                us.Property(u => u.StatusUser)
+                    .IsRequired()
+                    .HasColumnType("varchar(50)")
+                    .HasDefaultValue(StatusAccount.Active);
             });
 
             #endregion
@@ -514,6 +532,36 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 entity.Property(e => e.Name)
                     .HasMaxLength(30)
                     .IsRequired();
+            });
+
+            #endregion
+
+            #region Admin
+
+            modelBuilder.Entity<Admin>(ad =>
+            {
+                ad.Property(admin => admin.FirstName)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                ad.Property(admin => admin.LastName)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                ad.Property(admin => admin.Email)
+                    .HasMaxLength(60)
+                    .IsRequired();
+
+                ad.Property(admin => admin.Password)
+                    .HasMaxLength(60)
+                    .IsRequired();
+
+                ad.Property(admin => admin.Photo)
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                ad.Property(admin => admin.IsEmailConfirmed)
+                    .HasDefaultValue(false);
             });
 
             #endregion

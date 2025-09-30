@@ -1,6 +1,8 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.DTOs.ProgressBoard;
+using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.Extensions.Caching.Distributed;
@@ -12,13 +14,21 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
         IProgressBoardRepository progressBoardRepository,
         IDistributedCache decoratedCache,
         ILogger<GetRecentProgressBoardQueryHandler> logger)
-        : IQueryHandler<GetRecentProgressBoardQuery, IEnumerable<ProgressBoardDTos>>
+        : IQueryHandler<GetRecentProgressBoardQuery, PagedResult<ProgressBoardDTos>>
     {
-        public async Task<ResultT<IEnumerable<ProgressBoardDTos>>> Handle(
+        public async Task<ResultT<PagedResult<ProgressBoardDTos>>> Handle(
             GetRecentProgressBoardQuery request,
             CancellationToken cancellationToken)
         {
-            var progressBoardDictionary = GetValue();
+            var paginationValidation = PaginationHelper.ValidatePagination<ProgressBoardDTos>(
+                request.PageNumber,
+                request.PageSize,
+                logger
+            );
+
+            if (!paginationValidation.IsSuccess) return paginationValidation.Error!;
+
+            var progressBoardDictionary = GetValue(request.PageNumber, request.PageSize);
             if (progressBoardDictionary.TryGetValue((request.DateFilter), out var statusFilter))
             {
                 var progressBoardFilter = await decoratedCache.GetOrCreateAsync(
@@ -27,7 +37,9 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
                     {
                         var progressBoards = await statusFilter(cancellationToken);
 
-                        var progressBoardDTos = progressBoards.Select(x => new ProgressBoardDTos
+                        var items = progressBoards.Items ?? [];
+
+                        var progressBoardDTos = items.Select(x => new ProgressBoardDTos
                         (
                             ProgressBoardId: x.Id,
                             CommunitiesId: x.CommunitiesId,
@@ -36,55 +48,69 @@ namespace MetaBond.Application.Feature.ProgressBoard.Query.GetRecent
                             UpdatedAt: x.UpdatedAt
                         ));
 
-                        return progressBoardDTos;
+                        PagedResult<ProgressBoardDTos> pagedResult = new(
+                            totalItems: progressBoards.TotalItems,
+                            items: progressBoardDTos,
+                            currentPage: progressBoards.CurrentPage,
+                            pageSize: request.PageSize
+                        );
+
+                        return pagedResult;
                     },
                     cancellationToken: cancellationToken);
 
-                var progressBoardDTosEnumerable = progressBoardFilter.ToList();
-                if (!progressBoardDTosEnumerable.Any())
+                var itemsDto = progressBoardFilter.Items ?? [];
+
+                if (!itemsDto.Any())
                 {
                     logger.LogWarning("No progress boards found for the given date filter: {DateFilter}",
                         request.DateFilter);
 
-                    return ResultT<IEnumerable<ProgressBoardDTos>>.Failure(Error.Failure("400",
+                    return ResultT<PagedResult<ProgressBoardDTos>>.Failure(Error.Failure("400",
                         "No progress boards found"));
                 }
 
                 logger.LogInformation("Retrieved {Count} progress boards for date filter: {DateFilter}",
-                    progressBoardDTosEnumerable.Count(), request.DateFilter);
+                    itemsDto.Count(), request.DateFilter);
 
-                return ResultT<IEnumerable<ProgressBoardDTos>>.Success(progressBoardDTosEnumerable);
+                return ResultT<PagedResult<ProgressBoardDTos>>.Success(progressBoardFilter);
             }
 
             logger.LogError("Invalid date filter provided: {DateFilter}", request.DateFilter);
 
-            return ResultT<IEnumerable<ProgressBoardDTos>>.Failure(Error.Failure("400", "Invalid date filter"));
+            return ResultT<PagedResult<ProgressBoardDTos>>.Failure(Error.Failure("400", "Invalid date filter"));
         }
 
         #region Private Methods
 
-        private Dictionary<DateRangeFilter, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressBoard>>>>
-            GetValue()
+        private Dictionary<DateRangeFilter, Func<CancellationToken, Task<PagedResult<Domain.Models.ProgressBoard>>>>
+            GetValue(int pageNumber, int pageSize)
         {
             return new Dictionary<DateRangeFilter,
-                Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressBoard>>>>
+                Func<CancellationToken, Task<PagedResult<Domain.Models.ProgressBoard>>>>
             {
                 {
                     (DateRangeFilter.LastDay),
                     async cancellationToken =>
                         await progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddDays(-1),
+                            pageNumber,
+                            pageSize,
                             cancellationToken)
                 },
                 {
                     (DateRangeFilter.ThreeDays),
                     async cancellationToken =>
                         await progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddTicks(-3),
+                            pageNumber,
+                            pageSize,
                             cancellationToken)
                 },
                 {
                     (DateRangeFilter.LastWeek),
                     async cancellationToken =>
                         await progressBoardRepository.GetRecentBoardsAsync(DateTime.UtcNow.AddDays(-5),
+                            pageNumber,
+                            pageSize,
                             cancellationToken)
                 },
             };

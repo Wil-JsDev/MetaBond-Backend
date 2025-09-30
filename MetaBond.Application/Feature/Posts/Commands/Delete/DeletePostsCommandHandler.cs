@@ -19,12 +19,7 @@ internal sealed class DeletePostsCommandHandler(
             "Posts",
             logger
         );
-        if (!posts.IsSuccess)
-        {
-            logger.LogError("Post with ID {PostId} not found.", request.PostsId);
-
-            return ResultT<Guid>.Failure(Error.NotFound("404", $"{request.PostsId} not found"));
-        }
+        if (!posts.IsSuccess) return posts.Error!;
 
         await postsRepository.DeleteAsync(posts.Value, cancellationToken);
 

@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.ProgressBoard;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using Microsoft.Extensions.Caching.Distributed;
@@ -15,14 +16,13 @@ internal sealed class GetRangeProgressBoardQueryHandler(
     IProgressEntryRepository progressEntryRepository,
     IDistributedCache decoratedCache,
     ILogger<GetRangeProgressBoardQueryHandler> logger)
-    : IQueryHandler<GetRangeProgressBoardQuery, IEnumerable<ProgressBoardWithProgressEntryDTos>>
+    : IQueryHandler<GetRangeProgressBoardQuery, PagedResult<ProgressBoardWithProgressEntryDTos>>
 {
-    public async Task<ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>> Handle(
+    public async Task<ResultT<PagedResult<ProgressBoardWithProgressEntryDTos>>> Handle(
         GetRangeProgressBoardQuery request,
         CancellationToken cancellationToken)
     {
-        var paginationValidationResult = PaginationHelper.ValidatePagination<ProgressBoardWithProgressEntryDTos>
-        (
+        var paginationValidationResult = PaginationHelper.ValidatePagination<ProgressBoardWithProgressEntryDTos>(
             request.Page,
             request.PageSize,
             logger
@@ -31,132 +31,115 @@ internal sealed class GetRangeProgressBoardQueryHandler(
         if (!paginationValidationResult.IsSuccess)
             return paginationValidationResult.Error!;
 
-        var progressBoard = GetValue();
-        if (progressBoard.TryGetValue((request.DateRangeType), out var progressBoardValue))
+        if (!TryGetBoardsQuery(request.DateRangeType, request.Page, request.PageSize, out var boardsQuery))
         {
-            var progressBoards = await progressBoardValue(cancellationToken);
+            logger.LogError("Invalid DateRangeType: {DateRangeType}. No matching progress board found.",
+                request.DateRangeType);
 
-            var boards = progressBoards.ToList();
-            if (!boards.Any())
-            {
-                logger.LogError("No progress board entries found for DateRangeType: {DateRangeType}",
-                    request.DateRangeType);
-
-                var getMessage = GetMessage().TryGetValue(request.DateRangeType, out var messageValue);
-                if (getMessage)
-                {
-                    logger.LogWarning("No progress board found for the given date range");
-
-                    return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(Error.NotFound("404",
-                        messageValue!));
-                }
-            }
-
-            if (request.Page <= 0 || request.PageSize <= 0)
-            {
-                logger.LogWarning("Invalid pagination parameters: Page = {Page}, PageSize = {PageSize}", request.Page,
-                    request.PageSize);
-
-                return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
-                    Error.Failure("400",
-                        "Page number and page size must be greater than zero. Please provide valid pagination values."));
-            }
-
-            var result = await decoratedCache.GetOrCreateAsync(
-                $"progress-entry-paged-get-range-{request.Page}-{request.PageSize}",
-                async () =>
-                {
-                    var progressEntryPaged = await progressEntryRepository.GetPagedProgressEntryAsync(
-                        request.PageSize,
-                        request.Page,
-                        cancellationToken);
-
-                    var progressEntries = progressEntryPaged.Items!.ToList();
-
-                    var progressBoardWithProgressEntryDs = boards.Select(board =>
-                        board.ToProgressBoardWithEntriesDto(progressEntries));
-
-                    return progressBoardWithProgressEntryDs;
-                }, cancellationToken: cancellationToken);
-
-            var progressBoardWithProgressEntryDTosEnumerable = result.ToList();
-            logger.LogInformation(
-                "Successfully retrieved {Count} progress board entries for DateRangeType: {DateRangeType}",
-                progressBoardWithProgressEntryDTosEnumerable.Count(), request.DateRangeType);
-
-            return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Success(
-                progressBoardWithProgressEntryDTosEnumerable);
+            return ResultT<PagedResult<ProgressBoardWithProgressEntryDTos>>.Failure(
+                Error.Failure("400", "Invalid DateRangeType provided"));
         }
 
-        logger.LogError("Invalid DateRangeType: {DateRangeType}. No matching progress board found.",
-            request.DateRangeType);
+        var cacheKey = $"progress-entry-paged-get-range-{request.DateRangeType}-{request.Page}-{request.PageSize}";
 
-        return ResultT<IEnumerable<ProgressBoardWithProgressEntryDTos>>.Failure(
-            Error.Failure("400", "Invalid DateRangeType provided"));
+        var result = await decoratedCache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var progressBoards = await boardsQuery(cancellationToken);
+                var boards = progressBoards.Items?.ToList() ?? [];
+
+                if (!boards.Any())
+                {
+                    if (Messages.TryGetValue(request.DateRangeType, out var messageValue))
+                    {
+                        logger.LogWarning("No progress board found for DateRangeType: {DateRangeType}",
+                            request.DateRangeType);
+
+                        return ResultT<PagedResult<ProgressBoardWithProgressEntryDTos>>.Failure(
+                            Error.Failure("400", messageValue));
+                    }
+                }
+
+                var progressEntryPaged = await progressEntryRepository.GetPagedProgressEntryAsync(
+                    request.PageSize,
+                    request.Page,
+                    cancellationToken);
+
+                var progressEntries = progressEntryPaged.Items ?? [];
+
+                var boardDtos = boards
+                    .Select(board => board.ToProgressBoardWithEntriesDto(progressEntries))
+                    .ToList();
+
+                return new PagedResult<ProgressBoardWithProgressEntryDTos>
+                {
+                    TotalItems = progressBoards.TotalItems,
+                    CurrentPage = progressBoards.CurrentPage,
+                    TotalPages = progressBoards.TotalPages,
+                    Items = boardDtos
+                };
+            },
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation(
+            "Successfully retrieved {Count} progress board entries for DateRangeType: {DateRangeType}",
+            result.Value.Items!.Count(), request.DateRangeType);
+
+        return ResultT<PagedResult<ProgressBoardWithProgressEntryDTos>>.Success(result.Value);
     }
 
-    #region Private Methods
+    #region Private Helpers
 
-    private static Dictionary<DateRangeType, string> GetMessage()
+    private static readonly Dictionary<DateRangeType, string> Messages = new()
     {
-        return new Dictionary<DateRangeType, string>
+        { DateRangeType.Today, "No records available for today." },
+        { DateRangeType.Week, "No records available for this week." },
+        { DateRangeType.Month, "No records available for this month." },
+        { DateRangeType.Year, "No records available for this year." },
+    };
+
+    private static (DateTime Start, DateTime End) GetDateRange(DateRangeType type)
+    {
+        var now = DateTime.UtcNow.Date;
+
+        return type switch
         {
-            { DateRangeType.Today, "No records available for today." },
-            { DateRangeType.Week, "No records available for this week." },
-            { DateRangeType.Month, "No records available for this month." },
-            { DateRangeType.Year, "No records available for this year." },
+            DateRangeType.Today => (now, now.AddDays(1).AddTicks(-1)),
+            DateRangeType.Week => (now.AddDays(-7), now.AddDays(-1)),
+            DateRangeType.Month => (new DateTime(now.Year, now.Month, 1),
+                new DateTime(now.Year, now.Month, 1).AddMonths(1).AddTicks(-1)),
+            DateRangeType.Year => (new DateTime(now.Year, 1, 1),
+                new DateTime(now.Year + 1, 1, 1).AddTicks(-1)),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
 
-    private Dictionary<DateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressBoard>>>>
-        GetValue()
+    private bool TryGetBoardsQuery(
+        DateRangeType rangeType,
+        int page,
+        int pageSize,
+        out Func<CancellationToken, Task<PagedResult<Domain.Models.ProgressBoard>>> query)
     {
-        return new Dictionary<DateRangeType, Func<CancellationToken, Task<IEnumerable<Domain.Models.ProgressBoard>>>>
+        try
         {
-            {
-                DateRangeType.Today,
-                async cancellationToken =>
-                    await progressBoardRepository.GetBoardsByDateRangeAsync(
-                        DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc), // We ensure that the date is UTC
-                        DateTime.SpecifyKind(DateTime.UtcNow.AddDays(1).AddTicks(-1),
-                            DateTimeKind.Utc), // End of today in UTC
-                        cancellationToken)
-            },
+            var (start, end) = GetDateRange(rangeType);
 
-            {
-                DateRangeType.Week,
-                async cancellationToken =>
-                    await progressBoardRepository.GetBoardsByDateRangeAsync(
-                        DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-7),
-                            DateTimeKind.Utc), // Start of last week in UTC
-                        DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-1),
-                            DateTimeKind.Utc), // End of last week in UTC
-                        cancellationToken)
-            },
+            query = async cancellationToken =>
+                await progressBoardRepository.GetBoardsByDateRangeAsync(
+                    start,
+                    end,
+                    page,
+                    pageSize,
+                    cancellationToken);
 
-            {
-                DateRangeType.Month,
-                async cancellationToken =>
-                    await progressBoardRepository.GetBoardsByDateRangeAsync(
-                        DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1),
-                            DateTimeKind.Utc), // Start of the month in UTC
-                        DateTime.SpecifyKind(
-                            new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(1).AddTicks(-1),
-                            DateTimeKind.Utc), // End of the month in UTC
-                        cancellationToken)
-            },
-
-            {
-                DateRangeType.Year,
-                async cancellationToken =>
-                    await progressBoardRepository.GetBoardsByDateRangeAsync(
-                        DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year, 1, 1),
-                            DateTimeKind.Utc), // Start of the year in UTC
-                        DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year + 1, 1, 1).AddTicks(-1),
-                            DateTimeKind.Utc), // End of the year in UTC
-                        cancellationToken)
-            }
-        };
+            return true;
+        }
+        catch
+        {
+            query = null!;
+            return false;
+        }
     }
 
     #endregion
