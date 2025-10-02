@@ -43,6 +43,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
         public DbSet<CommunityCategory> CommunityCategories { get; set; }
 
+        public DbSet<Admin> Admins { get; set; }
+
+        public DbSet<Notification> Notifications { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -116,6 +120,9 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<CommunityCategory>()
                 .ToTable("CommunityCategories");
+
+            modelBuilder.Entity<Notification>()
+                .ToTable("Notifications");
 
             #endregion
 
@@ -191,6 +198,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<CommunityCategory>()
                 .HasKey(cc => cc.Id)
                 .HasName("PkCommunityCategories");
+
+            modelBuilder.Entity<Notification>()
+                .HasKey(n => n.Id)
+                .HasName("PkNotifications");
 
             #endregion
 
@@ -341,6 +352,13 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .WithOne(ic => ic.InterestCategory)
                 .HasForeignKey(ic => ic.InterestCategoryId)
                 .HasConstraintName("FkInterestCategoryId")
+                .IsRequired();
+
+            modelBuilder.Entity<User>()
+                .HasMany(us => us.Notifications)
+                .WithOne(n => n.User)
+                .HasForeignKey(n => n.UserId)
+                .HasConstraintName("FkNotificationsUserId")
                 .IsRequired();
 
             #endregion
@@ -562,6 +580,29 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
                 ad.Property(admin => admin.IsEmailConfirmed)
                     .HasDefaultValue(false);
+            });
+
+            #endregion
+
+            #region Notification
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.Property(nt => nt.Message)
+                    .HasMaxLength(250)
+                    .IsRequired();
+
+                entity.Property(nt => nt.Type)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(nt => nt.CreatedAt)
+                    .HasColumnType("timestamp without time zone");
+
+                entity.Property(nt => nt.ReadAt)
+                    .HasColumnType("timestamp without time zone");
+
+                entity.Ignore(nt => nt.IsRead); // Computed property, no se guarda en BD
             });
 
             #endregion
