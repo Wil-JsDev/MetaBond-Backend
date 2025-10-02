@@ -50,4 +50,6 @@ public sealed class User
     public ICollection<Rewards>? Rewards { get; set; }
 
     public ICollection<ProgressBoard>? ProgressBoards { get; set; }
+
+    public ICollection<Notification>? Notifications { get; set; }
 }
