@@ -1,6 +1,7 @@
 using MetaBond.Infrastructure.Persistence;
 using MetaBond.Infrastructure.Shared;
 using MetaBond.Application;
+using MetaBond.Infrastructure.Shared.SignaIR.Hubs;
 using Serilog;
 using MetaBond.Presentation.Api.Extensions;
 
@@ -39,6 +40,12 @@ try
 
     app.UseExceptionHandler(_ => { });
 
+    app.UseCors("AllowedPort");
+
+    app.UseRouting();
+
+    app.UseWebSockets();
+
     app.UseSerilogRequestLogging();
 
     // Configure the HTTP request pipeline.
@@ -57,6 +64,9 @@ try
     app.UserSwaggerExtension();
 
     app.MapControllers();
+
+    // Hubs
+    app.MapHub<NotificationHub>("/hubs/notifications");
 
     app.Run();
 }
