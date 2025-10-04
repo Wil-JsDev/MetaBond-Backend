@@ -15,6 +15,8 @@ using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -22,12 +24,13 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
 [ApiController]
+[Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/progress-board")]
 public class ProgressBoardController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new progress board",
         Description = "Creates a new progress board using the provided command data."
@@ -39,7 +42,7 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update a progress board",
         Description = "Updates an existing progress board with the provided data."

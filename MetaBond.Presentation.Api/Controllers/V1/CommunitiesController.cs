@@ -11,9 +11,13 @@ using MetaBond.Application.Feature.Communities.Query.Pagination;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Common;
+using MetaBond.Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
+using static MetaBond.Domain.Common.UserRoleNames;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
@@ -23,6 +27,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class CommunitiesController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new community",
@@ -35,6 +40,7 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete]
+    [Authorize(Roles = $"{CommunityMembershipRoleNames.Owner},{UserRoleNames.Admin}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Delete a community",
@@ -48,6 +54,7 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = $"{CommunityMembershipRoleNames.Owner},{UserRoleNames.Admin}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update a community",
@@ -60,6 +67,7 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get community by ID",
@@ -73,6 +81,7 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("search/category/{categoryId}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Search communities by category",
@@ -95,6 +104,7 @@ public class CommunitiesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}/details")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get detailed community information",

@@ -9,6 +9,8 @@ using MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -21,6 +23,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class ParticipationInEventController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new participation in an event",
@@ -34,6 +37,8 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles =
+        $"{UserRoleNames.Admin},{CommunityMembershipRoleNames.Owner}, {CommunityMembershipRoleNames.Moderator}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update participation in an event",
@@ -47,7 +52,8 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [DisableRateLimiting]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get participation by ID",
         Description = "Retrieves a specific participation record by its unique identifier."
@@ -61,6 +67,7 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{participationInEventId}/events")]
+    [Authorize]   
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get events for a participation",
@@ -83,6 +90,7 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("pagination")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get paginated participation records",

@@ -12,10 +12,11 @@ using MetaBond.Application.Feature.Events.Query.GetCommunities;
 using MetaBond.Application.Feature.Events.Query.GetEventsWithParticipationInEvent;
 using MetaBond.Application.Feature.Events.Query.GetOrderById;
 using MetaBond.Application.Feature.Events.Query.Pagination;
-using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -28,6 +29,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class EventsController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = $"{CommunityMembershipRoleNames.Owner},{CommunityMembershipRoleNames.Moderator}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new event",
@@ -40,6 +42,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = $"{CommunityMembershipRoleNames.Owner},{CommunityMembershipRoleNames.Moderator}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Delete an event by ID",
@@ -53,6 +56,8 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles =
+        $"{CommunityMembershipRoleNames.Owner},{CommunityMembershipRoleNames.Moderator}, {CommunityMembershipRoleNames.CommunityManager}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update an event",
@@ -65,7 +70,8 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [DisableRateLimiting]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get event by ID",
         Description = "Retrieves a specific event by its unique identifier."
@@ -78,6 +84,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communitiesId}/search/by-date-range")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Filter events by date range for a community",
@@ -102,6 +109,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("search/title/{title}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Filter events by title",
@@ -123,6 +131,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communityId}/search/title/{title}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get events by title and community",
@@ -147,6 +156,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{eventId}/communities")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get event with communities",
@@ -169,7 +179,8 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{eventId}/participation-in-event")]
-    [DisableRateLimiting]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get event participation",
         Description = "Retrieves participation details for a specific event."
@@ -191,6 +202,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("order")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Order events",
@@ -212,6 +224,7 @@ public class EventsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("pagination")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get paginated events",

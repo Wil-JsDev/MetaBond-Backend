@@ -10,6 +10,9 @@ using MetaBond.Application.Feature.Interest.Query.Pagination;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -22,6 +25,8 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class InterestController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = UserRoleNames.Admin)]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new interest",
         Description = "Creates a new interest and returns the created resource."
@@ -33,6 +38,7 @@ public class InterestController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{interestId}")]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get interest by ID",
         Description = "Retrieves an interest by its unique identifier."
@@ -71,6 +77,7 @@ public class InterestController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("by-user/{userId}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get interests by user",

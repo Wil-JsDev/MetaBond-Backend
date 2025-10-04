@@ -15,6 +15,8 @@ using MetaBond.Application.Feature.User.Query.Pagination;
 using MetaBond.Application.Feature.User.Query.SearchByUsername;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -28,7 +30,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class UserController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new user",
         Description = "Creates a new user using the provided command data."
@@ -40,7 +42,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("confirm-account")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Confirm user account",
         Description = "Confirms a user account using the provided userId and confirmation code."
@@ -58,7 +60,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{userId}/forgot-password")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Forgot password",
         Description = "Sends a password reset email to the user with the provided email address."
@@ -75,7 +77,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update user information",
         Description = "Updates the information of an existing user."
@@ -87,7 +89,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{code}")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update user password",
         Description = "Updates the password for a user using a reset code and new password information."
@@ -107,7 +109,8 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{userId}/photo")]
-    [DisableRateLimiting]
+    [Authorize(Roles = UserRoleNames.User)]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update user photo",
         Description = "Updates the profile photo of a user by their unique identifier."
@@ -125,6 +128,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("search-by/{username}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get user by username",
@@ -142,6 +146,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{userId}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get user with friendship info",
@@ -159,6 +164,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("pagination")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get paginated users",
@@ -177,6 +183,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("search")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Search users by username",
@@ -197,6 +204,7 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("reset-password/{userId}")]
+    [Authorize]
     [SwaggerOperation(
         Summary = "Reset user password",
         Description =

@@ -10,10 +10,10 @@ using MetaBond.Application.Feature.Notifications.Query.GetById;
 using MetaBond.Application.Feature.Notifications.Query.GetNextUnread;
 using MetaBond.Application.Feature.Notifications.Query.GetNotificationByUser;
 using MetaBond.Application.Feature.Notifications.Query.GetNotificationRecentByUser;
-using MetaBond.Application.Feature.Notifications.Query.GetPagedUserId;
-using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
@@ -23,6 +23,8 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class NotificationController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<NotificationDTos>> CreateNotificationAsync([FromBody] CreateNotificationCommand command,
         CancellationToken cancellationToken)
     {
@@ -30,6 +32,8 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{notificationId}/users/{userId}")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<Result> DeleteAllNotificationsAsync([FromRoute] Guid userId,
         [FromRoute] Guid notificationId,
         CancellationToken cancellationToken)
@@ -44,6 +48,8 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("users/{userId}")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<Result> DeleteAllNotificationsAsync([FromRoute] Guid userId, CancellationToken cancellationToken)
     {
         var command = new DeleteAllByUserNotificationCommand()
@@ -55,12 +61,16 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("users/{userId}/reads")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<string>> MarkAllAsReadAsync([FromRoute] Guid userId, CancellationToken cancellationToken)
     {
         return await mediator.Send(new MarkAllAsReadNotificationCommand() { UserId = userId }, cancellationToken);
     }
 
     [HttpPatch("{notificationId}/users/{userId}/read")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<NotificationDTos>> MarkAsReadAsync([FromRoute] Guid userId,
         [FromRoute] Guid notificationId,
         CancellationToken cancellationToken)
@@ -75,6 +85,8 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{notificationId}")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<NotificationDTos>> GetNotificationByIdAsync([FromRoute] Guid notificationId,
         CancellationToken cancellationToken)
     {
@@ -87,6 +99,8 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("users/{userId}/next-unread")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<NotificationDTos>> NextUnreadNotificationAsync([FromRoute] Guid userId,
         CancellationToken cancellationToken)
     {
@@ -99,6 +113,8 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{notificationId}/users/{userId}")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<NotificationWithUserDTos>> GetNotificationByUserAsync([FromRoute] Guid userId,
         [FromRoute] Guid notificationId,
         CancellationToken cancellationToken)
@@ -113,6 +129,8 @@ public class NotificationController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("users/{userId}/recent")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<ResultT<IEnumerable<NotificationWithUserDTos>>> GetNotificationRecentByUserAsync(
         [FromRoute] Guid userId,
         [FromQuery] int take,

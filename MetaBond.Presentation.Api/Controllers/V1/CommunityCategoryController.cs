@@ -8,7 +8,10 @@ using MetaBond.Application.Feature.CommunityCategory.Query.GetByName;
 using MetaBond.Application.Feature.CommunityCategory.Query.Pagination;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
@@ -19,6 +22,8 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class CommunityCategoryController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = UserRoleNames.Admin)]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new Community Category",
         Description = "Creates a new community category with the provided details."
@@ -32,6 +37,7 @@ public class CommunityCategoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = UserRoleNames.Admin)]
     [SwaggerOperation(
         Summary = "Update an existing Community Category",
         Description = "Updates the name or details of an existing community category."
@@ -44,7 +50,9 @@ public class CommunityCategoryController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpGet("{communityCategoryId:guid}")]
+    [HttpGet("{communityCategoryId}")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get Community Category by Id",
         Description = "Retrieves a specific community category using its unique identifier."
