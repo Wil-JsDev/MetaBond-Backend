@@ -123,4 +123,13 @@ public class NotificationRepository(MetaBondContext metaBondContext)
             .OrderBy(n => n.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<IEnumerable<Notification>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await _metaBondContext.Set<Notification>()
+            .AsNoTracking()
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
 }

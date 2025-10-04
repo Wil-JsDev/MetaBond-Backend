@@ -57,4 +57,12 @@ public interface INotificationRepository : IGenericRepository<Notification>
     /// </summary>
     Task<Notification?> GetNextUnreadByUserIdAsync(
         Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Retrieves all notifications for a given user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user for whom to retrieve notifications.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>A collection of notifications associated with the specified user, ordered by creation date descending.</returns>
+    Task<IEnumerable<Notification>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken);
 }
