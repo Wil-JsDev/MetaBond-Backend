@@ -29,6 +29,7 @@ internal sealed class JoinCommunityCommandHandler(
             );
         }
 
+
         var communityResult = await EntityHelper.GetEntityByIdAsync(communitiesRepository.GetByIdAsync,
             request.CommunityId ?? Guid.Empty,
             "Community",
@@ -44,8 +45,20 @@ internal sealed class JoinCommunityCommandHandler(
 
         if (!userResult.IsSuccess) return ResultT<CommunityMembershipDto>.Failure(userResult.Error!);
 
+        if (await communityMembershipRepository.IsUserMemberAsync(request.UserId ?? Guid.Empty,
+                request.CommunityId ?? Guid.Empty, cancellationToken))
+        {
+            logger.LogWarning("User {UserId} is already a member of Community {CommunityId}.", request.UserId,
+                request.CommunityId);
+
+            return ResultT<CommunityMembershipDto>.Failure(
+                Error.Conflict("409", $"User '{userResult.Value.Username}' is already a member of this community.")
+            );
+        }
+
         var communityMembership = new Domain.Models.CommunityMembership
         {
+            Id = Guid.NewGuid(),
             CommunityId = communityResult.Value.Id,
             UserId = userResult.Value.Id,
             Role = CommunityMembershipRoles.Member.ToString()
