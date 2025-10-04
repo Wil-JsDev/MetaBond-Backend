@@ -213,7 +213,7 @@ The backend is currently deployed on **Railway** with automatic deployments from
 - [x] Interest Management
 - [x] API Documentation
 - [x] Unit Testing Framework
-- [ ] Authentication & Authorization (In Progress)
+- [x] Authentication & Authorization
 - [ ] Real-time Features (Planned)
 - [ ] Gamification System (Planned)
 - [ ] Notification System (Planned)
