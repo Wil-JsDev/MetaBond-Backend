@@ -20,14 +20,6 @@ internal sealed class GetNotificationRecentByUserQueryHandler(
     public async Task<ResultT<IEnumerable<NotificationWithUserDTos>>> Handle(GetNotificationRecentByUserQuery request,
         CancellationToken cancellationToken)
     {
-        if (request.UserId is null || request.UserId == Guid.Empty)
-        {
-            logger.LogWarning("GetRecentNotificationsByUserQueryHandler: UserId is required.");
-
-            return ResultT<IEnumerable<NotificationWithUserDTos>>.Failure(
-                Error.Failure("400", "UserId is required"));
-        }
-
         var user = await EntityHelper.GetEntityByIdAsync(
             userRepository.GetByIdAsync,
             request.UserId ?? Guid.Empty,

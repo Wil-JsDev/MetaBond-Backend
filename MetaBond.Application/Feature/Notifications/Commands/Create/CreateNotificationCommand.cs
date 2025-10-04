@@ -7,6 +7,6 @@ namespace MetaBond.Application.Feature.Notifications.Commands.Create;
 public sealed class CreateNotificationCommand : ICommand<NotificationDTos>
 {
     public NotificationType Type { get; set; }
-    
+
     public Guid? UserId { get; set; }
 }

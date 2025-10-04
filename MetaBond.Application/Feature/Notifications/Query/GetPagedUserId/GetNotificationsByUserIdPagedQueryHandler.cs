@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.Notifications;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Repository.Account;
+using MetaBond.Application.Interfaces.Service.SignaIR.Senders;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
@@ -16,10 +17,11 @@ internal sealed class GetNotificationsByUserIdPagedQueryHandler(
     ILogger<GetNotificationsByUserIdPagedQueryHandler> logger,
     INotificationRepository notificationRepository,
     IUserRepository userRepository,
-    IDistributedCache cache
-) : IQueryHandler<GetNotificationsByUserIdPagedQuery, PagedResult<NotificationWithUserDTos>>
+    IDistributedCache cache,
+    INotificationSender notificationSender
+) : IQueryHandler<GetNotificationsByUserIdPagedQuery, PagedResult<NotificationDTos>>
 {
-    public async Task<ResultT<PagedResult<NotificationWithUserDTos>>> Handle(GetNotificationsByUserIdPagedQuery request,
+    public async Task<ResultT<PagedResult<NotificationDTos>>> Handle(GetNotificationsByUserIdPagedQuery request,
         CancellationToken cancellationToken)
     {
         var user = await EntityHelper.GetEntityByIdAsync(
@@ -44,9 +46,9 @@ internal sealed class GetNotificationsByUserIdPagedQueryHandler(
 
             var items = paged.Items.ToList();
 
-            var pagedDto = items.Select(NotificationMapper.ToNotificationWithUserDto).ToList();
+            var pagedDto = items.Select(NotificationMapper.MapNotificationDTos).ToList();
 
-            PagedResult<NotificationWithUserDTos> pagedResult = new()
+            PagedResult<NotificationDTos> pagedResult = new()
             {
                 CurrentPage = paged.CurrentPage,
                 Items = pagedDto,
@@ -63,7 +65,7 @@ internal sealed class GetNotificationsByUserIdPagedQueryHandler(
                 "GetNotificationsByUserIdPagedQueryHandler: No notifications found for user ID '{UserId}'.",
                 request.UserId);
 
-            return ResultT<PagedResult<NotificationWithUserDTos>>.Failure(Error.NotFound("404",
+            return ResultT<PagedResult<NotificationDTos>>.Failure(Error.NotFound("404",
                 "Notifications not found"));
         }
 
@@ -71,6 +73,10 @@ internal sealed class GetNotificationsByUserIdPagedQueryHandler(
             "GetNotificationsByUserIdPagedQueryHandler: Notifications found for user ID '{UserId}'.",
             request.UserId);
 
-        return ResultT<PagedResult<NotificationWithUserDTos>>.Success(result);
+        await notificationSender.SendNotificationsAsync(request.UserId ?? Guid.Empty, result.Items);
+
+        logger.LogInformation("GetNotificationsByUserIdPagedQueryHandler: Notifications sent successfully.");
+
+        return ResultT<PagedResult<NotificationDTos>>.Success(result);
     }
 }

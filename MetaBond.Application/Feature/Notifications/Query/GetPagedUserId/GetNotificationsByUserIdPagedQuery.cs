@@ -4,7 +4,7 @@ using MetaBond.Application.Pagination;
 
 namespace MetaBond.Application.Feature.Notifications.Query.GetPagedUserId;
 
-public sealed class GetNotificationsByUserIdPagedQuery : IQuery<PagedResult<NotificationWithUserDTos>>
+public sealed class GetNotificationsByUserIdPagedQuery : IQuery<PagedResult<NotificationDTos>>
 {
     public Guid? UserId { get; set; }
 

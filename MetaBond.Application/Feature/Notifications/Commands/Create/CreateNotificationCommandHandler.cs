@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.Notifications;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Repository.Account;
+using MetaBond.Application.Interfaces.Service.SignaIR.Senders;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
@@ -13,7 +14,8 @@ namespace MetaBond.Application.Feature.Notifications.Commands.Create;
 internal sealed class CreateNotificationCommandHandler(
     ILogger<CreateNotificationCommandHandler> logger,
     IUserRepository userRepository,
-    INotificationRepository notificationRepository
+    INotificationRepository notificationRepository,
+    INotificationSender notificationSender
 ) : ICommandHandler<CreateNotificationCommand, NotificationDTos>
 {
     public async Task<ResultT<NotificationDTos>> Handle(CreateNotificationCommand request,
@@ -42,6 +44,11 @@ internal sealed class CreateNotificationCommandHandler(
             request.UserId);
 
         var notificationDto = NotificationMapper.MapNotificationDTos(notification);
+
+        await notificationSender.SendNewNotificationAsync(request.UserId ?? Guid.Empty, notificationDto);
+
+        logger.LogInformation("CreateNotificationAsync: Notification sent successfully for user ID '{UserId}'.",
+            request.UserId);
 
         return ResultT<NotificationDTos>.Success(notificationDto);
     }

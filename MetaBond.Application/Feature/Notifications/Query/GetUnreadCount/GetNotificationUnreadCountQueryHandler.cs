@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.Base;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Repository.Account;
+using MetaBond.Application.Interfaces.Service.SignaIR.Senders;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -12,7 +13,8 @@ namespace MetaBond.Application.Feature.Notifications.Query.GetUnreadCount;
 internal sealed class GetNotificationUnreadCountQueryHandler(
     ILogger<GetNotificationUnreadCountQueryHandler> logger,
     INotificationRepository notificationRepository,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    INotificationSender notificationSender
 ) : IQueryHandler<GetNotificationUnreadCountQuery, CountResponse>
 {
     public async Task<ResultT<CountResponse>> Handle(GetNotificationUnreadCountQuery request,
@@ -34,6 +36,11 @@ internal sealed class GetNotificationUnreadCountQueryHandler(
             "GetNotificationUnreadCountQueryHandler: Unread notification count retrieved for user ID '{UserId}'.",
             request.UserId);
 
+        await notificationSender.SendNotificationUnreadCountAsync(request.UserId ?? Guid.Empty, unreadCount);
+
+        logger.LogInformation(
+            "GetNotificationUnreadCountQueryHandler: Notification sent successfully for user ID '{UserId}'.",
+            request.UserId);
 
         return ResultT<CountResponse>.Success(new CountResponse(unreadCount));
     }
