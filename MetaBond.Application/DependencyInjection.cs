@@ -21,8 +21,11 @@ public static class DependencyInjection
 
         #region Services
 
+        services.AddHttpContextAccessor();
+
         services.AddScoped<IEmailConfirmationTokenService, EmailConfirmationTokenService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<ICurrentService, CurrentUserService>();
 
         #endregion
     }

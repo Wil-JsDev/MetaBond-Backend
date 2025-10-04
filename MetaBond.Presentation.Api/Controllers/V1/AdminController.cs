@@ -10,7 +10,11 @@ using MetaBond.Application.Feature.Admin.Query.GetPagedUserStatus;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Common;
+using MetaBond.Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace MetaBond.Presentation.Api.Controllers.V1;
@@ -34,27 +38,9 @@ public class AdminController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpPost("confirm-account")]
-    [SwaggerOperation(
-        Summary = "Confirm admin account",
-        Description = "Confirms an admin account using the provided adminId and confirmation code."
-    )]
-    [ProducesResponseType(typeof(ResultT<string>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResultT<string>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResultT<string>), StatusCodes.Status404NotFound)]
-    public async Task<ResultT<string>> ConfirmAccountAsync([FromQuery] Guid adminId, [FromQuery] string code,
-        CancellationToken cancellationToken)
-    {
-        var command = new ConfirmAccountAdminCommand()
-        {
-            AdminId = adminId,
-            Code = code
-        };
-
-        return await mediator.Send(command, cancellationToken);
-    }
-
     [HttpPost("users/{userId}/ban")]
+    [Authorize(Roles = UserRoleNames.Admin)]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Ban a user",
         Description = "Bans a user by their unique identifier."
@@ -74,6 +60,8 @@ public class AdminController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("users/{userId}/unban")]
+    [Authorize(Roles = UserRoleNames.Admin)]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Unban a user",
         Description = "Unbans a user by their unique identifier."
@@ -93,6 +81,8 @@ public class AdminController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("users/{statusAccount}")]
+    [Authorize(Roles = UserRoleNames.Admin)]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get paged users by status",
         Description = "Retrieves a paginated list of users filtered by their account status."

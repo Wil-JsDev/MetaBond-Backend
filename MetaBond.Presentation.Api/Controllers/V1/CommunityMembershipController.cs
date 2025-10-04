@@ -9,6 +9,8 @@ using MetaBond.Application.Feature.CommunityMembership.Query.GetCommunityMember;
 using MetaBond.Application.Feature.CommunityMembership.Query.GetUserCommunities;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -21,6 +23,8 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class CommunityMembershipController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Join a community",
         Description = "Allows a user to join a specific community."
@@ -35,6 +39,8 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{communityId}/members/{userId}/role")]
+    [Authorize(Roles =
+        $"{CommunityMembershipRoleNames.Owner},{CommunityMembershipRoleNames.Moderator},{UserRoleNames.Admin}")]
     [SwaggerOperation(
         Summary = "Update user role in a community",
         Description = "Updates the role of a user within a community."
@@ -53,6 +59,7 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("leave")]
+    [Authorize]
     [SwaggerOperation(
         Summary = "Leave a community",
         Description = "Allows a user to leave a community."
@@ -73,6 +80,7 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("community/{communityId}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get community members",
@@ -97,6 +105,7 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("users/{userId}")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get user communities",

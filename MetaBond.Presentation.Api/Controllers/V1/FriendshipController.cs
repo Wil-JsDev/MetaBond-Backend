@@ -13,10 +13,10 @@ using MetaBond.Application.Feature.Friendship.Query.GetFriendshipWithUser;
 using MetaBond.Application.Feature.Friendship.Query.GetOrderById;
 using MetaBond.Application.Feature.Friendship.Query.GetRecentlyCreated;
 using MetaBond.Application.Feature.Friendship.Query.Pagination;
-using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -25,6 +25,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/{version:ApiVersion}/friendship")]
 public class FriendshipController(IMediator mediator) : ControllerBase
 {
@@ -41,7 +42,7 @@ public class FriendshipController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get friendship by ID",
         Description = "Retrieves a specific friendship by its unique identifier."
@@ -67,7 +68,7 @@ public class FriendshipController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update a friendship",
         Description = "Updates an existing friendship using the provided command data."
@@ -178,7 +179,7 @@ public class FriendshipController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("recent-created/{limit}")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get recently created friendships",
         Description = "Retrieves the most recently created friendships up to the specified limit."

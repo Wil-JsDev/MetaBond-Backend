@@ -15,6 +15,7 @@ using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -22,6 +23,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
 [ApiController]
+[Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/rewards")]
 public class RewardsController(IMediator mediator) : ControllerBase

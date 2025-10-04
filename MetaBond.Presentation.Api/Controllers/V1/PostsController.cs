@@ -13,6 +13,9 @@ using MetaBond.Application.Feature.Posts.Query.Pagination;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
+using MetaBond.Domain;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -25,7 +28,8 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 public class PostsController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    [DisableRateLimiting]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Create a new post",
         Description = "Creates a new post using form data."
@@ -37,6 +41,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = $"{UserRoleNames.Admin}, {UserRoleNames.User}")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Delete a post",
@@ -50,7 +55,8 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [DisableRateLimiting]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get a post by ID",
         Description = "Retrieves a post by its unique ID."
@@ -63,6 +69,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communitiesId}/recent-posts")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get recent posts in a community",
@@ -84,6 +91,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communitiesId}/recent-posts-top10")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get top 10 recent posts in a community",
@@ -98,6 +106,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{postsId}/details/communities")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get post details with communities",
@@ -119,6 +128,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communitiesId}/search/title")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Filter posts by title",
@@ -142,6 +152,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("pagination")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get paginated posts",
@@ -161,6 +172,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{postsId}/with-author")]
+    [Authorize]
     [SwaggerOperation(
         Summary = "Get post with author info",
         Description = "Retrieves a post along with its author details."

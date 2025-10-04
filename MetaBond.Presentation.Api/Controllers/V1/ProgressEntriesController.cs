@@ -17,6 +17,8 @@ using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
+using MetaBond.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
@@ -24,6 +26,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace MetaBond.Presentation.Api.Controllers.V1;
 
 [ApiController]
+[Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/progress-entries")]
 public class ProgressEntriesController(IMediator mediator) : ControllerBase
@@ -41,7 +44,7 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Update a progress entry",
         Description = "Updates an existing progress entry using the provided command data."
@@ -53,7 +56,7 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Delete a progress entry",
         Description = "Deletes a progress entry by its unique ID."
@@ -66,7 +69,7 @@ public class ProgressEntriesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [DisableRateLimiting]
+    [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get a progress entry by ID",
         Description = "Retrieves a progress entry using its unique ID."
