@@ -1,6 +1,7 @@
 ﻿using MetaBond.Application.Abstractions.Messaging;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +9,9 @@ namespace MetaBond.Application.Feature.Rewards.Commands.Delete;
 
 internal sealed class DeleteRewardsCommandHandler(
     IRewardsRepository repository,
-    ILogger<DeleteRewardsCommandHandler> logger)
+    ILogger<DeleteRewardsCommandHandler> logger,
+    ICurrentService currentService
+)
     : ICommandHandler<DeleteRewardsCommand, Guid>
 {
     public async Task<ResultT<Guid>> Handle(
@@ -23,6 +26,15 @@ internal sealed class DeleteRewardsCommandHandler(
         );
 
         if (!reward.IsSuccess) return reward.Error!;
+
+        if (reward.Value.UserId != currentService.UserId && !currentService.IsAdmin)
+        {
+            logger.LogWarning("User {UserId} is not authorized to delete reward with ID {RewardsId}",
+                currentService.UserId,
+                request.RewardsId);
+
+            return ResultT<Guid>.Failure(Error.Conflict("409", "You are not authorized to delete this reward."));
+        }
 
         await repository.DeleteAsync(reward.Value, cancellationToken);
 
