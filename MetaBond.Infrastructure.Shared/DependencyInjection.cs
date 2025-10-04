@@ -1,8 +1,10 @@
 ﻿using MetaBond.Application.DTOs.Account.Auth;
 using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Interfaces.Service.Auth;
+using MetaBond.Application.Interfaces.Service.SignaIR.Senders;
 using MetaBond.Domain.Settings;
 using MetaBond.Infrastructure.Shared.Service;
+using MetaBond.Infrastructure.Shared.SignaIR.Senders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -103,6 +105,13 @@ namespace MetaBond.Infrastructure.Shared
                 };
             });
 
+            #endregion
+            
+            #region SignaIR
+            
+            services.AddSignalR();
+            services.AddTransient<INotificationSender, NotificationSender>();
+            
             #endregion
         }
     }
