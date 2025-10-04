@@ -103,7 +103,11 @@ public class CommunityMembershipRepository(MetaBondContext metaBondContext)
 
     public async Task<bool> IsUserMemberAsync(Guid userId, Guid communityId, CancellationToken cancellationToken)
     {
-        return await ValidateAsync(cm => cm.UserId == userId && cm.CommunityId == communityId, cancellationToken);
+        return await ValidateAsync(cm =>
+                cm.UserId == userId &&
+                cm.CommunityId == communityId &&
+                cm.IsActive
+            , cancellationToken);
     }
 
     public async Task UpdateUserRoleAsync(Guid userId, Guid communityId, string role,
