@@ -9,13 +9,22 @@ public static class UserMapper
     {
         return new UserDTos(
             UserId: user!.Id,
-            FirstName: user.FirstName,
-            LastName: user.LastName,
+            FullName: $"{user.FirstName} {user.LastName}",
             Username: user.Username,
             Photo: user.Photo,
             StatusAccount: user.StatusUser,
             CreatedAt: user.CreatedAt,
             UpdateAt: user.UpdatedAt
+        );
+    }
+
+    public static UserCommunityMembershipDto MapUserCommunityMembershipDto(User? user)
+    {
+        return new UserCommunityMembershipDto(
+            UserId: user!.Id,
+            Username: user.Username,
+            FullName: $"{user.FirstName} {user.LastName}",
+            Photo: user.Photo
         );
     }
 }

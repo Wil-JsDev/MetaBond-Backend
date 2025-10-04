@@ -10,7 +10,8 @@ public static class CommunityMembershipMapper
     {
         return new CommunityMembershipDto
         (
-            User: UserMapper.MapUserDTos(model.User!),
+            CommunityMembershipId: model.Id,
+            User: UserMapper.MapUserCommunityMembershipDto(model.User!),
             Community: CommunityMapper.MapCommunitiesDTos(model.Community!),
             Role: model.Role,
             IsActive: model.IsActive
@@ -21,6 +22,7 @@ public static class CommunityMembershipMapper
     {
         return new CommunityMembersDto
         (
+            CommunityMembershipId: communityMembers.Id,
             User: UserMapper.MapUserDTos(communityMembers.User!),
             Role: communityMembers.Role
         );
