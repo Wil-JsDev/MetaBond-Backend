@@ -91,7 +91,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communitiesId}/recent-posts-top10")]
-    [Authorize]   
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get top 10 recent posts in a community",
@@ -106,7 +106,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{postsId}/details/communities")]
-    [Authorize]  
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get post details with communities",
@@ -128,7 +128,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("communities/{communitiesId}/search/title")]
-    [Authorize] 
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Filter posts by title",

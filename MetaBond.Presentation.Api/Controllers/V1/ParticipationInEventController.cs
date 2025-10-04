@@ -67,7 +67,7 @@ public class ParticipationInEventController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{participationInEventId}/events")]
-    [Authorize]   
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get events for a participation",
