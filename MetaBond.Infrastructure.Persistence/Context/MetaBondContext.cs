@@ -597,10 +597,10 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .IsRequired();
 
                 entity.Property(nt => nt.CreatedAt)
-                    .HasColumnType("timestamp without time zone");
+                    .HasColumnType("timestamp with time zone");
 
                 entity.Property(nt => nt.ReadAt)
-                    .HasColumnType("timestamp without time zone");
+                    .HasColumnType("timestamp with time zone");
 
                 entity.Ignore(nt => nt.IsRead); // Computed property, no se guarda en BD
             });
