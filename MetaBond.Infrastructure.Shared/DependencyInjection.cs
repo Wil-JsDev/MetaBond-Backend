@@ -106,12 +106,12 @@ namespace MetaBond.Infrastructure.Shared
             });
 
             #endregion
-            
+
             #region SignaIR
-            
+
             services.AddSignalR();
             services.AddTransient<INotificationSender, NotificationSender>();
-            
+
             #endregion
         }
     }
