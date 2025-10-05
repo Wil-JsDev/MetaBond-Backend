@@ -3,6 +3,7 @@ using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Interfaces.Service.Auth;
 using MetaBond.Application.Interfaces.Service.SignaIR.Senders;
 using MetaBond.Domain.Settings;
+using MetaBond.Infrastructure.Shared.Authentication;
 using MetaBond.Infrastructure.Shared.Service;
 using MetaBond.Infrastructure.Shared.SignaIR.Senders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -65,29 +66,37 @@ namespace MetaBond.Infrastructure.Shared
                 {
                     OnAuthenticationFailed = async context =>
                     {
-                        // Use generic error messages to avoid leaking details
+                        var message = context.Exception switch
+                        {
+                            SecurityTokenExpiredException => JwtMessages.TokenExpired,
+                            SecurityTokenInvalidSignatureException => JwtMessages.InvalidSignature,
+                            _ => JwtMessages.AuthenticationFailed
+                        };
+
                         context.Response.StatusCode = 401;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(new JwtResponse(true, "Authentication failed."));
+
+                        var result = JsonConvert.SerializeObject(new JwtResponse(true, message));
                         await context.Response.WriteAsync(result);
                     },
 
-                    OnChallenge = async c =>
+                    OnChallenge = async context =>
                     {
-                        c.HandleResponse();
-                        c.Response.StatusCode = 401;
-                        c.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(new JwtResponse(true, "Access denied."));
-                        await c.Response.WriteAsync(result);
+                        context.HandleResponse();
+                        context.Response.StatusCode = 401;
+                        context.Response.ContentType = "application/json";
+
+                        var result = JsonConvert.SerializeObject(new JwtResponse(true, JwtMessages.AccessDenied));
+                        await context.Response.WriteAsync(result);
                     },
 
-                    OnForbidden = async c =>
+                    OnForbidden = async context =>
                     {
-                        c.Response.StatusCode = 403;
-                        c.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(new JwtResponse(true,
-                            "You do not have permission to access this resource."));
-                        await c.Response.WriteAsync(result);
+                        context.Response.StatusCode = 403;
+                        context.Response.ContentType = "application/json";
+
+                        var result = JsonConvert.SerializeObject(new JwtResponse(true, JwtMessages.Forbidden));
+                        await context.Response.WriteAsync(result);
                     },
 
                     OnMessageReceived = context =>
