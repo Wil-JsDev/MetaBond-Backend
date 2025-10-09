@@ -47,6 +47,14 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
         public DbSet<Notification> Notifications { get; set; }
 
+        public DbSet<Chat> Chats { get; set; }
+
+        public DbSet<UserChat> UserChats { get; set; }
+
+        public DbSet<Message> Messages { get; set; }
+
+        public DbSet<MessageRead> MessageReads { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -56,6 +64,8 @@ namespace MetaBond.Infrastructure.Persistence.Context
             #region Filter
 
             modelBuilder.Entity<User>().HasQueryFilter(us => us.StatusUser == StatusAccount.Active.ToString());
+
+            modelBuilder.Entity<Message>().HasQueryFilter(m => !m.IsDeleted);
 
             #endregion
 
@@ -123,6 +133,18 @@ namespace MetaBond.Infrastructure.Persistence.Context
 
             modelBuilder.Entity<Notification>()
                 .ToTable("Notifications");
+
+            modelBuilder.Entity<Chat>()
+                .ToTable("Chats");
+
+            modelBuilder.Entity<UserChat>()
+                .ToTable("UserChats");
+
+            modelBuilder.Entity<Message>()
+                .ToTable("Messages");
+
+            modelBuilder.Entity<MessageRead>()
+                .ToTable("MessageReads");
 
             #endregion
 
@@ -202,6 +224,20 @@ namespace MetaBond.Infrastructure.Persistence.Context
             modelBuilder.Entity<Notification>()
                 .HasKey(n => n.Id)
                 .HasName("PkNotifications");
+
+            modelBuilder.Entity<Chat>()
+                .HasKey(c => c.Id)
+                .HasName("PkChats");
+
+            modelBuilder.Entity<UserChat>()
+                .HasKey(uc => new { uc.ChatId, uc.UserId });
+
+            modelBuilder.Entity<MessageRead>()
+                .HasKey(mr => new { mr.MessageId, mr.UserId });
+
+            modelBuilder.Entity<Message>()
+                .HasKey(m => m.Id)
+                .HasName("PkMessages");
 
             #endregion
 
@@ -359,6 +395,41 @@ namespace MetaBond.Infrastructure.Persistence.Context
                 .WithOne(n => n.User)
                 .HasForeignKey(n => n.UserId)
                 .HasConstraintName("FkNotificationsUserId")
+                .IsRequired();
+
+            modelBuilder.Entity<Chat>()
+                .HasMany(ch => ch.Messages)
+                .WithOne(ch => ch.Chat)
+                .HasForeignKey(m => m.ChatId)
+                .HasConstraintName("FkMessagesChatId")
+                .IsRequired();
+
+            modelBuilder.Entity<UserChat>()
+                .HasOne(uc => uc.User)
+                .WithMany(us => us.UserChats)
+                .HasForeignKey(uc => uc.UserId)
+                .HasConstraintName("FkUserChatsUserId")
+                .IsRequired();
+
+            modelBuilder.Entity<UserChat>()
+                .HasOne(uc => uc.Chat)
+                .WithMany(us => us.UserChats)
+                .HasForeignKey(uc => uc.ChatId)
+                .HasConstraintName("FkUserChatsChatId")
+                .IsRequired();
+
+            modelBuilder.Entity<User>()
+                .HasMany(us => us.Messages)
+                .WithOne(m => m.Sender)
+                .HasForeignKey(m => m.SenderId)
+                .HasConstraintName("FkMessagesSenderId")
+                .IsRequired();
+
+            modelBuilder.Entity<Message>()
+                .HasMany(msg => msg.MessageReads)
+                .WithOne(mr => mr.Message)
+                .HasForeignKey(mr => mr.MessageId)
+                .HasConstraintName("FkMessageReadsMessageId")
                 .IsRequired();
 
             #endregion
@@ -603,6 +674,60 @@ namespace MetaBond.Infrastructure.Persistence.Context
                     .HasColumnType("timestamp with time zone");
 
                 entity.Ignore(nt => nt.IsRead); // Computed property, no se guarda en BD
+            });
+
+            #endregion
+
+            #region Chat
+
+            modelBuilder.Entity<Chat>(entity =>
+            {
+                entity.Property(c => c.Name)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(c => c.Photo)
+                    .HasMaxLength(255);
+
+                entity.Property(c => c.LastMessage)
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                entity.Property(c => c.Type)
+                    .HasDefaultValue(ChatType.Direct.ToString());
+
+                entity.Property(nt => nt.LastMessageAt)
+                    .HasColumnType("timestamp with time zone");
+            });
+
+            #endregion
+
+            #region Message
+
+            modelBuilder.Entity<Message>(entity =>
+            {
+                entity.Property(m => m.Content)
+                    .HasMaxLength(250)
+                    .IsRequired();
+
+                entity.Property(m => m.SentAt)
+                    .HasColumnType("timestamp with time zone");
+
+                entity.Property(m => m.EditedAt)
+                    .HasColumnType("timestamp with time zone");
+
+                entity.Property(m => m.IsEdited)
+                    .HasDefaultValue(false);
+            });
+
+            #endregion
+
+            #region Message Read
+
+            modelBuilder.Entity<MessageRead>(entity =>
+            {
+                entity.Property(m => m.ReadAt)
+                    .HasColumnType("timestamp with time zone");
             });
 
             #endregion

@@ -52,4 +52,9 @@ public sealed class User
     public ICollection<ProgressBoard>? ProgressBoards { get; set; }
 
     public ICollection<Notification>? Notifications { get; set; }
+    public ICollection<UserChat>? UserChats { get; set; }
+
+    public ICollection<Message>? Messages { get; set; }
+
+    public ICollection<MessageRead>? MessageReads { get; set; }
 }
