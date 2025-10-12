@@ -122,6 +122,7 @@ namespace MetaBond.Infrastructure.Shared
 
             services.AddSignalR();
             services.AddTransient<INotificationSender, NotificationSender>();
+            services.AddTransient<IChatSender, ChatSender>();
 
             #endregion
         }
