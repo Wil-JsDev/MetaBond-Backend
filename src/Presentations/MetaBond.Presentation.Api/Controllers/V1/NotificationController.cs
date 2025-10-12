@@ -10,6 +10,8 @@ using MetaBond.Application.Feature.Notifications.Query.GetById;
 using MetaBond.Application.Feature.Notifications.Query.GetNextUnread;
 using MetaBond.Application.Feature.Notifications.Query.GetNotificationByUser;
 using MetaBond.Application.Feature.Notifications.Query.GetNotificationRecentByUser;
+using MetaBond.Application.Feature.Notifications.Query.GetPagedUserId;
+using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,13 +24,19 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [Route("api/v{version:ApiVersion}/notifications")]
 public class NotificationController(IMediator mediator) : ControllerBase
 {
-    [HttpPost]
+    [HttpGet("pagination")]
     [Authorize]
     [EnableRateLimiting("fixed")]
-    public async Task<ResultT<NotificationDTos>> CreateNotificationAsync([FromBody] CreateNotificationCommand command,
-        CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<NotificationDTos>>> GetPagedNotificationByUserIdAsync([FromQuery] Guid userId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
-        return await mediator.Send(command, cancellationToken);
+        var query = new GetNotificationsByUserIdPagedQuery()
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            UserId = userId
+        };
+        return await mediator.Send(query);
     }
 
     [HttpDelete("{notificationId}/users/{userId}")]
