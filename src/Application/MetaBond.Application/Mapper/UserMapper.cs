@@ -1,3 +1,4 @@
+using MetaBond.Application.DTOs.Account.Chat;
 using MetaBond.Application.DTOs.Account.User;
 using MetaBond.Domain.Models;
 
@@ -24,6 +25,25 @@ public static class UserMapper
             UserId: user!.Id,
             Username: user.Username,
             FullName: $"{user.FirstName} {user.LastName}",
+            Photo: user.Photo
+        );
+    }
+
+    public static UserChatDTos MapToUserChatDTos(User user)
+    {
+        return new UserChatDTos(
+            UserId: user.Id,
+            Username: user.Username,
+            Photo: user.Photo,
+            FullName: $"{user.FirstName} {user.LastName}"
+        );
+    }
+
+    public static SenderDTos MapToSenderDTos(User user)
+    {
+        return new SenderDTos(
+            SenderId: user.Id,
+            DisplayName: user.Username,
             Photo: user.Photo
         );
     }
