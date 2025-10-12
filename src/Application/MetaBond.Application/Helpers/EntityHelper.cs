@@ -17,6 +17,6 @@ public static class EntityHelper
 
         logger.LogWarning("{EntityName} with ID {Id} was not found.", entityName, id);
 
-        return ResultT<T>.Failure(Error.NotFound("404", $"{entityName} with ID {id} was not found."));
+        return ResultT<T>.Failure(Error.NotFound("404", $"this {entityName} not found."));
     }
 }
