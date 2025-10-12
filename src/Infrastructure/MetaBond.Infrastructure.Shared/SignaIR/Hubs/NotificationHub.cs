@@ -1,8 +1,12 @@
 using MediatR;
 using MetaBond.Application.DTOs.Notifications;
+using MetaBond.Application.Feature.Notifications.Commands.Create;
 using MetaBond.Application.Feature.Notifications.Query.GetPagedUserId;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Interfaces.Service.SignaIR.Hubs;
+using MetaBond.Domain;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
@@ -11,42 +15,30 @@ namespace MetaBond.Infrastructure.Shared.SignaIR.Hubs;
 [Authorize]
 public class NotificationHub(
     ILogger<NotificationHub> logger,
-    IMediator mediator
+    IMediator mediator,
+    ICurrentService currentService
 ) : Hub<INotificationHub>
 {
     public override Task OnConnectedAsync()
     {
-        logger.LogInformation("Connect user: {ContextUser}", Context.UserIdentifier);
+        logger.LogInformation("Connect user: {ContextUser}", currentService.CurrentId);
         return base.OnConnectedAsync();
     }
 
-
-    public async Task GetPaginatedNotifications(int pageNumber, int pageSize)
+    public async Task CreateNotification(NotificationType type)
     {
-        var query = new GetNotificationsByUserIdPagedQuery
+        var command = new CreateNotificationCommand()
         {
-            UserId = Guid.Parse(Context.UserIdentifier ?? Guid.Empty.ToString()),
-            PageNumber = pageNumber,
-            PageSize = pageSize
+            UserId = currentService.CurrentId,
+            Type = type
         };
 
-        var result = await mediator.Send(query);
-
-        if (result.IsSuccess)
-        {
-            await Clients.Caller.OnNotificationsReceived(result.Value.Items ?? Array.Empty<NotificationDTos>());
-        }
-
-        logger.LogError(
-            "Error fetching paginated notifications for user {UserId}: {Error}",
-            Context.UserIdentifier, result.Error
-        );
+        await mediator.Send(command, CancellationToken.None);
     }
-
 
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        logger.LogInformation("Disconnect user: {ContextUser}", Context.UserIdentifier);
+        logger.LogInformation("Disconnect user: {ContextUser}", currentService.CurrentId);
         return base.OnDisconnectedAsync(exception);
     }
 }

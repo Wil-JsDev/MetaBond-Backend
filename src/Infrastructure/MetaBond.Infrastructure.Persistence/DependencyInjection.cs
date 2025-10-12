@@ -52,6 +52,8 @@ public static class DependencyInjection
         services.AddTransient<ICommunityCategoryRepository, CommunityCategoryRepository>();
         services.AddTransient<IInterestCategoryRepository, InterestCategoryRepository>();
         services.AddTransient<INotificationRepository, NotificationRepository>();
+        services.AddTransient<IChatRepository, ChatRepository>();
+        services.AddTransient<IUserChatRepository, UserChatRepository>();
 
         #endregion
     }
