@@ -6,6 +6,7 @@ using MetaBond.Application.Feature.Friendship.Commands.Update;
 using MetaBond.Application.Feature.Friendship.Query.GetCountByStatus;
 using MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedAfter;
 using MetaBond.Application.Feature.Friendship.Query.GetCreated.GetCreatedBefore;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -17,6 +18,7 @@ namespace MetaBond.Tests.Friendship;
 public class FriendshipControllerTests
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
     public async Task CreateFriendship_Tests()
@@ -24,14 +26,13 @@ public class FriendshipControllerTests
         //Arrange
         CreateFriendshipCommand createFriendshipCommand = new()
         {
-            Status = Status.Accepted,
             RequesterId = Guid.NewGuid(),
             AddresseeId = Guid.NewGuid()
         };
 
         FriendshipDTos friendshipDTos = new(
             FriendshipId: Guid.NewGuid(),
-            Status: createFriendshipCommand.Status,
+            Status: Status.Accepted,
             RequesterId: createFriendshipCommand.RequesterId,
             AddresseeId: createFriendshipCommand.AddresseeId,
             CreatedAt: DateTime.UtcNow
@@ -42,10 +43,12 @@ public class FriendshipControllerTests
         _mediator.Setup(m => m.Send(createFriendshipCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var friendshipController = new FriendshipController(_mediator.Object);
+        var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
+
+        var parameter = new AddresseeParameter(Guid.NewGuid());
 
         //Act
-        var result = await friendshipController.CreateAsync(createFriendshipCommand, CancellationToken.None);
+        var result = await friendshipController.CreateAsync(parameter, CancellationToken.None);
 
         //Assert
         Assert.True(result.IsSuccess);
@@ -71,7 +74,7 @@ public class FriendshipControllerTests
         _mediator.Setup(m => m.Send(updateFriendshipCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var friendshipController = new FriendshipController(_mediator.Object);
+        var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await friendshipController.UpdateAsync(updateFriendshipCommand, CancellationToken.None);
@@ -93,7 +96,7 @@ public class FriendshipControllerTests
                 m.Send(It.Is<DeleteFriendshipCommand>(cmd => cmd.Id == friendshipId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var friendshipController = new FriendshipController(_mediator.Object);
+        var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await friendshipController.DeleteAsync(friendshipId, CancellationToken.None);
@@ -132,7 +135,7 @@ public class FriendshipControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var friendshipController = new FriendshipController(_mediator.Object);
+        var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
 
         //Act
         var result = await friendshipController.GetAfterCreatedAsync(dateRange, 1, 2, CancellationToken.None);
@@ -171,7 +174,7 @@ public class FriendshipControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var friendshipController = new FriendshipController(_mediator.Object);
+        var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await friendshipController.GetBeforeCreatedAsync(pastDateRange, 1, 2, CancellationToken.None);
@@ -198,7 +201,7 @@ public class FriendshipControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var friendshipController = new FriendshipController(_mediator.Object);
+        var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await friendshipController.FilterByStatus(status, CancellationToken.None);

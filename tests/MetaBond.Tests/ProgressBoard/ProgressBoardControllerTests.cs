@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.ProgressBoard.Commands.Update;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Domain.Models;
@@ -19,6 +20,7 @@ namespace MetaBond.Tests.ProgressBoard;
 public class ProgressBoardControllerTests
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
     public async Task CreateProgressBoard_Test()
@@ -45,10 +47,12 @@ public class ProgressBoardControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new ProgressBoardController(_mediator.Object);
+        var controller = new ProgressBoardController(_mediator.Object, _currentService.Object);
+
+        var parameter = new CreateProgressBoardParameter(Guid.NewGuid());
 
         // Act
-        var result = await controller.CreateAsync(command, CancellationToken.None);
+        var result = await controller.CreateAsync(parameter, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -80,10 +84,13 @@ public class ProgressBoardControllerTests
         _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new ProgressBoardController(_mediator.Object);
+        var controller = new ProgressBoardController(_mediator.Object, _currentService.Object);
+        ;
+
+        var parameter = new UpdateProgressBoardParameter(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
-        var result = await controller.UpdateAsync(command, CancellationToken.None);
+        var result = await controller.UpdateAsync(parameter, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -103,7 +110,7 @@ public class ProgressBoardControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<DeleteProgressBoardCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new ProgressBoardController(_mediator.Object);
+        var controller = new ProgressBoardController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.DeleteAsync(id, CancellationToken.None);

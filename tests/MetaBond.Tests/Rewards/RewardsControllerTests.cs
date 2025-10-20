@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Rewards.Commands.Update;
 using MetaBond.Application.Feature.Rewards.Query.GetById;
 using MetaBond.Application.Feature.Rewards.Query.GetRange;
 using MetaBond.Application.Feature.Rewards.Query.GetTop;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
@@ -21,6 +22,7 @@ namespace MetaBond.Tests.Rewards;
 public class RewardsControllerTests
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
     public async Task CreateRewards_Test()
@@ -46,10 +48,15 @@ public class RewardsControllerTests
         _mediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var controller = new RewardsController(_mediator.Object);
+        var controller = new RewardsController(_mediator.Object, _currentService.Object);
+
+        var parameter = new CreateRewardsParameter(
+            "Example",
+            12
+        );
 
         // Act
-        var result = await controller.AddAsync(command, CancellationToken.None);
+        var result = await controller.AddAsync(parameter, CancellationToken.None);
 
         // Assert
         var resultT = Assert.IsType<ResultT<RewardsDTos>>(result);
@@ -70,7 +77,7 @@ public class RewardsControllerTests
         _mediator.Setup(m => m.Send(It.Is<DeleteRewardsCommand>(c => c.RewardsId == id), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var controller = new RewardsController(_mediator.Object);
+        var controller = new RewardsController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.DeleteAsync(id, CancellationToken.None);
@@ -106,7 +113,7 @@ public class RewardsControllerTests
         _mediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var controller = new RewardsController(_mediator.Object);
+        var controller = new RewardsController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.UpdateAsync(command, CancellationToken.None);
@@ -140,7 +147,7 @@ public class RewardsControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var controller = new RewardsController(_mediator.Object);
+        var controller = new RewardsController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.GetByIdAsync(id, CancellationToken.None);
@@ -180,7 +187,7 @@ public class RewardsControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var controller = new RewardsController(_mediator.Object);
+        var controller = new RewardsController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.GetDateRangeAsync(DateRangeType.Month, 1, 10, CancellationToken.None);
@@ -222,7 +229,7 @@ public class RewardsControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var controller = new RewardsController(_mediator.Object);
+        var controller = new RewardsController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.GetTopRewards(1, 3, CancellationToken.None);

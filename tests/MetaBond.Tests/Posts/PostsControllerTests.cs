@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Posts.Commands.Delete;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
 using MetaBond.Application.Feature.Posts.Query.Pagination;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Presentation.Api.Controllers.V1;
@@ -20,6 +21,7 @@ namespace MetaBond.Tests.Posts;
 public class PostsControllerTests
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
     public async Task CreatePost_Tests()
@@ -58,10 +60,18 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
+        ;
+
+        var parameter = new CreatePostsParameter(
+            Title: command.Title,
+            Content: command.Content,
+            CommunitiesId: command.CommunitiesId,
+            ImageFile: command.ImageFile
+        );
 
         // Act
-        var resultController = await postsController.AddPostsAsync(command, CancellationToken.None);
+        var resultController = await postsController.AddPostsAsync(parameter, CancellationToken.None);
 
         // Assert
         Assert.NotNull(resultController);
@@ -79,7 +89,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<DeletePostsCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController = await postsController.DeletePostsAsync(postId, CancellationToken.None);
@@ -118,7 +128,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<GetPostsByIdCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController = await postsController.GetDetailsPosts(postId, 1, 2, CancellationToken.None);
@@ -158,7 +168,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<GetFilterTitlePostsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController =
@@ -192,7 +202,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<GetPagedPostsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController = await postsController.GetPagedResultAsync(pagedPostsQuery.PageNumber,
