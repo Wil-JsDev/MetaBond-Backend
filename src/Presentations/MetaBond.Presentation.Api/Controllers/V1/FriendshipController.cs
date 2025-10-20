@@ -13,6 +13,7 @@ using MetaBond.Application.Feature.Friendship.Query.GetFriendshipWithUser;
 using MetaBond.Application.Feature.Friendship.Query.GetOrderById;
 using MetaBond.Application.Feature.Friendship.Query.GetRecentlyCreated;
 using MetaBond.Application.Feature.Friendship.Query.Pagination;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -27,7 +28,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiVersion("1.0")]
 [Authorize]
 [Route("api/{version:ApiVersion}/friendship")]
-public class FriendshipController(IMediator mediator) : ControllerBase
+public class FriendshipController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]
@@ -35,9 +36,16 @@ public class FriendshipController(IMediator mediator) : ControllerBase
         Summary = "Create a new friendship",
         Description = "Creates a new friendship using the provided command data."
     )]
-    public async Task<ResultT<FriendshipDTos>> CreateAsync([FromBody] CreateFriendshipCommand friendshipCommand,
+    public async Task<ResultT<FriendshipDTos>> CreateAsync(
+        [FromBody] AddresseeParameter parameter,
         CancellationToken cancellationToken)
     {
+        CreateFriendshipCommand friendshipCommand = new()
+        {
+            RequesterId = currentService.CurrentId,
+            AddresseeId = parameter.AddresseeId
+        };
+
         return await mediator.Send(friendshipCommand, cancellationToken);
     }
 

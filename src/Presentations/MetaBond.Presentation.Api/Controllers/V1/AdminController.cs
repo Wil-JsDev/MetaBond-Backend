@@ -6,6 +6,7 @@ using MetaBond.Application.Feature.Admin.Commands.BanUser;
 using MetaBond.Application.Feature.Admin.Commands.Create;
 using MetaBond.Application.Feature.Admin.Commands.UnbanUser;
 using MetaBond.Application.Feature.Admin.Query.GetPagedUserStatus;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -20,7 +21,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/admins")]
-public class AdminController(IMediator mediator) : ControllerBase
+public class AdminController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [SwaggerOperation(
@@ -36,7 +37,7 @@ public class AdminController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpPost("users/{userId}/ban")]
+    [HttpPost("users/ban")]
     [Authorize(Roles = UserRoleNames.Admin)]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
@@ -46,18 +47,17 @@ public class AdminController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ResultT<BanUserResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResultT<BanUserResultDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResultT<BanUserResultDto>), StatusCodes.Status404NotFound)]
-    public async Task<ResultT<BanUserResultDto>> BanUserAsync([FromRoute] Guid userId,
-        CancellationToken cancellationToken)
+    public async Task<ResultT<BanUserResultDto>> BanUserAsync(CancellationToken cancellationToken)
     {
         var command = new DisableUserCommand()
         {
-            UserId = userId
+            UserId = currentService.CurrentId
         };
 
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpPost("users/{userId}/unban")]
+    [HttpPost("users/unban")]
     [Authorize(Roles = UserRoleNames.Admin)]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
@@ -67,12 +67,11 @@ public class AdminController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ResultT<UnbanUserResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResultT<UnbanUserResultDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResultT<UnbanUserResultDto>), StatusCodes.Status404NotFound)]
-    public async Task<ResultT<UnbanUserResultDto>> UnBanUserAsync([FromRoute] Guid userId,
-        CancellationToken cancellationToken)
+    public async Task<ResultT<UnbanUserResultDto>> UnBanUserAsync(CancellationToken cancellationToken)
     {
         var command = new UnBanUserCommand()
         {
-            UserId = userId
+            UserId = currentService.CurrentId
         };
 
         return await mediator.Send(command, cancellationToken);

@@ -7,10 +7,9 @@ using MetaBond.Application.Feature.Interest.Query.GetInterestByCategory;
 using MetaBond.Application.Feature.Interest.Query.GetInterestsByName;
 using MetaBond.Application.Feature.Interest.Query.GetInterestsByUser;
 using MetaBond.Application.Feature.Interest.Query.Pagination;
-using MetaBond.Application.Helpers;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
-using MetaBond.Domain;
 using MetaBond.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +21,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/interests")]
-public class InterestController(IMediator mediator) : ControllerBase
+public class InterestController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [Authorize(Roles = UserRoleNames.Admin)]
@@ -76,20 +75,21 @@ public class InterestController(IMediator mediator) : ControllerBase
         return await mediator.Send(query, cancellationToken);
     }
 
-    [HttpGet("by-user/{userId}")]
+    [HttpGet("me")]
     [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get interests by user",
         Description = "Retrieves a paginated list of interests associated with a specific user."
     )]
-    public async Task<ResultT<PagedResult<InterestDTos>>> GetInterestByUserAsync([FromRoute] Guid userId,
+    public async Task<ResultT<PagedResult<InterestDTos>>> GetInterestByUserAsync(
         [FromQuery] int pageNumber,
-        [FromQuery] int pageSize, CancellationToken cancellationToken = default)
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken = default)
     {
         var query = new GetInterestByUserQuery
         {
-            UserId = userId,
+            UserId = currentService.CurrentId,
             PageNumber = pageNumber,
             PageSize = pageSize
         };
