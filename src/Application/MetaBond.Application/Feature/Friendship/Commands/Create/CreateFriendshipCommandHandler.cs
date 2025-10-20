@@ -3,6 +3,7 @@ using MetaBond.Application.DTOs.Friendship;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
+using MetaBond.Domain;
 using Microsoft.Extensions.Logging;
 
 namespace MetaBond.Application.Feature.Friendship.Commands.Create;
@@ -21,7 +22,7 @@ internal sealed class CreateFriendshipCommandHandler(
             Domain.Models.Friendship friendship = new()
             {
                 Id = Guid.NewGuid(),
-                Status = request.Status,
+                Status = Status.Pending,
                 RequesterId = request.RequesterId,
                 AddresseeId = request.AddresseeId,
             };
