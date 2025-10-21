@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.ProgressBoard.Commands.Update;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetProgressEntries;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
 using MetaBond.Domain.Models;
@@ -19,21 +20,24 @@ namespace MetaBond.Tests.ProgressBoard;
 public class ProgressBoardControllerTests
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
-    public async Task CreateProgressBoard_Test()
+    public async Task CreateProgressBoard_ShouldReturnSuccess_WhenCommandIsValid()
     {
         // Arrange
-        var command = new CreateProgressBoardCommand
-        {
-            CommunitiesId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
+        var communitiesId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        // Mock the current user service (this was a hidden bug)
+        _currentService.Setup(s => s.CurrentId).Returns(userId);
+
+        var parameter = new CreateProgressBoardParameter(communitiesId);
 
         var dto = new ProgressBoardDTos(
             ProgressBoardId: Guid.NewGuid(),
-            CommunitiesId: command.CommunitiesId,
-            UserId: command.UserId,
+            CommunitiesId: communitiesId, // Must match the ID from the parameter
+            UserId: userId, // Must match the ID from the mocked service
             CreatedAt: DateTime.UtcNow,
             UpdatedAt: DateTime.UtcNow
         );
@@ -41,54 +45,81 @@ public class ProgressBoardControllerTests
         var expectedResult = ResultT<ProgressBoardDTos>.Success(dto);
 
         _mediator
-            .Setup(x => x.Send(It.Is<CreateProgressBoardCommand>(c => c.CommunitiesId == command.CommunitiesId),
+            .Setup(x => x.Send(
+                It.Is<CreateProgressBoardCommand>(c =>
+                    c.CommunitiesId == communitiesId && // Check against parameter's ID
+                    c.UserId == userId), // Check against service's ID
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new ProgressBoardController(_mediator.Object);
+        var controller = new ProgressBoardController(_mediator.Object, _currentService.Object);
 
         // Act
-        var result = await controller.CreateAsync(command, CancellationToken.None);
+        var result = await controller.CreateAsync(parameter, CancellationToken.None);
 
         // Assert
+        Assert.NotNull(result);
         Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
         Assert.Equal(dto.ProgressBoardId, result.Value.ProgressBoardId);
-        _mediator.Verify(x => x.Send(It.IsAny<CreateProgressBoardCommand>(), It.IsAny<CancellationToken>()),
+
+        _mediator.Verify(x => x.Send(
+                It.Is<CreateProgressBoardCommand>(c =>
+                    c.CommunitiesId == communitiesId &&
+                    c.UserId == userId),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task UpdateProgressBoard_Test()
+    public async Task UpdateProgressBoard_ShouldReturnSuccess_WhenCommandIsValid()
     {
         // Arrange
-        var command = new UpdateProgressBoardCommand
-        {
-            ProgressBoardId = Guid.NewGuid(),
-            CommunitiesId = Guid.NewGuid()
-        };
+        var progressBoardId = Guid.NewGuid();
+        var communitiesId = Guid.NewGuid();
+        var userId = Guid.NewGuid(); // Assume this comes from the current user service
+
+        // Mock the current user service (the controller needs this)
+        _currentService.Setup(s => s.CurrentId).Returns(userId);
+
+        // Assuming the parameter constructor takes (ProgressBoardId, CommunitiesId)
+        var parameter = new UpdateProgressBoardParameter(progressBoardId, communitiesId);
 
         var dto = new ProgressBoardDTos(
-            ProgressBoardId: command.ProgressBoardId,
-            CommunitiesId: command.CommunitiesId,
-            UserId: command.UserId,
+            ProgressBoardId: progressBoardId,
+            CommunitiesId: communitiesId,
+            UserId: userId, // This should come from the mocked service
             CreatedAt: DateTime.UtcNow,
             UpdatedAt: DateTime.UtcNow
         );
 
         var expectedResult = ResultT<ProgressBoardDTos>.Success(dto);
 
-        _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
+        _mediator.Setup(x => x.Send(
+                It.Is<UpdateProgressBoardCommand>(cmd =>
+                    cmd.ProgressBoardId == progressBoardId &&
+                    cmd.CommunitiesId == communitiesId &&
+                    cmd.UserId == userId), // Assuming the controller adds the UserId
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new ProgressBoardController(_mediator.Object);
+        var controller = new ProgressBoardController(_mediator.Object, _currentService.Object);
 
         // Act
-        var result = await controller.UpdateAsync(command, CancellationToken.None);
+        var result = await controller.UpdateAsync(parameter, CancellationToken.None);
 
         // Assert
+        Assert.NotNull(result);
         Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
         Assert.Equal(dto.ProgressBoardId, result.Value.ProgressBoardId);
-        _mediator.Verify(x => x.Send(command, It.IsAny<CancellationToken>()), Times.Once);
+
+        _mediator.Verify(x => x.Send(
+            It.Is<UpdateProgressBoardCommand>(cmd =>
+                cmd.ProgressBoardId == progressBoardId &&
+                cmd.CommunitiesId == communitiesId &&
+                cmd.UserId == userId),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -103,7 +134,7 @@ public class ProgressBoardControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<DeleteProgressBoardCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new ProgressBoardController(_mediator.Object);
+        var controller = new ProgressBoardController(_mediator.Object, _currentService.Object);
 
         // Act
         var result = await controller.DeleteAsync(id, CancellationToken.None);

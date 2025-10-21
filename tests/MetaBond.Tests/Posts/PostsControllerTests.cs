@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Posts.Commands.Delete;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
 using MetaBond.Application.Feature.Posts.Query.Pagination;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Presentation.Api.Controllers.V1;
@@ -20,53 +21,78 @@ namespace MetaBond.Tests.Posts;
 public class PostsControllerTests
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
-    public async Task CreatePost_Tests()
+    public async Task CreatePost_ShouldReturnSuccess_WhenCommandIsValid()
     {
         // Arrange
-        var command = new CreatePostsCommand
+        var createdById = Guid.NewGuid();
+        var communitiesId = Guid.NewGuid();
+        var title = "Tests Title";
+        var content = "Tests Content";
+
+        var imageFile = new FormFile(
+            baseStream: new MemoryStream(new byte[] { 1, 2, 3 }),
+            baseStreamOffset: 0,
+            length: 3,
+            name: "image",
+            fileName: "test-image.png")
         {
-            Title = "Tests Title",
-            Content = "Tests Content",
-            CommunitiesId = Guid.NewGuid(),
-            ImageFile = new FormFile(
-                baseStream: new MemoryStream(new byte[] { 1, 2, 3 }),
-                baseStreamOffset: 0,
-                length: 3,
-                name: "image",
-                fileName: "test-image.png")
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "image/png"
-            },
-            CreatedById = Guid.NewGuid()
+            Headers = new HeaderDictionary(),
+            ContentType = "image/png"
         };
+
+        _currentService.Setup(s => s.CurrentId).Returns(createdById);
+
+        var parameter = new CreatePostsParameter(
+            Title: title,
+            Content: content,
+            CommunitiesId: communitiesId,
+            ImageFile: imageFile
+        );
 
         var postsDTos = new PostsDTos(
             PostsId: Guid.NewGuid(),
-            Title: command.Title,
-            Content: command.Content,
-            ImageUrl: "https://cdn.fakeapp.com/images/test-image.png",
-            CreatedById: command.CreatedById,
-            CommunitiesId: command.CommunitiesId,
+            Title: title,
+            Content: content,
+            ImageUrl: "https://cdn.fakeapp.com/images/test-image.png", // The expected output
+            CreatedById: createdById,
+            CommunitiesId: communitiesId,
             CreatedAt: DateTime.UtcNow
         );
 
         var expectedResult = ResultT<PostsDTos>.Success(postsDTos);
 
-        _mediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
+        _mediator.Setup(x => x.Send(
+                It.Is<CreatePostsCommand>(cmd =>
+                    cmd.Title == title &&
+                    cmd.Content == content &&
+                    cmd.CommunitiesId == communitiesId &&
+                    cmd.CreatedById == createdById && // Check the ID from the service
+                    cmd.ImageFile == imageFile),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
-        var resultController = await postsController.AddPostsAsync(command, CancellationToken.None);
+        var resultController = await postsController.AddPostsAsync(parameter, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultController);
+        Assert.NotNull(resultController); // This will now pass
         Assert.True(resultController.IsSuccess);
-        Assert.Equal(command.Title, resultController.Value.Title);
+        Assert.NotNull(resultController.Value);
+        Assert.Equal(title, resultController.Value.Title);
+
+        _mediator.Verify(x => x.Send(
+            It.Is<CreatePostsCommand>(cmd =>
+                cmd.Title == title &&
+                cmd.Content == content &&
+                cmd.CommunitiesId == communitiesId &&
+                cmd.CreatedById == createdById &&
+                cmd.ImageFile == imageFile),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -79,7 +105,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<DeletePostsCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController = await postsController.DeletePostsAsync(postId, CancellationToken.None);
@@ -118,7 +144,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<GetPostsByIdCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController = await postsController.GetDetailsPosts(postId, 1, 2, CancellationToken.None);
@@ -158,7 +184,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<GetFilterTitlePostsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController =
@@ -192,7 +218,7 @@ public class PostsControllerTests
         _mediator.Setup(x => x.Send(It.IsAny<GetPagedPostsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var postsController = new PostsController(_mediator.Object);
+        var postsController = new PostsController(_mediator.Object, _currentService.Object);
 
         // Act
         var resultController = await postsController.GetPagedResultAsync(pagedPostsQuery.PageNumber,

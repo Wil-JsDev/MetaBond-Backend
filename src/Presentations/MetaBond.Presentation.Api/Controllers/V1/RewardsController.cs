@@ -12,6 +12,7 @@ using MetaBond.Application.Feature.Rewards.Query.GetTop;
 using MetaBond.Application.Feature.Rewards.Query.GetUsersByReward;
 using MetaBond.Application.Feature.Rewards.Query.Pagination;
 using MetaBond.Application.Helpers;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -26,7 +27,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/rewards")]
-public class RewardsController(IMediator mediator) : ControllerBase
+public class RewardsController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]
@@ -34,9 +35,15 @@ public class RewardsController(IMediator mediator) : ControllerBase
         Summary = "Create a new reward",
         Description = "Creates a new reward using the provided command data."
     )]
-    public async Task<ResultT<RewardsDTos>> AddAsync([FromBody] CreateRewardsCommand rewardsCommand,
+    public async Task<ResultT<RewardsDTos>> AddAsync([FromBody] CreateRewardsParameter rewardsParameter,
         CancellationToken cancellationToken)
     {
+        var rewardsCommand = new CreateRewardsCommand()
+        {
+            UserId = currentService.CurrentId,
+            Description = rewardsParameter.Description,
+            PointAwarded = rewardsParameter.PointAwarded
+        };
         return await mediator.Send(rewardsCommand, cancellationToken);
     }
 

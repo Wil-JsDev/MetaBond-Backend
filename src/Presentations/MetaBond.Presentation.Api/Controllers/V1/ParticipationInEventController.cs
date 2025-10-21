@@ -6,7 +6,6 @@ using MetaBond.Application.Feature.ParticipationInEvent.Commands.Update;
 using MetaBond.Application.Feature.ParticipationInEvent.Query.GetById;
 using MetaBond.Application.Feature.ParticipationInEvent.Query.GetEvents;
 using MetaBond.Application.Feature.ParticipationInEvent.Query.Pagination;
-using MetaBond.Application.Helpers;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Common;

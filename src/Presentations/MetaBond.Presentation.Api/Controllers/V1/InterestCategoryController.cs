@@ -6,6 +6,7 @@ using MetaBond.Application.Feature.InterestCategory.Command.Update;
 using MetaBond.Application.Feature.InterestCategory.Query.GetById;
 using MetaBond.Application.Feature.InterestCategory.Query.GetByName;
 using MetaBond.Application.Feature.InterestCategory.Query.Pagination;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Common;
@@ -19,7 +20,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/interest-categories")]
-public class InterestCategoryController(IMediator mediator) : ControllerBase
+public class InterestCategoryController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]

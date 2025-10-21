@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Authentication.Commands.LoginUser;
 using MetaBond.Application.Feature.Authentication.Commands.RefreshTokenAdmin;
 using MetaBond.Application.Feature.Authentication.Commands.RefreshTokenUser;
 using MetaBond.Application.Feature.Authentication.Query.ValidateToken;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/auth")]
-public class AuthController(IMediator mediator) : ControllerBase
+public class AuthController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost("users")]
     [EnableRateLimiting("fixed")]
@@ -86,7 +87,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpPost("communities/{communityId}/users/{userId}/token")]
+    [HttpPost("communities/{communityId}/users/token")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Generate community token",
@@ -101,7 +102,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         var command = new GenerateCommunityTokenCommand
         {
             CommunityId = communityId,
-            UserId = userId
+            UserId = currentService.CurrentId
         };
 
         return await mediator.Send(command, cancellationToken);

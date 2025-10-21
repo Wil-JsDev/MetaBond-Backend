@@ -9,6 +9,7 @@ using MetaBond.Application.Feature.Communities.Query.GetCommunitiesByCategory;
 using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
 using MetaBond.Application.Feature.Communities.Query.Pagination;
 using MetaBond.Application.Helpers;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Common;
@@ -24,7 +25,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/communities")]
-public class CommunitiesController(IMediator mediator) : ControllerBase
+public class CommunitiesController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [Authorize]
