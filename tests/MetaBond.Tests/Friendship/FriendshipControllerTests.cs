@@ -21,38 +21,55 @@ public class FriendshipControllerTests
     private readonly Mock<ICurrentService> _currentService = new();
 
     [Fact]
-    public async Task CreateFriendship_Tests()
+    public async Task CreateFriendship_ShouldReturnSuccess_WhenCommandIsValid()
     {
         //Arrange
-        CreateFriendshipCommand createFriendshipCommand = new()
-        {
-            RequesterId = Guid.NewGuid(),
-            AddresseeId = Guid.NewGuid()
-        };
+        var requesterId = Guid.NewGuid();
+        var addresseeId = Guid.NewGuid();
 
-        FriendshipDTos friendshipDTos = new(
+        // 1. Mock the current user service
+        _currentService.Setup(s => s.CurrentId).Returns(requesterId);
+
+        // 2. This is the parameter coming into the controller
+        var parameter = new AddresseeParameter(addresseeId);
+
+        // 3. This is the DTO we expect back from the mediator
+        var friendshipDTos = new FriendshipDTos(
             FriendshipId: Guid.NewGuid(),
             Status: Status.Accepted,
-            RequesterId: createFriendshipCommand.RequesterId,
-            AddresseeId: createFriendshipCommand.AddresseeId,
+            RequesterId: requesterId, // Should match the mocked service
+            AddresseeId: addresseeId, // Should match the parameter
             CreatedAt: DateTime.UtcNow
         );
 
         var expectedResult = ResultT<FriendshipDTos>.Success(friendshipDTos);
 
-        _mediator.Setup(m => m.Send(createFriendshipCommand, It.IsAny<CancellationToken>()))
+        // 4. Set up the mediator mock
+        _mediator.Setup(m => m.Send(
+                // Validate the command properties inside the mock
+                It.Is<CreateFriendshipCommand>(cmd =>
+                    cmd.RequesterId == requesterId &&
+                    cmd.AddresseeId == addresseeId),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var friendshipController = new FriendshipController(_mediator.Object, _currentService.Object);
-
-        var parameter = new AddresseeParameter(Guid.NewGuid());
 
         //Act
         var result = await friendshipController.CreateAsync(parameter, CancellationToken.None);
 
         //Assert
-        Assert.True(result.IsSuccess);
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess); // You should uncomment this
+        Assert.NotNull(result.Value);
         Assert.Equal(friendshipDTos, result.Value);
+
+        // (Optional) Verify the command was sent exactly once
+        _mediator.Verify(m => m.Send(
+            It.Is<CreateFriendshipCommand>(cmd =>
+                cmd.RequesterId == requesterId &&
+                cmd.AddresseeId == addresseeId),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
