@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Posts.Query.GetById;
 using MetaBond.Application.Feature.Posts.Query.GetFilterRecent;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
+using MetaBond.Application.Feature.Posts.Query.GetPagedPostsByUserCommunity;
 using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
 using MetaBond.Application.Feature.Posts.Query.GetPostWithAuthor;
 using MetaBond.Application.Feature.Posts.Query.Pagination;
@@ -48,6 +49,26 @@ public class PostsController(IMediator mediator, ICurrentService currentService)
         };
 
         return await mediator.Send(createPostsCommand, cancellationToken);
+    }
+
+    [HttpGet("me/{communitiesId}/communities")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
+    public async Task<ResultT<PagedResult<PostsDTos>>> GetPagedPostsByUserAndCommunity([FromRoute] Guid communitiesId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken
+    )
+    {
+        var query = new GetPagedPostsByUserCommunityQuery()
+        {
+            CreatedById = currentService.CurrentId,
+            CommunitiesId = communitiesId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpDelete("{id}")]
