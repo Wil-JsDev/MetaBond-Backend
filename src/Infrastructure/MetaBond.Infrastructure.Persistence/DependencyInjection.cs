@@ -30,8 +30,13 @@ public static class DependencyInjection
 
         #endregion
 
-        #region Repositories
+        services.AddRepositories();
+    }
 
+    #region Private Methods
+
+    private static void AddRepositories(this IServiceCollection services)
+    {
         services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddTransient<ICommunitiesRepository, CommunitiesRepository>();
         services.AddTransient<IEventsRepository, EventsRepository>();
@@ -54,7 +59,9 @@ public static class DependencyInjection
         services.AddTransient<INotificationRepository, NotificationRepository>();
         services.AddTransient<IChatRepository, ChatRepository>();
         services.AddTransient<IUserChatRepository, UserChatRepository>();
-
-        #endregion
+        services.AddTransient<IMessageRepository, MessageRepository>();
+        services.AddTransient<IMessageReadRepository, MessageReadRepository>();
     }
+
+    #endregion
 }
