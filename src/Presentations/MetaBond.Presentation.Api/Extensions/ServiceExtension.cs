@@ -66,23 +66,11 @@ public static class ServiceExtension
 
     public static void AddCors(this IServiceCollection services, IConfiguration configuration)
     {
-        var allowedPort = configuration["Cors:AllowedPort"];
-
-        if (string.IsNullOrWhiteSpace(allowedPort))
-        {
-            throw new InvalidOperationException("AllowedPort must be configured in appsettings.json");
-        }
-
-        var allowedOrigin = $"http://localhost:{allowedPort}";
-
         services.AddCors(options =>
         {
-            options.AddPolicy("RestrictedCorsPolicy", builder =>
+            options.AddPolicy("AllowAllOrigins", policy =>
             {
-                builder
-                    .WithOrigins(allowedOrigin)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
             });
         });
     }
