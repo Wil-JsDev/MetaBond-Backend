@@ -68,10 +68,8 @@ public static class ServiceExtension
     {
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowAllOrigins", policy =>
-            {
-                policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
-            });
+            options.AddPolicy("AllowAllOrigins",
+                policy => { policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin(); });
         });
     }
 
