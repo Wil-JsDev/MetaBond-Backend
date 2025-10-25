@@ -115,4 +115,11 @@ public class UserRepository(MetaBondContext metaBondContext) : GenericRepository
         _metaBondContext.Set<User>().Update(user);
         await _metaBondContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<User?> GetByIdGithubAsync(string id, CancellationToken cancellationToken)
+    {
+        return await _metaBondContext.Set<User>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.GitHubId == id, cancellationToken);
+    }
 }

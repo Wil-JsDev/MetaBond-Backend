@@ -113,4 +113,12 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task UpdatePasswordAsync(User user, string newHashedPassword, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Retrieves a user by their associated GitHub ID.
+    /// </summary>
+    /// <param name="id">The unique identifier of the GitHub account.</param>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>The corresponding <see cref="User"/> if found; otherwise, null.</returns>
+    Task<User?> GetByIdGithubAsync(string id, CancellationToken cancellationToken);
 }
