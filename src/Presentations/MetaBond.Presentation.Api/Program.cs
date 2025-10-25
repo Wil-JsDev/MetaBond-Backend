@@ -40,7 +40,7 @@ try
 
     app.UseExceptionHandler(_ => { });
 
-    app.UseCors("AllowedPort");
+    app.UseCors("AllowAllOrigins");
 
     app.UseRouting();
 
