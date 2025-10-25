@@ -68,6 +68,8 @@ try
     // Hubs
     app.MapHub<NotificationHub>("/hubs/notifications");
 
+    app.MapHub<ChatHub>("/hubs/chats");
+
     app.Run();
 }
 catch (Exception ex)
