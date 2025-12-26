@@ -4,6 +4,7 @@ using MetaBond.Application.DTOs.Account.Message;
 using MetaBond.Application.Helpers;
 using MetaBond.Application.Interfaces.Repository;
 using MetaBond.Application.Interfaces.Repository.Account;
+using MetaBond.Application.Interfaces.Service.SignaIR.Senders;
 using MetaBond.Application.Mapper;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Models;
@@ -15,7 +16,8 @@ internal sealed class CreateMessageCommandHandler(
     IUserRepository userRepository,
     IMessageRepository messageRepository,
     IChatRepository chatRepository,
-    ILogger<CreateMessageCommandHandler> logger
+    ILogger<CreateMessageCommandHandler> logger,
+    IChatSender chatSender
 ) : ICommandHandler<CreateMessageCommand, MessageGeneralDTos>
 {
     public async Task<ResultT<MessageGeneralDTos>> Handle(CreateMessageCommand request,
@@ -44,6 +46,10 @@ internal sealed class CreateMessageCommandHandler(
         logger.LogInformation("Message created successfully");
 
         var messageDtos = MessageMapper.MapToMessageGeneralDTos(message, userResult.Value);
+
+        var messageChatDto = MessageMapper.MapToMessageDto(message);
+
+        await chatSender.SendMessageAsync(message.ChatId, messageChatDto);
 
         return ResultT<MessageGeneralDTos>.Success(messageDtos);
     }
