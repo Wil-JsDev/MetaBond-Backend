@@ -652,14 +652,15 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("GitHubId")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsEmailConfirmed")
                         .ValueGeneratedOnAdd()
@@ -667,17 +668,14 @@ namespace MetaBond.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
                     b.Property<string>("Photo")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 

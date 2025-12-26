@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.CommunityMembership.Commands.LeaveCommunity;
 using MetaBond.Application.Feature.CommunityMembership.Commands.UpdateRole;
 using MetaBond.Application.Feature.CommunityMembership.Query.GetCommunityMember;
 using MetaBond.Application.Feature.CommunityMembership.Query.GetUserCommunities;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Common;
@@ -20,7 +21,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v:{version:ApiVersion}/community-memberships")]
-public class CommunityMembershipController(IMediator mediator) : ControllerBase
+public class CommunityMembershipController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [Authorize]
@@ -38,7 +39,7 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
         return await mediator.Send(joinCommunityCommand, cancellationToken);
     }
 
-    [HttpPut("{communityId}/members/{userId}/role")]
+    [HttpPut("{communityId}/members/users/role")]
     [Authorize(Roles =
         $"{CommunityMembershipRoleNames.Owner},{CommunityMembershipRoleNames.Moderator},{UserRoleNames.Admin}")]
     [SwaggerOperation(
@@ -50,7 +51,7 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     {
         var command = new UpdateCommunityMembershipRoleCommand
         {
-            UserId = userId,
+            UserId = currentService.CurrentId,
             CommunityId = communityId,
             Role = roles.Role
         };
@@ -67,12 +68,11 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
     public async Task<ResultT<LeaveCommunityDto>> LeaveCommunityAsync([FromQuery] Guid communityId,
-        [FromQuery] Guid userId,
         CancellationToken cancellationToken)
     {
         var command = new LeaveCommunityCommand
         {
-            UserId = userId,
+            UserId = currentService.CurrentId,
             CommunityId = communityId
         };
 
@@ -104,7 +104,7 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
         return await mediator.Send(query, cancellationToken);
     }
 
-    [HttpGet("users/{userId}")]
+    [HttpGet("me/commuities")]
     [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
@@ -114,14 +114,13 @@ public class CommunityMembershipController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(object), 200)]
     [ProducesResponseType(typeof(string), 400)]
     public async Task<ResultT<PagedResult<CommunitiesDTos>>> GetCommunityAsync(
-        [FromRoute] Guid userId,
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var query = new GetUserCommunitiesQuery
         {
-            UserId = userId,
+            UserId = currentService.CurrentId,
             PageNumber = pageNumber,
             PageSize = pageSize
         };

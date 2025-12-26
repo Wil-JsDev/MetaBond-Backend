@@ -21,7 +21,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [Route("api/v{version:ApiVersion}/chats")]
 public class ChatController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
-    [HttpGet("users/{userId}")]
+    [HttpGet("users")]
     [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
@@ -34,7 +34,7 @@ public class ChatController(IMediator mediator, ICurrentService currentService) 
     {
         var query = new GetPagedChatByUserQuery()
         {
-            UserId = userId,
+            UserId = currentService.CurrentId,
             PageNumber = pageNumber,
             PageSize = pageSize
         };

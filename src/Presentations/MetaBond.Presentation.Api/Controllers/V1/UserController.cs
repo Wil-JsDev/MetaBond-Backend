@@ -13,6 +13,7 @@ using MetaBond.Application.Feature.User.Query.GetByUsername;
 using MetaBond.Application.Feature.User.Query.GetUserWithFriendship;
 using MetaBond.Application.Feature.User.Query.Pagination;
 using MetaBond.Application.Feature.User.Query.SearchByUsername;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain.Common;
@@ -27,7 +28,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/users")]
-public class UserController(IMediator mediator) : ControllerBase
+public class UserController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]
@@ -108,7 +109,7 @@ public class UserController(IMediator mediator) : ControllerBase
         return await mediator.Send(passwordUserCommand, cancellationToken);
     }
 
-    [HttpPut("{userId}/photo")]
+    [HttpPut("me/photo")]
     [Authorize(Roles = UserRoleNames.User)]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
@@ -121,7 +122,7 @@ public class UserController(IMediator mediator) : ControllerBase
         UpdatePhotoUserCommand command = new()
         {
             ImageFile = parameter.Photo,
-            UserId = userId
+            UserId = currentService.CurrentId
         };
 
         return await mediator.Send(command, cancellationToken);
@@ -145,19 +146,19 @@ public class UserController(IMediator mediator) : ControllerBase
         return await mediator.Send(usernameUserQuery, cancellationToken);
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("me/friendships")]
     [Authorize]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Get user with friendship info",
         Description = "Retrieves a user and their friendship information by user ID."
     )]
-    public async Task<ResultT<UserWithFriendshipDTos>> GetUserWithFriendshipAsync([FromRoute] Guid userId,
+    public async Task<ResultT<UserWithFriendshipDTos>> GetUserWithFriendshipAsync(
         CancellationToken cancellationToken)
     {
         GetUserWithFriendshipByIdQuery query = new()
         {
-            UserId = userId
+            UserId = currentService.CurrentId
         };
 
         return await mediator.Send(query, cancellationToken);
@@ -203,19 +204,19 @@ public class UserController(IMediator mediator) : ControllerBase
         return await mediator.Send(query, cancellationToken);
     }
 
-    [HttpPut("reset-password/{userId}")]
+    [HttpPut("me/reset-password")]
     [Authorize]
     [SwaggerOperation(
         Summary = "Reset user password",
         Description =
             "Resets the password for a user by their unique identifier. Requires the new password and confirmation."
     )]
-    public async Task<ResultT<string>> ResetPasswordAsync([FromRoute] Guid userId,
-        [FromBody] UpdatePasswordParameter request, CancellationToken cancellationToken)
+    public async Task<ResultT<string>> ResetPasswordAsync([FromBody] UpdatePasswordParameter request,
+        CancellationToken cancellationToken)
     {
         ResetPasswordUserCommand command = new()
         {
-            UserId = userId,
+            UserId = currentService.CurrentId,
             NewPassword = request.NewPassword,
             ConfirmNewPassword = request.NewPasswordConfirmPassword
         };

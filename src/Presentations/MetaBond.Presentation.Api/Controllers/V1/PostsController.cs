@@ -7,10 +7,12 @@ using MetaBond.Application.Feature.Posts.Query.GetById;
 using MetaBond.Application.Feature.Posts.Query.GetFilterRecent;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTitle;
 using MetaBond.Application.Feature.Posts.Query.GetFilterTop10;
+using MetaBond.Application.Feature.Posts.Query.GetPagedPostsByUserCommunity;
 using MetaBond.Application.Feature.Posts.Query.GetPostByIdCommunities;
 using MetaBond.Application.Feature.Posts.Query.GetPostWithAuthor;
 using MetaBond.Application.Feature.Posts.Query.Pagination;
 using MetaBond.Application.Helpers;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -25,7 +27,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/posts")]
-public class PostsController(IMediator mediator) : ControllerBase
+public class PostsController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [Authorize]
@@ -34,10 +36,39 @@ public class PostsController(IMediator mediator) : ControllerBase
         Summary = "Create a new post",
         Description = "Creates a new post using form data."
     )]
-    public async Task<ResultT<PostsDTos>> AddPostsAsync([FromForm] CreatePostsCommand createPostsCommand,
+    public async Task<ResultT<PostsDTos>> AddPostsAsync([FromForm] CreatePostsParameter createPosts,
         CancellationToken cancellationToken)
     {
+        var createPostsCommand = new CreatePostsCommand()
+        {
+            Title = createPosts.Title,
+            Content = createPosts.Content,
+            CommunitiesId = createPosts.CommunitiesId,
+            ImageFile = createPosts.ImageFile,
+            CreatedById = currentService.CurrentId
+        };
+
         return await mediator.Send(createPostsCommand, cancellationToken);
+    }
+
+    [HttpGet("me/{communitiesId}/communities")]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
+    public async Task<ResultT<PagedResult<PostsDTos>>> GetPagedPostsByUserAndCommunity([FromRoute] Guid communitiesId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken
+    )
+    {
+        var query = new GetPagedPostsByUserCommunityQuery()
+        {
+            CreatedById = currentService.CurrentId,
+            CommunitiesId = communitiesId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return await mediator.Send(query, cancellationToken);
     }
 
     [HttpDelete("{id}")]

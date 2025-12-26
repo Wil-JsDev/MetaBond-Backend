@@ -3,6 +3,7 @@ using MetaBond.Application.Feature.Chat.Commands.CreateChatGroup;
 using MetaBond.Application.Feature.Chat.Commands.CreateChatPrivate;
 using MetaBond.Application.Feature.Chat.Commands.JoinChat;
 using MetaBond.Application.Feature.Chat.Commands.LeaveChat;
+using MetaBond.Application.Feature.Messages.Commands.Create;
 using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Interfaces.Service.SignaIR.Hubs;
 using Microsoft.AspNetCore.Http;
@@ -12,8 +13,11 @@ namespace MetaBond.Infrastructure.Shared.SignaIR.Hubs;
 
 public class ChatHub(IMediator mediator, ICurrentService currentService) : Hub<IChatHub>
 {
-    //Create send message method
-    // Parameter chatId and message
+    public async Task CreateMessage(Guid chatId, string message)
+    {
+        await mediator.Send(new CreateMessageCommand()
+            { SenderId = currentService.CurrentId, ChatId = chatId, Content = message });
+    }
 
     // Create chat private method
     public async Task CreateChatPrivate()

@@ -12,6 +12,7 @@ using MetaBond.Application.Feature.ProgressBoard.Query.GetRange;
 using MetaBond.Application.Feature.ProgressBoard.Query.GetRecent;
 using MetaBond.Application.Feature.ProgressBoard.Query.Pagination;
 using MetaBond.Application.Helpers;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Domain;
@@ -27,7 +28,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/progress-board")]
-public class ProgressBoardController(IMediator mediator) : ControllerBase
+public class ProgressBoardController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("fixed")]
@@ -35,9 +36,15 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Summary = "Create a new progress board",
         Description = "Creates a new progress board using the provided command data."
     )]
-    public async Task<ResultT<ProgressBoardDTos>> CreateAsync([FromBody] CreateProgressBoardCommand command,
+    public async Task<ResultT<ProgressBoardDTos>> CreateAsync(
+        [FromBody] CreateProgressBoardParameter progressBoardParameter,
         CancellationToken cancellationToken)
     {
+        var command = new CreateProgressBoardCommand()
+        {
+            CommunitiesId = progressBoardParameter.CommunitiesId,
+            UserId = currentService.CurrentId
+        };
         return await mediator.Send(command, cancellationToken);
     }
 
@@ -48,9 +55,16 @@ public class ProgressBoardController(IMediator mediator) : ControllerBase
         Description = "Updates an existing progress board with the provided data."
     )]
     public async Task<ResultT<ProgressBoardDTos>> UpdateAsync(
-        [FromBody] UpdateProgressBoardCommand updateProgressBoardCommand,
+        [FromBody] UpdateProgressBoardParameter updateProgressBoardParameter,
         CancellationToken cancellationToken)
     {
+        var updateProgressBoardCommand = new UpdateProgressBoardCommand()
+        {
+            CommunitiesId = updateProgressBoardParameter.CommunitiesId,
+            ProgressBoardId = updateProgressBoardParameter.ProgressBoardId,
+            UserId = currentService.CurrentId
+        };
+
         return await mediator.Send(updateProgressBoardCommand, cancellationToken);
     }
 

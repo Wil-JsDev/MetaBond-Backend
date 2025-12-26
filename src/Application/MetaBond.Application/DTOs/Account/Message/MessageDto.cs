@@ -4,4 +4,4 @@ public sealed record MessageDto(
     Guid MessageId,
     Guid UserId,
     string Content,
-    DateTimeOffset CreatedAt);
+    DateTime? SentAt);

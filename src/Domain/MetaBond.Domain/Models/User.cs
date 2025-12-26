@@ -28,6 +28,8 @@ public sealed class User
 
     public Guid? RoleId { get; set; }
 
+    public string? GitHubId { get; set; }
+
     // Relationships
     public Roles? Role { get; set; }
 

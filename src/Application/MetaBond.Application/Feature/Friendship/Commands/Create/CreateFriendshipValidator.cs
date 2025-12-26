@@ -6,10 +6,6 @@ public class CreateFriendshipValidator : AbstractValidator<CreateFriendshipComma
 {
     public CreateFriendshipValidator()
     {
-        RuleFor(x => x.Status)
-            .NotEmpty().WithMessage("The status is required and cannot be empty or null.")
-            .IsInEnum().WithMessage("The status must be a valid value.");
-
         RuleFor(x => x.RequesterId)
             .NotEmpty().WithMessage("The requesterId is required and cannot be empty or null.");
 

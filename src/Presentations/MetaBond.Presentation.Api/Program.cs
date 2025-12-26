@@ -40,7 +40,7 @@ try
 
     app.UseExceptionHandler(_ => { });
 
-    app.UseCors("AllowedPort");
+    app.UseCors("AllowAllOrigins");
 
     app.UseRouting();
 
@@ -67,6 +67,8 @@ try
 
     // Hubs
     app.MapHub<NotificationHub>("/hubs/notifications");
+
+    app.MapHub<ChatHub>("/hubs/chats");
 
     app.Run();
 }

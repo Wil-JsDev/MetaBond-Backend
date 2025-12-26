@@ -524,23 +524,23 @@ namespace MetaBond.Infrastructure.Persistence.Context
             {
                 us.Property(p => p.FirstName)
                     .HasMaxLength(50)
-                    .IsRequired();
+                    .IsRequired(false);
 
                 us.Property(p => p.LastName)
                     .HasMaxLength(50)
-                    .IsRequired();
+                    .IsRequired(false);
 
                 us.Property(u => u.Email)
                     .HasMaxLength(60)
-                    .IsRequired();
+                    .IsRequired(false);
 
                 us.Property(u => u.Password)
                     .HasMaxLength(60)
-                    .IsRequired();
+                    .IsRequired(false);
 
                 us.Property(u => u.Photo)
                     .HasMaxLength(255)
-                    .IsRequired();
+                    .IsRequired(false);
 
                 us.Property(ad => ad.IsEmailConfirmed)
                     .HasDefaultValue(false);

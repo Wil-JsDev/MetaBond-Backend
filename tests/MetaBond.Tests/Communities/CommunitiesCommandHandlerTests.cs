@@ -7,6 +7,7 @@ using MetaBond.Application.Feature.Communities.Query.GetById;
 using MetaBond.Application.Feature.Communities.Query.GetCommunitiesByCategory;
 using MetaBond.Application.Feature.Communities.Query.GetPostsAndEvents;
 using MetaBond.Application.Feature.Communities.Query.Pagination;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Pagination;
 using MetaBond.Application.Utils;
 using MetaBond.Presentation.Api.Controllers.V1;
@@ -17,6 +18,7 @@ namespace MetaBond.Tests.Communities;
 public class CommunitiesCommandHandlerTests
 {
     private readonly Mock<IMediator> _mediatorMock = new();
+    private readonly Mock<ICurrentService> _currentServiceMock = new();
 
     [Fact]
     public async Task CreateCommunitiesController()
@@ -44,7 +46,7 @@ public class CommunitiesCommandHandlerTests
         _mediatorMock.Setup(m => m.Send(createCommunitiesCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var communitiesController = new CommunitiesController(_mediatorMock.Object);
+        var communitiesController = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
 
         // Act
         var result = await communitiesController.AddAsync(createCommunitiesCommand, CancellationToken.None);
@@ -66,7 +68,8 @@ public class CommunitiesCommandHandlerTests
             .Setup(m => m.Send(It.Is<DeleteCommunitiesCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var communitiesController = new CommunitiesController(_mediatorMock.Object);
+        var communitiesController = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
+        ;
 
         //Act
         var result = await communitiesController.DeleteAsync(id, CancellationToken.None);
@@ -103,7 +106,8 @@ public class CommunitiesCommandHandlerTests
         _mediatorMock.Setup(m => m.Send(communitiesCommand, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var communitiesController = new CommunitiesController(_mediatorMock.Object);
+        var communitiesController = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
+        ;
 
         //Act
         var result = await communitiesController.UpdateAsync(communitiesCommand, CancellationToken.None);
@@ -134,7 +138,7 @@ public class CommunitiesCommandHandlerTests
         _mediatorMock.Setup(m => m.Send(It.Is<GetByIdCommunitiesQuery>(q => q.Id == id), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var communitiesController = new CommunitiesController(_mediatorMock.Object);
+        var communitiesController = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
 
         //Act
         var result = await communitiesController.GetByIdAsync(id, CancellationToken.None);
@@ -178,7 +182,7 @@ public class CommunitiesCommandHandlerTests
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var communitiesController = new CommunitiesController(_mediatorMock.Object);
+        var communitiesController = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
 
         // Act
         var result =
@@ -236,7 +240,7 @@ public class CommunitiesCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new CommunitiesController(_mediatorMock.Object);
+        var controller = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
 
         // Act
         var result = await controller.GetCommunitiesDetailsAsync(id, pageNumber, pageSize, CancellationToken.None);
@@ -286,7 +290,7 @@ public class CommunitiesCommandHandlerTests
                 q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
-        var controller = new CommunitiesController(_mediatorMock.Object);
+        var controller = new CommunitiesController(_mediatorMock.Object, _currentServiceMock.Object);
 
         //Act
         var result = await controller.GetPagedAsync(pageNumber, pageSize, CancellationToken.None);

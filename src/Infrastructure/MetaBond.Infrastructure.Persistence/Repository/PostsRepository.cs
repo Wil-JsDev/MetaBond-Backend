@@ -27,6 +27,28 @@ namespace MetaBond.Infrastructure.Persistence.Repository
             return result;
         }
 
+        public async Task<PagedResult<Posts>> GetPagedPostsByUserAndCommunitiesAsync(Guid userId, Guid communitiesId,
+            int pageNumber,
+            int pageSize, CancellationToken cancellationToken)
+        {
+            var baseQuery = _metaBondContext.Set<Posts>()
+                .AsNoTracking()
+                .Where(x => x.CommunitiesId == communitiesId && x.CreatedBy.Id == userId);
+
+            var total = await baseQuery.CountAsync(cancellationToken);
+
+            var query = await baseQuery
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsSplitQuery()
+                .ToListAsync(cancellationToken);
+
+            var pagedResponse = new PagedResult<Posts>(query, pageNumber, pageSize, total);
+
+            return pagedResponse;
+        }
+
         public async Task<PagedResult<Posts>> FilterRecentPostsByCountAsync(Guid communitiesId,
             int pageNumber, int pageSize, CancellationToken cancellationToken)
         {

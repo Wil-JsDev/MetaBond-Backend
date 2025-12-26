@@ -1,3 +1,4 @@
+using System.Text;
 using Asp.Versioning;
 using MediatR;
 using MetaBond.Application.DTOs.Account.Auth;
@@ -7,7 +8,9 @@ using MetaBond.Application.Feature.Authentication.Commands.LoginUser;
 using MetaBond.Application.Feature.Authentication.Commands.RefreshTokenAdmin;
 using MetaBond.Application.Feature.Authentication.Commands.RefreshTokenUser;
 using MetaBond.Application.Feature.Authentication.Query.ValidateToken;
+using MetaBond.Application.Interfaces.Service;
 using MetaBond.Application.Utils;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -18,7 +21,7 @@ namespace MetaBond.Presentation.Api.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:ApiVersion}/auth")]
-public class AuthController(IMediator mediator) : ControllerBase
+public class AuthController(IMediator mediator, ICurrentService currentService) : ControllerBase
 {
     [HttpPost("users")]
     [EnableRateLimiting("fixed")]
@@ -86,7 +89,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpPost("communities/{communityId}/users/{userId}/token")]
+    [HttpPost("communities/{communityId}/users/token")]
     [EnableRateLimiting("fixed")]
     [SwaggerOperation(
         Summary = "Generate community token",
@@ -101,9 +104,65 @@ public class AuthController(IMediator mediator) : ControllerBase
         var command = new GenerateCommunityTokenCommand
         {
             CommunityId = communityId,
-            UserId = userId
+            UserId = currentService.CurrentId
         };
 
         return await mediator.Send(command, cancellationToken);
+    }
+
+    [HttpGet("github-login")]
+    [SwaggerOperation(
+        Summary = "GitHub login",
+        Description = "Redirects to GitHub for authentication"
+    )]
+    public IActionResult LoginWithGitHub(string returnUrl)
+    {
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = Url.Action(nameof(Callback)),
+            Items =
+            {
+                { "returnUrl", returnUrl ?? "" }
+            }
+        };
+
+        return Challenge(properties, "GitHub");
+    }
+
+    [HttpGet("callback")]
+    [SwaggerOperation(
+        Summary = "GitHub callback",
+        Description = "Handles the GitHub callback"
+    )]
+    public async Task<IActionResult> Callback(CancellationToken cancellationToken,
+        [FromServices] IGitHubAuthService gitHubAuthService)
+    {
+        var authenticatedResult = await HttpContext.AuthenticateAsync("GitHub");
+
+        if (!authenticatedResult.Succeeded)
+        {
+            return BadRequest(new { message = "Failed to authenticate with GitHub" });
+        }
+
+        var returnUrl = "";
+        if (authenticatedResult.Properties?.Items.TryGetValue("returnUrl", out var storedReturnUrl) == true)
+        {
+            returnUrl = storedReturnUrl ?? "";
+        }
+
+        var result = await gitHubAuthService.AuthenticatedGitHubAsync(
+            authenticatedResult.Principal,
+            cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        var redirectUrl = $"{returnUrl}?accessToken={result.Value!.AccessToken}" +
+                          $"&refreshToken={result.Value.RefreshToken}" +
+                          $"&userId={result.Value.UserId}";
+
+        return Redirect(redirectUrl);
     }
 }
