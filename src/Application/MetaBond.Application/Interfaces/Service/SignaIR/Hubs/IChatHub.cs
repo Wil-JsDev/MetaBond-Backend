@@ -38,4 +38,6 @@ public interface IChatHub
     /// <param name="userId">The ID of the user sending the message.</param>
     /// <param name="message">The content of the message.</param>
     Task OnMessageReceived(Guid chatId, Guid userId, string message);
+
+    Task OnMessagesRead(Guid chatId, Guid userId, IReadOnlyCollection<Guid> messageIds);
 }
