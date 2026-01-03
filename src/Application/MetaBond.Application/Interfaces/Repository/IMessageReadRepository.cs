@@ -7,4 +7,6 @@ public interface IMessageReadRepository : IGenericRepository<MessageRead>
     Task<MessageRead?> GetMessageReadAsync(Guid messageId, Guid userId, CancellationToken cancellationToken);
 
     Task<bool> ExistsMessageReadAsync(Guid messageId, Guid userId, CancellationToken cancellationToken);
+
+    Task CreateRangeAsync(List<MessageRead> messageRead, CancellationToken cancellationToken);
 }

@@ -34,4 +34,16 @@ public class MessageRepository(MetaBondContext metaBondContext)
 
     public async Task<bool> ExistsMessageAsync(Guid chatId, Guid userId, CancellationToken cancellationToken) =>
         await ValidateAsync(ms => ms.ChatId == chatId && ms.SenderId == userId, cancellationToken);
+
+    public async Task<IReadOnlyCollection<Message>> GetUnreadMessagesAsync(Guid chatId, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var unReadMessage = await _metaBondContext.Set<Message>()
+            .AsNoTracking()
+            .Where(ms => ms.ChatId == chatId)
+            .Where(ms => ms.MessageReads.All(mr => mr.UserId != userId))
+            .ToListAsync(cancellationToken);
+
+        return unReadMessage;
+    }
 }

@@ -23,4 +23,10 @@ public class MessageReadRepository(MetaBondContext metaBondContext)
     {
         return await ValidateAsync(mr => mr.MessageId == messageId && mr.UserId == userId, cancellationToken);
     }
+
+    public async Task CreateRangeAsync(List<MessageRead> messageRead, CancellationToken cancellationToken)
+    {
+        await _metaBondContext.AddRangeAsync(messageRead, cancellationToken);
+        await SaveAsync(cancellationToken);
+    }
 }

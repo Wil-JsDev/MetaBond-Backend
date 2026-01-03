@@ -38,4 +38,10 @@ public class ChatSender(IHubContext<ChatHub, IChatHub> hubContext) : IChatSender
         await hubContext.Clients.Group(chatId.ToString())
             .OnMessageReceived(chatId, message.UserId, message.Content);
     }
+
+    public async Task SendMessagesReadAsync(Guid chatId, Guid userId, IReadOnlyCollection<Guid> messageIds)
+    {
+        await hubContext.Clients.Group(chatId.ToString())
+            .OnMessagesRead(chatId, userId, messageIds);
+    }
 }

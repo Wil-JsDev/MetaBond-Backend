@@ -41,4 +41,6 @@ public interface IChatSender
     /// <param name="chatId">The ID of the chat where the message was sent.</param>
     /// <param name="message">The message data transfer object, containing content and metadata.</param>
     Task SendMessageAsync(Guid chatId, MessageDto message);
+
+    Task SendMessagesReadAsync(Guid chatId, Guid userId, IReadOnlyCollection<Guid> messageIds);
 }

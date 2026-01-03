@@ -9,4 +9,7 @@ public interface IMessageRepository : IGenericRepository<Message>
         CancellationToken cancellationToken);
 
     Task<bool> ExistsMessageAsync(Guid chatId, Guid userId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<Message>> GetUnreadMessagesAsync(Guid chatId, Guid userId,
+        CancellationToken cancellationToken);
 }
